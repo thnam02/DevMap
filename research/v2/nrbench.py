@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import statistics
 import subprocess
@@ -37,13 +38,32 @@ NR = os.environ.get("NAMERTS_HOME", os.path.join(WORK, "NameRTS"))
 OUT = os.path.join(HERE, "results", "nrbench")
 WORKERS = int(os.environ.get("PROVISO_WORKERS", max(1, (os.cpu_count() or 2) - 1)))
 
+def sync_pinned_test_deps(tree, python, req="requirements_test_min.txt", names=("astroid",)):
+    """Install the exact versions a commit pins for its own tests (pylint pins astroid per commit in
+    requirements_test_min.txt; a newer astroid makes older commits fail to import). Returns what was installed."""
+    path = os.path.join(tree, req)
+    if not os.path.isfile(path):
+        return {}
+    pins = {}
+    for line in open(path):
+        m = re.match(r"^\s*([A-Za-z0-9_.-]+)\s*==\s*([^\s#;]+)", line)
+        if m and m.group(1).lower() in names:
+            pins[m.group(1).lower()] = m.group(2)
+    for name, ver in pins.items():
+        r = subprocess.run([python, "-m", "pip", "install", "-q", "--no-deps", f"{name}=={ver}"], capture_output=True,
+                           text=True)
+        if r.returncode:
+            raise RuntimeError(f"could not install {name}=={ver}: {(r.stdout + r.stderr).strip()[-200:]}")
+    return pins
+
+
 # NameRTS's ten projects: code (its result-file suffix), ground-truth file, package directory, test targets.
 # pip: extra test dependencies beyond the project's own (installed into the project's venv by the user, see README).
 PROJECTS = {
     "loguru": dict(url="https://github.com/Delgan/loguru.git", code="LOG", gt="gt_loguru.json", pkg="loguru",
                    targets=["tests"]),
     "pylint": dict(url="https://github.com/pylint-dev/pylint.git", code="PYL", gt="gt_pylint.json", pkg="pylint",
-                   targets=["tests"]),
+                   targets=["tests"], sync=sync_pinned_test_deps),
     "sphinx": dict(url="https://github.com/sphinx-doc/sphinx.git", code="SPH", gt="gt_sphinx.json", pkg="sphinx",
                    targets=["tests"]),
     "pvlib": dict(url="https://github.com/pvlib/pvlib-python.git", code="PVL", gt="gt_pvlib.json", pkg="pvlib",
@@ -116,6 +136,7 @@ def run_pair(proj, tree, p, python):
            "PATH": os.path.dirname(python) + os.pathsep + os.environ.get("PATH", "")}
     cov_path = os.path.join(WORK, "nrbench", proj, "covmap.json")
     t0 = time.time()
+    synced = C["sync"](tree, python) if C.get("sync") else {}   # the commit's own pinned test dependencies
     targets = [t for t in C["targets"] if os.path.exists(os.path.join(tree, t))]  # test layout moves over history
     REC.record(tree, C["pkg"], cov_path, python, targets, WORKERS, "", ["-p", "no:randomly"], env)
     rec_s = time.time() - t0
@@ -155,7 +176,7 @@ def run_pair(proj, tree, p, python):
             "proviso_time_share": round(sum(cov[n].get("time", 0) for n in sel_tests & set(tests)) / t_all, 4),
             "namerts_files": len(p["namerts"]), "namerts_missed": sorted(gt - set(p["namerts"])),
             "namerts_safe": gt <= set(p["namerts"]), "gt_not_recorded": unrunnable,
-            "record_s": round(rec_s), "selection_s": round(sel_s, 2)}
+            "record_s": round(rec_s), "selection_s": round(sel_s, 2), "pinned_deps": synced}
 
 
 def main_project(proj, n, python):
