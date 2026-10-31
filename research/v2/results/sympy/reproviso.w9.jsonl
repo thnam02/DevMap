@@ -8,3 +8,8 @@
 {"id": "select:module:sympy/core/assumptions_generated.py:1483", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 2.92, "reason": null}}
 {"id": "realeval:c42397116c", "proviso": {"selected": 551, "time_share": 1.0, "missed": [], "selection_s": 2.98, "reason": null}}
 {"id": "realeval:d7c3be2816", "proviso": {"selected": 552, "time_share": 1.0, "missed": [], "selection_s": 0.12, "reason": "your edited functions run in 97% of the test time"}}
+{"id": "select:function:sympy/functions/elementary/trigonometric.py:1453", "proviso": {"selected": 37, "time_share": 0.0373, "missed": [], "selection_s": 0.22, "reason": null}, "format": 12}
+{"id": "select:class:sympy/core/numbers.py:4017", "proviso": {"selected": 105, "time_share": 0.5159, "missed": [], "selection_s": 4.1, "reason": null}, "format": 12}
+{"id": "select:class:sympy/core/numbers.py:775", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 24.59, "reason": "module sympy no longer imports"}, "format": 12}
+{"id": "select:module:sympy/core/assumptions_generated.py:1473", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 2.88, "reason": null}, "format": 12}
+{"id": "realeval:c42397116c", "proviso": {"selected": 551, "time_share": 1.0, "missed": [], "selection_s": 2.58, "reason": null}, "format": 12}
