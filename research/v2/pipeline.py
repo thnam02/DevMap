@@ -35,6 +35,7 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, HERE)   # rts.py (selectors), mutants.py (planted bugs), namerts_driver.py live here
 from dc_engine import impact as I  # noqa: E402
+from dc_engine import importstate as IS  # noqa: E402
 from dc_engine import record as REC  # noqa: E402
 import mutants as M  # noqa: E402
 import rts as SEL  # noqa: E402
@@ -780,7 +781,8 @@ def _proviso_row(tree, cov, universe, truth, plain):
 def reproviso_worker(i, n):
     """Recompute Proviso's rows (planted and real) with the current dc_engine; rows go to reproviso.w*.jsonl as
     {"id": "<stage>:<change id>", "proviso": row}. Other selectors do not use the import-time snapshot."""
-    done = set(merged("reproviso"))
+    # a row counts as done only if it was computed with the current snapshot format (a later fix re-scores again)
+    done = {k for k, r in merged("reproviso").items() if r.get("format") == IS.FORMAT}
     tr, base = merged("truth"), baseline()
     jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in merged("realeval").values()]
     jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
@@ -806,7 +808,7 @@ def reproviso_worker(i, n):
                 apply_commit_src(tree, r)
                 row = _proviso_row(tree, cov, universe_of(cov, failing(b0)), r["failing"],
                                    {k: t for k, (ok, t) in b0.items()})
-            append("reproviso", i, {"id": f"{stage}:{cid}", "proviso": row})
+            append("reproviso", i, {"id": f"{stage}:{cid}", "proviso": row, "format": IS.FORMAT})
         except Exception as e:  # noqa: BLE001
             print(stage, cid, "ERROR", repr(e)[:300], flush=True)
         finally:
@@ -814,11 +816,19 @@ def reproviso_worker(i, n):
 
 
 def reproviso():
-    """Re-score Proviso with the current dc_engine (after the import-time snapshot fix, FORMAT 11). The previous rows
+    """Re-score Proviso with the current dc_engine (after the latest import-time snapshot fix). The previous rows
     are kept as "proviso_v10" for the comparison the paper discloses; the report shows the current "proviso"."""
     jobs = list(merged("select").values()) + list(merged("realeval").values())
     parallel("reproviso", jobs)
-    new = merged("reproviso")
+    new = {}   # rows of the current snapshot format win over older ones, whichever worker file they are in
+    for p in glob.glob(os.path.join(RES, "reproviso.w*.jsonl")):
+        for line in open(p):
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if r["id"] not in new or r.get("format") == IS.FORMAT:
+                new[r["id"]] = r
     changed = 0
     for stage in ("select", "realeval"):
         for p in sorted(glob.glob(os.path.join(RES, f"{stage}.w*.jsonl"))):

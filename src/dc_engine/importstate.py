@@ -29,7 +29,7 @@ import tempfile
 
 HERE = os.path.abspath(__file__)
 SNAPSHOT_TIMEOUT = 300
-FORMAT = 11  # bump when fingerprints change; cached base snapshots of another format are rebuilt
+FORMAT = 12  # bump when fingerprints change; cached base snapshots of another format are rebuilt
 # bookkeeping that changes whenever lines move, or that Python fills in itself
 IGNORED_CLASS_KEYS = {"__dict__", "__weakref__", "__doc__", "__module__", "__qualname__", "__annotations__",
                       "__firstlineno__", "__static_attributes__", "__annotate__", "__annotate_func__",
@@ -352,6 +352,7 @@ def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> 
         subprocess.run(["tar", "-x", "-C", tmp], input=arch.stdout, capture_output=True)
         snap = snapshot(tmp, files, python)
         unstable: set[str] = set()
+        volatile: set[str] = set()
         for pad in (5003, 20011):
             if snap is None:
                 break
@@ -360,8 +361,12 @@ def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> 
                 snap = None
                 break
             unstable |= {k for k, v in snap["state"].items() if again["state"].get(k) != v}
+            # differs even without order: the value depends on the environment, the clock or the process (os.environ,
+            # a start time, a pid), not only on the code, so comparing it with another import says nothing
+            volatile |= {k for k in unstable if not _same(snap["state"][k], again["state"].get(k), True)}
         if snap is not None:
             snap["unstable"] = sorted(unstable)
+            snap["volatile"] = sorted(volatile)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     if snap is not None:
@@ -384,13 +389,15 @@ def _same(a: str | None, b: str | None, unstable: bool) -> bool:
 
 
 def diff(base: dict, cur: dict, ignore_added: set[str] = frozenset()) -> dict[str, list[str]]:
-    """changed: keys whose value changed or disappeared, plus keys that are new (except module-level names in
+    """changed: keys whose value changed or disappeared (volatile keys, which differ between two imports of the same
+    code, are never compared), plus keys that are new (except module-level names in
     `ignore_added`: new top-level functions and imports, which existing code cannot be reading).
     added_class_attrs: the new class-attribute keys (their classes may dispatch to them by computed name).
     errors: modules that import at base but not now."""
     b, c = base["state"], cur["state"]
     unstable = set(base.get("unstable", []))
-    changed = sorted(k for k in b if not _same(b[k], c.get(k), k in unstable))
+    volatile = set(base.get("volatile", []))
+    changed = sorted(k for k in b if k not in volatile and not _same(b[k], c.get(k), k in unstable))
     added = sorted(k for k in c if k not in b)
     added_class = [k for k in added if "." in k.split(":", 1)[1]]
     added_mod = [k for k in added if "." not in k.split(":", 1)[1] and k.split(":", 1)[1] not in ignore_added]

@@ -1,6 +1,7 @@
 """The import-time snapshot must not report changes that come from how a tree is installed rather than from the code:
-a version module generated at install time (setuptools-scm's _version.py), and the logging registry state that a
-missing version module leaves behind (a warning logged during import). Real changes must still be reported."""
+a version module generated at install time (setuptools-scm's _version.py), the logging registry state that a
+missing version module leaves behind (a warning logged during import), and values that differ between any two imports
+of the same code (os.environ, the clock, process ids). Real changes must still be reported."""
 from __future__ import annotations
 
 import os
@@ -24,8 +25,13 @@ except ImportError:
     __version__ = "0"
 '''
 CORE = '''import logging
+import os
+import time
+from os import environ
 logger = logging.getLogger("pkg")
 TABLE = {"a": 1, "b": 2}
+START = time.time()
+STATE = {"pid": os.getpid(), "started": START}
 '''
 
 
@@ -53,6 +59,10 @@ class ImportStateNoise(unittest.TestCase):
 
     def test_generated_version_module_is_not_a_change(self):
         open(os.path.join(self.root, "pkg", "_version.py"), "w").write('__version__ = "1.2.3"\n')
+        self.assertEqual(self.changed(), set())
+
+    def test_unchanged_code_reports_nothing(self):
+        # environment, clock and process ids differ between any two imports: never a change by themselves
         self.assertEqual(self.changed(), set())
 
     def test_real_table_change_is_reported(self):

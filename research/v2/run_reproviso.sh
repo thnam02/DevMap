@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Re-score Proviso's rows on the benchmark with the current dc_engine (after the import-time snapshot fix, FORMAT 11).
+# Re-score Proviso's rows on the benchmark with the current dc_engine (after the latest import-time snapshot fix).
 # Only Proviso's selection is recomputed (the other selectors do not use the snapshot); no tests are run, no API cost.
 #   bash research/v2/run_reproviso.sh            # all five repositories, then the combined report; pushed at the end
 set -uo pipefail
@@ -14,6 +14,6 @@ for r in sqlglot sympy sqlalchemy pygments datasette; do
 done
 python research/v2/pipeline.py report-all > research/v2/results/report-all.md
 git add research/v2/results
-git commit -qm "v2 evaluation: Proviso re-scored after the import-time snapshot fix ($(hostname), $(date +%F))" && \
+git commit -qm "v2 evaluation: Proviso re-scored after the import-time snapshot fix, FORMAT $(python3 -c "import sys; sys.path.insert(0, 'src'); from dc_engine import importstate; print(importstate.FORMAT)") ($(hostname), $(date +%F))" && \
   git pull -q --rebase && git push -q && echo "== pushed"
 echo "== reproviso finished ($(date +%T))"
