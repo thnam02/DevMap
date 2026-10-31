@@ -122,7 +122,10 @@ def run_pair(proj, tree, p, python):
     cov = json.load(open(cov_path))
     tests = [n for n in cov if not n.startswith("__")]
     if not tests:
-        raise RuntimeError("the dependency map recorded no tests (missing test dependency?)")
+        col = subprocess.run([python, "-m", "pytest", "--collect-only", "-qq", *targets], cwd=tree, env=env,
+                             capture_output=True, text=True)
+        tail = " | ".join((col.stdout + col.stderr).strip().splitlines()[-4:])
+        raise RuntimeError(f"the dependency map recorded no tests; collection says: {tail}")
     files_all = {file_of(n) for n in tests}
     put_current(tree, p["true_parent"], p["current"])
     t0 = time.time()
@@ -145,6 +148,9 @@ def run_pair(proj, tree, p, python):
             "recorded_test_files": len(files_all), "recorded_tests": len(tests),
             "gt": len(gt), "proviso_files": n_files, "proviso_full": sel is None, "reason": why.get("reason"),
             "proviso_missed": missed, "proviso_safe": not missed,
+            # for analysing misses: edited functions, and import-time values that the snapshot found changed
+            "changed_functions": len(why.get("changed_functions", [])),
+            "import_state_changed": why.get("import_state_changed", [])[:20],
             "proviso_safe_runnable": not (set(missed) - set(unrunnable)),
             "proviso_time_share": round(sum(cov[n].get("time", 0) for n in sel_tests & set(tests)) / t_all, 4),
             "namerts_files": len(p["namerts"]), "namerts_missed": sorted(gt - set(p["namerts"])),
@@ -157,7 +163,10 @@ def main_project(proj, n, python):
     os.makedirs(OUT, exist_ok=True)
     out = os.path.join(OUT, f"{proj}.jsonl")
     # rows of an older snapshot format are recomputed (the file keeps them; report() uses the newest per pair)
-    done = {r["current"] for r in _rows(out) if r.get("format") == IS.FORMAT and "error" not in r}
+    py_ver = subprocess.run([python, "-c", "import sys; print('%d.%d' % sys.version_info[:2])"], capture_output=True,
+                            text=True).stdout.strip()
+    # rows from another interpreter version are recomputed too (results must come from one environment)
+    done = {r["current"] for r in _rows(out) if r.get("format") == IS.FORMAT and "error" not in r and r.get("py") == py_ver}
     base = os.path.join(WORK, "nrbench", proj)
     tree = os.path.join(base, "repo")
     if not os.path.isdir(os.path.join(tree, ".git")):
@@ -168,9 +177,9 @@ def main_project(proj, n, python):
     for i, p in enumerate(todo):
         t = time.time()
         try:
-            row = {**run_pair(proj, tree, p, python), "format": IS.FORMAT}
+            row = {**run_pair(proj, tree, p, python), "format": IS.FORMAT, "py": py_ver}
         except Exception as e:  # noqa: BLE001
-            row = {"current": p["current"], "true_parent": p["true_parent"], "error": repr(e)[:400], "format": IS.FORMAT}
+            row = {"current": p["current"], "true_parent": p["true_parent"], "error": repr(e)[:400], "format": IS.FORMAT, "py": py_ver}
         finally:
             shutil.rmtree(os.path.join(tree, ".dc-engine"), ignore_errors=True)
         with open(out, "a") as fh:
