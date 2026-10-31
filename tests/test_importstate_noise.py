@@ -1,7 +1,7 @@
 """The import-time snapshot must not report changes that come from how a tree is installed rather than from the code:
 a version module generated at install time (setuptools-scm's _version.py), the logging registry state that a
-missing version module leaves behind (a warning logged during import), and values that differ between any two imports
-of the same code (os.environ, the clock, process ids). Real changes must still be reported."""
+missing version module leaves behind (a warning logged during import), and the process environment (os.environ).
+Real changes must still be reported."""
 from __future__ import annotations
 
 import os
@@ -25,13 +25,9 @@ except ImportError:
     __version__ = "0"
 '''
 CORE = '''import logging
-import os
-import time
 from os import environ
 logger = logging.getLogger("pkg")
 TABLE = {"a": 1, "b": 2}
-START = time.time()
-STATE = {"pid": os.getpid(), "started": START}
 '''
 
 
@@ -62,8 +58,22 @@ class ImportStateNoise(unittest.TestCase):
         self.assertEqual(self.changed(), set())
 
     def test_unchanged_code_reports_nothing(self):
-        # environment, clock and process ids differ between any two imports: never a change by themselves
+        # the process environment differs between any two imports: never a change by itself
         self.assertEqual(self.changed(), set())
+
+    def test_value_differing_between_imports_still_counts_when_code_changes(self):
+        # a value that differs on every import (here keyed by the process id, like SQLAlchemy's id-keyed registries)
+        # cannot be compared; it must stay reported when its code changes, not be ignored: ignoring such values hid
+        # real changes to SQLAlchemy registries
+        reg = os.path.join(self.root, "pkg", "reg.py")
+        open(reg, "w").write("import os\nREG = {os.getpid(): [1, 2]}\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "registry")
+        files = self.files + ["pkg/reg.py"]
+        base = S.base_snapshot(self.root, files, sys.executable, os.path.join(self.root, "base2.json"))
+        open(reg, "w").write("import os\nREG = {os.getpid(): [1, 3]}\n")
+        d = S.diff(base, S.snapshot(self.root, files, sys.executable), set())
+        self.assertIn("pkg.reg:REG", d["changed"])
 
     def test_real_table_change_is_reported(self):
         open(os.path.join(self.root, "pkg", "core.py"), "w").write(CORE.replace('"b": 2', '"b": 3'))
