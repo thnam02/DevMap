@@ -24,3 +24,16 @@
 {"id": "realeval:544e58c5f3", "proviso": {"selected": 30, "time_share": 0.2172, "missed": [], "selection_s": 0.15, "reason": null}, "format": 12}
 {"id": "realeval:edef94d66c", "proviso": {"selected": 13, "time_share": 0.0262, "missed": [], "selection_s": 1.76, "reason": null}, "format": 12}
 {"id": "realeval:d091e9341f", "proviso": {"selected": 5167, "time_share": 0.9848, "missed": [], "selection_s": 1.8, "reason": null}, "format": 12}
+{"id": "select:function:pygments/lexers/robotframework.py:538", "proviso": {"selected": 2, "time_share": 0.0129, "missed": [], "selection_s": 0.1, "reason": null}, "format": 13}
+{"id": "select:class:pygments/styles/emacs.py:65", "proviso": {"selected": 2, "time_share": 0.0129, "missed": [], "selection_s": 1.59, "reason": null}, "format": 13}
+{"id": "select:module:pygments/lexers/_mapping.py:325", "proviso": {"selected": 5291, "time_share": 0.9831, "missed": [], "selection_s": 1.76, "reason": null}, "format": 13}
+{"id": "select:function:pygments/formatters/html.py:805", "proviso": {"selected": 151, "time_share": 0.0386, "missed": [], "selection_s": 0.11, "reason": null}, "format": 13}
+{"id": "select:class:pygments/lexers/json5.py:59", "proviso": {"selected": 10, "time_share": 0.0243, "missed": [], "selection_s": 1.62, "reason": null}, "format": 13}
+{"id": "select:function:pygments/lexer.py:952", "proviso": {"selected": 2, "time_share": 0.0129, "missed": [], "selection_s": 0.11, "reason": null}, "format": 13}
+{"id": "select:function:pygments/formatters/groff.py:157", "proviso": {"selected": 6, "time_share": 0.013, "missed": [], "selection_s": 0.11, "reason": null}, "format": 13}
+{"id": "select:class:pygments/styles/perldoc.py:67", "proviso": {"selected": 2, "time_share": 0.0129, "missed": [], "selection_s": 1.68, "reason": null}, "format": 13}
+{"id": "realeval:209a33deb1", "proviso": {"selected": 13, "time_share": 0.0226, "missed": [], "selection_s": 1.55, "reason": null}, "format": 13}
+{"id": "realeval:857e46ae5b", "proviso": {"selected": 32, "time_share": 0.0435, "missed": [], "selection_s": 1.71, "reason": null}, "format": 13}
+{"id": "realeval:544e58c5f3", "proviso": {"selected": 30, "time_share": 0.2172, "missed": [], "selection_s": 0.08, "reason": null}, "format": 13}
+{"id": "realeval:edef94d66c", "proviso": {"selected": 13, "time_share": 0.0262, "missed": [], "selection_s": 1.67, "reason": null}, "format": 13}
+{"id": "realeval:d091e9341f", "proviso": {"selected": 5167, "time_share": 0.9848, "missed": [], "selection_s": 1.72, "reason": null}, "format": 13}

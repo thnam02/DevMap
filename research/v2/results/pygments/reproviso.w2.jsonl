@@ -26,3 +26,17 @@
 {"id": "realeval:6a62df1d1f", "proviso": {"selected": 8, "time_share": 0.0273, "missed": [], "selection_s": 1.71, "reason": null}, "format": 12}
 {"id": "realeval:ba6c1d6d6c", "proviso": {"selected": 4576, "time_share": 0.9806, "missed": [], "selection_s": 1.67, "reason": null}, "format": 12}
 {"id": "realeval:80d738c6b6", "proviso": {"selected": 8, "time_share": 0.0215, "missed": [], "selection_s": 0.99, "reason": null}, "format": 12}
+{"id": "select:function:pygments/lexers/scripting.py:1441", "proviso": {"selected": 21, "time_share": 0.0288, "missed": [], "selection_s": 0.12, "reason": null}, "format": 13}
+{"id": "select:class:pygments/lexers/haxe.py:583", "proviso": {"selected": 8, "time_share": 0.0259, "missed": [], "selection_s": 1.67, "reason": null}, "format": 13}
+{"id": "select:module:pygments/styles/_mapping.py:37", "proviso": {"selected": 874, "time_share": 0.3333, "missed": [], "selection_s": 1.66, "reason": null}, "format": 13}
+{"id": "select:function:pygments/lexers/scripting.py:1439", "proviso": {"selected": 21, "time_share": 0.0288, "missed": [], "selection_s": 0.19, "reason": null}, "format": 13}
+{"id": "select:class:pygments/styles/stata_dark.py:39", "proviso": {"selected": 2, "time_share": 0.0129, "missed": [], "selection_s": 1.69, "reason": null}, "format": 13}
+{"id": "select:module:pygments/lexers/_mapping.py:240", "proviso": {"selected": 5291, "time_share": 0.9831, "missed": [], "selection_s": 1.8, "reason": null}, "format": 13}
+{"id": "select:function:pygments/formatters/rtf.py:336", "proviso": {"selected": 30, "time_share": 0.1323, "missed": [], "selection_s": 0.1, "reason": null}, "format": 13}
+{"id": "select:class:pygments/styles/nord.py:57", "proviso": {"selected": 2, "time_share": 0.0129, "missed": [], "selection_s": 1.57, "reason": null}, "format": 13}
+{"id": "select:module:pygments/lexers/css.py:347", "proviso": {"selected": 10, "time_share": 0.0376, "missed": [], "selection_s": 1.59, "reason": null}, "format": 13}
+{"id": "realeval:04beeedecf", "proviso": {"selected": 4549, "time_share": 0.9777, "missed": [], "selection_s": 1.75, "reason": null}, "format": 13}
+{"id": "realeval:e5e4cf7b61", "proviso": {"selected": 7, "time_share": 0.0225, "missed": [], "selection_s": 1.67, "reason": null}, "format": 13}
+{"id": "realeval:6a62df1d1f", "proviso": {"selected": 8, "time_share": 0.0273, "missed": [], "selection_s": 1.59, "reason": null}, "format": 13}
+{"id": "realeval:ba6c1d6d6c", "proviso": {"selected": 4576, "time_share": 0.9806, "missed": [], "selection_s": 1.56, "reason": null}, "format": 13}
+{"id": "realeval:80d738c6b6", "proviso": {"selected": 8, "time_share": 0.0215, "missed": [], "selection_s": 1.02, "reason": null}, "format": 13}
