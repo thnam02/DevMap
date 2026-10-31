@@ -29,6 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from dc_engine import impact as I  # noqa: E402
+from dc_engine import importstate as IS  # noqa: E402
 from dc_engine import record as REC  # noqa: E402
 
 WORK = os.environ.get("PROVISO_WORK", os.path.expanduser("~/proviso-work/v2"))
@@ -155,28 +156,42 @@ def main_project(proj, n, python):
     C = PROJECTS[proj]
     os.makedirs(OUT, exist_ok=True)
     out = os.path.join(OUT, f"{proj}.jsonl")
-    done = {json.loads(l)["current"] for l in open(out)} if os.path.exists(out) else set()
+    # rows of an older snapshot format are recomputed (the file keeps them; report() uses the newest per pair)
+    done = {r["current"] for r in _rows(out) if r.get("format") == IS.FORMAT and "error" not in r}
     base = os.path.join(WORK, "nrbench", proj)
     tree = os.path.join(base, "repo")
     if not os.path.isdir(os.path.join(tree, ".git")):
         os.makedirs(base, exist_ok=True)
         subprocess.run(["git", "clone", "-q", C["url"], tree], check=True)
     todo = [p for p in pairs(proj) if p["current"] not in done][: max(0, n - len(done))]
+    n_done = len(done)
     for i, p in enumerate(todo):
         t = time.time()
         try:
-            row = run_pair(proj, tree, p, python)
+            row = {**run_pair(proj, tree, p, python), "format": IS.FORMAT}
         except Exception as e:  # noqa: BLE001
-            row = {"current": p["current"], "true_parent": p["true_parent"], "error": repr(e)[:400]}
+            row = {"current": p["current"], "true_parent": p["true_parent"], "error": repr(e)[:400], "format": IS.FORMAT}
         finally:
             shutil.rmtree(os.path.join(tree, ".dc-engine"), ignore_errors=True)
         with open(out, "a") as fh:
             fh.write(json.dumps(row) + "\n")
-        print(f"[{proj} {len(done) + i + 1}/{n}] {p['current'][:10]} "
+        print(f"[{proj} {n_done + i + 1}/{n}] {p['current'][:10]} "
               + (f"ERROR {row['error'][:120]}" if "error" in row else
                  f"gt {row['gt']}  proviso {row['proviso_files']} files safe={row['proviso_safe']}  "
                  f"namerts {row['namerts_files']} safe={row['namerts_safe']}  ({round(time.time() - t)} s)"),
               flush=True)
+
+
+def _rows(path):
+    """Rows of a results file, the newest per pair of the current snapshot format (older formats ignored)."""
+    if not os.path.exists(path):
+        return []
+    out = {}
+    for line in open(path):
+        r = json.loads(line)
+        if r.get("format") == IS.FORMAT:
+            out[r["current"]] = r
+    return list(out.values())
 
 
 def report():
@@ -184,10 +199,7 @@ def report():
              "NameRTS TestR | Proviso time share | Proviso full suite |", "|---|---|---|---|---|---|---|---|---|"]
     allr = []
     for proj in PROJECTS:
-        path = os.path.join(OUT, f"{proj}.jsonl")
-        if not os.path.exists(path):
-            continue
-        rows = [json.loads(l) for l in open(path)]
+        rows = _rows(os.path.join(OUT, f"{proj}.jsonl"))
         ok = [r for r in rows if "error" not in r]
         if not ok:
             continue
