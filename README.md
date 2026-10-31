@@ -10,6 +10,9 @@ pygments. In 72 Claude Code runs on real sqlglot fixes, Proviso cut the agent's 
 with no loss in hidden-test score. Full results: [`research/v2/results/report-all.md`](research/v2/results/report-all.md). Paper:
 [`paper/kaggle.md`](paper/kaggle.md).
 
+This repository continues the work; the version submitted to the Kaggle Gemma 4 Developer Agent Paper Track is
+frozen at [github.com/thnam02/Proviso](https://github.com/thnam02/Proviso).
+
 ## How it works
 
 1. **Record once per base commit.** The suite runs under a pytest plugin built on Python 3.12's `sys.monitoring`. For
