@@ -29,7 +29,7 @@ import tempfile
 
 HERE = os.path.abspath(__file__)
 SNAPSHOT_TIMEOUT = 300
-FORMAT = 15  # bump when fingerprints change; cached base snapshots of another format are rebuilt
+FORMAT = 16  # bump when fingerprints change; cached base snapshots of another format are rebuilt
 # bookkeeping that changes whenever lines move, or that Python fills in itself
 IGNORED_CLASS_KEYS = {"__dict__", "__weakref__", "__doc__", "__module__", "__qualname__", "__annotations__",
                       "__firstlineno__", "__static_attributes__", "__annotate__", "__annotate_func__",
@@ -203,7 +203,10 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
                     + ",".join(type(h).__name__ for h in getattr(v, "handlers", [])) + ";")
         if isinstance(v, types.FunctionType):
             r = f"fn:{v.__module__}.{v.__qualname__};"
-            if "<" in v.__qualname__:
+            # a wrapper made at import (functools.wraps gives it the wrapped function's name, so its code's own name
+            # differs): like a lambda or closure, the values it carries (deprecated(since=...)) are part of its state
+            wrapper = hasattr(v, "__wrapped__") or getattr(v.__code__, "co_qualname", v.__qualname__) != v.__qualname__
+            if "<" in v.__qualname__ or wrapper:
                 # lambdas and closures made at import time: their body lives inside a table or a factory call,
                 # not in a function the line-level rule can see, so their code and captured values count
                 h = hashlib.sha1()

@@ -119,6 +119,23 @@ class ImportStateNoise(unittest.TestCase):
         self.assertIn(["pkg/init_time.py", 1], funcs)
         self.assertNotIn(["pkg/init_time.py", 6], funcs)
 
+    def test_settings_inside_a_wrapper_count(self):
+        # pvlib: parse_psm3 = deprecated(since="0.12.1")(read_psm3); functools.wraps gives the wrapper the wrapped
+        # function's name, so the fingerprint saw "the same function" and missed the changed setting
+        p = os.path.join(self.root, "pkg", "wrap.py")
+        src = ("import functools\n\n\ndef deprecated(since):\n    def deco(f):\n        @functools.wraps(f)\n"
+               "        def w(*a):\n            print('deprecated since', since)\n            return f(*a)\n        return w\n"
+               "    return deco\n\n\n"
+               "def read():\n    return 1\n\n\nparse = deprecated(since='0.12')(read)\n")
+        open(p, "w").write(src)
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "wrap")
+        files = self.files + ["pkg/wrap.py"]
+        base = S.base_snapshot(self.root, files, sys.executable, os.path.join(self.root, "base5.json"))
+        self.assertEqual(S.diff(base, S.snapshot(self.root, files, sys.executable), set())["changed"], [])
+        open(p, "w").write(src.replace("'0.12'", "'0.13'"))
+        self.assertIn("pkg.wrap:parse", S.diff(base, S.snapshot(self.root, files, sys.executable), set())["changed"])
+
     def test_real_table_change_is_reported(self):
         open(os.path.join(self.root, "pkg", "core.py"), "w").write(CORE.replace('"b": 2', '"b": 3'))
         self.assertIn("pkg.core:TABLE", self.changed())
