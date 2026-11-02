@@ -45,7 +45,6 @@
 {"id": "select:function:pygments/lexer.py:952", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.13, "reason": null}, "format": 16}
 {"id": "select:function:pygments/formatters/groff.py:157", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 0.12, "reason": null}, "format": 16}
 {"id": "select:class:pygments/styles/perldoc.py:67", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 1.73, "reason": null}, "format": 16}
-{"id": "realeval:209a33deb1", "proviso": {"selected": 7, "time_share": 0.0004, "missed": [], "selection_s": 0.9, "reason": null}, "format": 16}
 {"id": "realeval:857e46ae5b", "proviso": {"selected": 30, "time_share": 0.03, "missed": [], "selection_s": 0.95, "reason": null}, "format": 16}
 {"id": "realeval:544e58c5f3", "proviso": {"selected": 28, "time_share": 0.193, "missed": [], "selection_s": 0.04, "reason": null}, "format": 16}
 {"id": "realeval:edef94d66c", "proviso": {"selected": 11, "time_share": 0.0127, "missed": [], "selection_s": 0.99, "reason": null}, "format": 16}

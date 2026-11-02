@@ -54,3 +54,4 @@
 {"id": "realeval:b073d8adf1", "proviso": {"selected": 60, "time_share": 0.1422, "missed": [], "selection_s": 2.94, "reason": null}, "format": 16}
 {"id": "realeval:d24e272894", "proviso": {"selected": 193, "time_share": 0.1944, "missed": ["tests/examplefiles/python/linecontinuation.py::", "tests/examplefiles/python/unicodedoc.py::", "tests/test_irc_formatter.py::test_linecount_output"], "selection_s": 2.28, "reason": null}, "format": 16}
 {"id": "realeval:72101ab2ee", "proviso": {"selected": 97, "time_share": 0.0378, "missed": [], "selection_s": 1.32, "reason": null}, "format": 16}
+{"id": "realeval:209a33deb1", "proviso": {"selected": 11, "time_share": 0.0105, "missed": [], "selection_s": 0.97, "reason": null}, "format": 16}
