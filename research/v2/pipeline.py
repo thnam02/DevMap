@@ -817,6 +817,73 @@ def reproviso_worker(i, n):
             reset(tree)
 
 
+def samemaps_worker(i, n):
+    """The current Proviso's selection on the v1 dependency maps (covmap.v1.json), to compare selection logic alone
+    with v1's on identical maps: re-recording mixes logic changes with run-to-run differences in what the recorder
+    captures (caches, test order). Rows go to samemaps.w*.jsonl."""
+    done = {k for k, r in merged("samemaps").items() if r.get("format") == IS.FORMAT}
+    tr, base = merged("truth"), baseline()
+    jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in merged("realeval").values()]
+    jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
+    cov0 = jload(os.path.join(WORK, "covmap.v1.json")) or {}
+    plain0 = {k: t for k, (ok, t) in base.items()}
+    uni0 = universe_of(cov0, failing(base))
+    bug_by_id = {b["id"]: b for b in bugs()}
+    real = {r["id"]: r for r in merged("mine").values()}
+    tree = make_tree(f"w{i}", CFG["commit"])
+    for stage, cid in jobs:
+        try:
+            if stage == "select":
+                if not cov0:
+                    raise RuntimeError("no covmap.v1.json")
+                tree = make_tree(f"w{i}", CFG["commit"])
+                apply_bug(tree, bug_by_id[cid])
+                row = _proviso_row(tree, cov0, uni0, truth_failing(tr[cid], uni0), plain0)
+            else:
+                r, d = real[cid], os.path.join(WORK, "real", cid)
+                tree = make_tree(f"w{i}", r["commit"] + "^")
+                b0 = jload(os.path.join(d, "base_outcomes.json")) or {}
+                cov = jload(os.path.join(d, "covmap.v1.json")) or {}
+                if not cov or not b0:
+                    raise RuntimeError("no v1 coverage map or baseline for this commit")
+                reset(tree)
+                apply_commit_src(tree, r)
+                row = _proviso_row(tree, cov, universe_of(cov, failing(b0)), r["failing"],
+                                   {k: t for k, (ok, t) in b0.items()})
+            append("samemaps", i, {"id": f"{stage}:{cid}", "proviso": row, "format": IS.FORMAT})
+        except Exception as e:  # noqa: BLE001
+            print(stage, cid, "ERROR", repr(e)[:300], flush=True)
+        finally:
+            reset(tree)
+
+
+def samemaps():
+    """Run samemaps_worker, then compare with v1 on the same maps: changes where the current logic misses a failing
+    test that v1 caught, and the time share either way. Written to results/<repo>/samemaps.md."""
+    jobs = list(merged("select").values()) + list(merged("realeval").values())
+    parallel("samemaps", jobs)
+    new = {r["id"]: r for r in merged("samemaps").values() if r.get("format") == IS.FORMAT}
+    lines = [f"# {REPO}: current Proviso (snapshot format {IS.FORMAT}) vs v1, both on the v1 dependency maps", "",
+             "| change set | changes | v1 misses | current misses | new misses (v1 caught) | v1 time share | current time share |",
+             "|---|---|---|---|---|---|---|"]
+    for stage in ("select", "realeval"):
+        rows = [r for r in merged(stage).values() if f"{stage}:{r['id']}" in new and "proviso_v1" in r["selectors"]]
+        brk = [r for r in rows if r["truth"]]
+        v1m = [r for r in brk if r["selectors"]["proviso_v1"]["missed"]]
+        curm = [r for r in brk if new[f"{stage}:{r['id']}"]["proviso"]["missed"]]
+        newm = [r for r in brk if new[f"{stage}:{r['id']}"]["proviso"]["missed"] and
+                set(new[f"{stage}:{r['id']}"]["proviso"]["missed"]) - set(r["selectors"]["proviso_v1"]["missed"])]
+        ts = lambda k, rs: 100 * st.mean(rs) if rs else 0
+        lines.append(f"| {'planted' if stage == 'select' else 'real'} | {len(rows)} | {len(v1m)} | {len(curm)} | "
+                     f"{len(newm)} | {ts(0, [r['selectors']['proviso_v1']['time_share'] for r in rows]):.1f}% | "
+                     f"{ts(0, [new[f'{stage}:' + r['id']]['proviso']['time_share'] for r in rows]):.1f}% |")
+        for r in newm:
+            extra = sorted(set(new[f"{stage}:{r['id']}"]["proviso"]["missed"]) - set(r["selectors"]["proviso_v1"]["missed"]))
+            lines.append(f"|  new miss: {r['id']} | | | | {len(extra)} tests, e.g. {extra[0]} | | |")
+    open(os.path.join(RES, "samemaps.md"), "w").write("\n".join(lines) + "\n")
+    log("samemaps:", "; ".join(l for l in lines[4:] if not l.startswith("|  new")))
+
+
 def reproviso():
     """Re-score Proviso with the current dc_engine (after the latest import-time snapshot fix). The previous rows
     are kept as "proviso_v10" for the comparison the paper discloses; the report shows the current "proviso"."""
@@ -1059,9 +1126,10 @@ STAGES = {"prepare": prepare, "baseline": baseline, "covmap": covmap, "testmon":
           "select": lambda: (baseline(), covmap(), testmon(), nrinit(), drop_crash_rows(),
                              parallel("select", bugs(), NR_WORKERS)),
           "mine": lambda: parallel("mine", commits()), "realeval": lambda: parallel("realeval", real_set(), NR_WORKERS),
-          "deflake": deflake, "report": report, "retestmon": retestmon, "tdad": tdad, "rescore": lambda: rescore(), "reproviso": reproviso}
+          "deflake": deflake, "report": report, "retestmon": retestmon, "tdad": tdad, "rescore": lambda: rescore(), "reproviso": reproviso,
+          "samemaps": samemaps}
 WORKER = {"truth": truth_worker, "select": select_worker, "mine": mine_worker, "realeval": realeval_worker,
-          "reproviso": reproviso_worker,
+          "reproviso": reproviso_worker, "samemaps": samemaps_worker,
           "deflake": deflake_worker}
 
 if __name__ == "__main__":

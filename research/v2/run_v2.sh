@@ -2,6 +2,7 @@
 # Proviso v2 evaluation, step by step (no API cost; each step resumable; results pushed as they finish).
 #   bash research/v2/run_v2.sh gate     # 1. safety gate: the main benchmark (650 changes) re-scored with v2, its
 #                                       #    dependency maps re-recorded by the v2 recorder (v1 maps kept as *.v1.json)
+#   bash research/v2/run_v2.sh samemaps # 1b. selection logic alone: v2 vs v1 on the same (v1) dependency maps
 #   bash research/v2/run_v2.sh dev      # 2. NameRTS benchmark, development projects (loguru pylint pvlib) + verify
 #   bash research/v2/run_v2.sh test     # 3. NameRTS benchmark, test projects (sphinx seaborn xarray dask sympy)
 #                                       #    + verify — run only after 1 and 2 are reviewed
@@ -15,6 +16,16 @@ step=${1:-}
 case $step in
   gate)
     PROVISO_RERECORD=1 bash research/v2/run_reproviso.sh ;;
+  samemaps)
+    # selection logic alone: the current Proviso on the v1 dependency maps, compared with v1 on the same maps
+    for r in sqlglot sympy sqlalchemy pygments datasette; do
+      echo "== $r: samemaps ($(date +%T))"
+      python3 research/v2/pipeline.py "$r" samemaps 2>&1 | tail -3
+    done
+    cat research/v2/results/*/samemaps.md
+    git add research/v2/results
+    git commit -qm "v2 safety gate on identical maps: current selection logic vs v1, both on the v1 dependency maps ($(hostname), $(date +%F))" && \
+      { git pull -q --rebase && git push -q && echo "== pushed"; } ;;
   dev|test)
     if [ "$step" = dev ]; then P="loguru pylint pvlib"; else P="sphinx seaborn xarray dask sympy"; fi
     bash research/v2/run_nrbench.sh $P
