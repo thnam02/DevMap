@@ -823,10 +823,11 @@ def require_importable():
     every class or module edit selects nothing (a samemaps run under the system python3 did exactly that)."""
     tree = make_tree("w0", CFG["commit"])
     path = os.pathsep.join([tree] + [os.path.join(tree, p) for p in CFG.get("pythonpath", [])])
-    r = subprocess.run([PY, "-c", f"import {CFG['pkg']}"], cwd=tree, capture_output=True, text=True,
+    mod = os.path.basename(CFG["pkg"].rstrip("/"))   # "lib/sqlalchemy" -> sqlalchemy
+    r = subprocess.run([PY, "-c", f"import {mod}"], cwd=tree, capture_output=True, text=True,
                        env={**os.environ, "PYTHONPATH": path})
     if r.returncode:
-        sys.exit(f"{CFG['pkg']} does not import with {PY} (activate the evaluation venv):\n{r.stderr[-800:]}")
+        sys.exit(f"{mod} does not import with {PY} (activate the evaluation venv):\n{r.stderr[-800:]}")
 
 
 def samemaps_worker(i, n):
