@@ -281,5 +281,32 @@ class TestSupportCode(unittest.TestCase):
         self.assertNotIn("reason", why)
 
 
+class SubprocessRule(unittest.TestCase):
+    """Starting a subprocess marks a test 'always selected' only when the subprocess can run the package's code."""
+
+    def test_external_tool_does_not_mark_always_but_python_does(self):
+        from dc_engine import record as REC
+        root = tempfile.mkdtemp(prefix="impact-sub-")
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, "pkg"))
+        os.makedirs(os.path.join(root, "tests"))
+        open(os.path.join(root, "pkg", "__init__.py"), "w").write("def f():\n    return 1\n")
+        open(os.path.join(root, "tests", "test_s.py"), "w").write(textwrap.dedent('''\
+            import subprocess, sys
+            import pkg
+
+            def test_git():
+                subprocess.run(["git", "--version"], capture_output=True)
+                assert pkg.f() == 1
+
+            def test_python():
+                subprocess.run([sys.executable, "-c", "pass"], capture_output=True)
+        '''))
+        env = {**os.environ, "PYTHONPATH": root}
+        cov = REC.record(root, "pkg", os.path.join(root, "cov.json"), sys.executable, ["tests"], 1, "", [], env)
+        self.assertFalse(cov["tests/test_s.py::test_git"]["always"])
+        self.assertTrue(cov["tests/test_s.py::test_python"]["always"])
+
+
 if __name__ == "__main__":
     unittest.main()

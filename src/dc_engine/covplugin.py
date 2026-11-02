@@ -27,6 +27,30 @@ import pytest
 ROOT = os.getcwd()
 PKG = os.path.join(ROOT, os.environ.get("COVMAP_PKG", "sqlglot")) + os.sep
 SUBPROC = "subprocess.py"
+PKG_NAME = os.path.basename(os.path.normpath(os.environ.get("COVMAP_PKG", "sqlglot")))
+
+
+def _runs_project_code(args) -> bool:
+    """Whether a subprocess can run the package's own code, which the recorder cannot see: a Python interpreter (or
+    pytest), or a command named after the package (pylint, sphinx-build). External tools (git, latex, dot) cannot, so
+    starting one does not make a test depend on everything (pytest-benchmark's git calls at session start had marked
+    every pylint test as always selected)."""
+    if isinstance(args, (str, bytes)):
+        args = (args.decode() if isinstance(args, bytes) else args).split()
+    try:
+        words = [os.fspath(a) for a in args]
+    except TypeError:
+        return True  # unknown form: keep the conservative rule
+    if not words:
+        return True
+    words = [w.decode() if isinstance(w, bytes) else w for w in words]
+    for w in words[:3]:  # program, or a wrapper such as `env VAR=1 python`
+        base = os.path.basename(w).lower()
+        if base.startswith(("python", "pypy", "pytest", "py.test")) or w == sys.executable:
+            return True
+        if PKG_NAME and PKG_NAME.lower() in base:
+            return True
+    return False
 TOOL = 3
 mon = sys.monitoring
 DISABLE = mon.DISABLE
@@ -140,7 +164,12 @@ def _start(code, offset):
         return DISABLE
     t = _target()
     if k == "subprocess":
-        t.always = True
+        try:
+            popen_args = sys._getframe(1).f_locals.get("args")
+        except Exception:  # noqa: BLE001
+            popen_args = None
+        if popen_args is None or _runs_project_code(popen_args):
+            t.always = True
         return DISABLE
     key, method = k
     t.funcs.add(key)
