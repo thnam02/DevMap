@@ -35,7 +35,7 @@ from dc_engine import record as REC  # noqa: E402
 
 WORK = os.environ.get("PROVISO_WORK", os.path.expanduser("~/proviso-work/v2"))
 NR = os.environ.get("NAMERTS_HOME", os.path.join(WORK, "NameRTS"))
-OUT = os.path.join(HERE, "results", "nrbench")
+OUT = os.environ.get("NRBENCH_OUT", os.path.join(HERE, "results", "nrbench"))  # v2: results/nrbench_v2
 WORKERS = int(os.environ.get("PROVISO_WORKERS", max(1, (os.cpu_count() or 2) - 1)))
 
 def sync_pinned_test_deps(tree, python, req="requirements_test_min.txt", names=("astroid",)):

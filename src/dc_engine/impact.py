@@ -653,65 +653,104 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     return sorted(set(sel) | shared) + extra, why
 
 
-def _changed_fixtures(root: str, path: str) -> set[str] | None:
-    """Names of the fixtures in conftest `path` whose definitions contain every changed line; None if any change is
-    outside a fixture (module-level code, hooks, helpers) or the file is new."""
-    lines = _changed_old_lines(_git(root, "diff", "-U0", "HEAD", "--", path)).get(path)
-    src = _git(root, "show", f"HEAD:{path}")
-    if not lines or not src:
-        return None
-    try:
-        tree = ast.parse(src)
-    except SyntaxError:
-        return None
-    spans = []
-    for node in tree.body:
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        for dec in node.decorator_list:
-            if "fixture" not in ast.unparse(dec):
-                continue
-            name = node.name
-            if isinstance(dec, ast.Call):
-                for kw in dec.keywords:
-                    if kw.arg == "name" and isinstance(kw.value, ast.Constant):
-                        name = kw.value.value
-            start = min([node.lineno] + [d.lineno for d in node.decorator_list])
-            spans.append((start, node.end_lineno, name))
-    names = set()
-    for ln in lines:
-        hit = [n for a, b, n in spans if a <= ln <= b]
-        if not hit:
+def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool]:
+    """What an edit to shared test code (a conftest.py or a helper module) changes, by comparing its top-level
+    definitions in the base and the working tree: (changed fixtures, changed other functions/classes, whether other
+    module-level code changed). New definitions and added imports change nothing existing (tests using them were
+    edited and run anyway: loguru added two helpers to its conftest)."""
+    def parse(src: str):
+        try:
+            tree = ast.parse(src)
+        except SyntaxError:
             return None
-        names.update(hit)
-    return names
+        defs: dict[str, tuple[str, bool]] = {}
+        other: list[str] = []
+        imports: set[str] = set()
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                fixture = any("fixture" in ast.unparse(d) for d in getattr(node, "decorator_list", []))
+                name = node.name
+                for d in getattr(node, "decorator_list", []):
+                    if isinstance(d, ast.Call):
+                        for kw in d.keywords:
+                            if kw.arg == "name" and isinstance(kw.value, ast.Constant):
+                                name = kw.value.value
+                hook = name.startswith("pytest_")  # hooks act on every test
+                defs[name] = (ast.dump(node), fixture and not hook)
+                if hook:
+                    other.append(ast.dump(node))
+            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                imports.add(ast.dump(node))
+            elif not (isinstance(node, ast.Expr) and isinstance(getattr(node, "value", None), ast.Constant)):
+                other.append(ast.dump(node))   # module-level statements (docstrings aside)
+        return defs, other, imports
+    old_src = _git(root, "show", f"HEAD:{path}")
+    try:
+        new_src = open(os.path.join(root, path), encoding="utf-8").read()
+    except OSError:
+        new_src = ""
+    old, new = parse(old_src) if old_src else None, parse(new_src) if new_src else None
+    if old is None or new is None:   # a new, deleted or unparsable file: assume it affects everything below it
+        return set(), set(), True
+    (od, oo, oi), (nd, no, ni) = old, new
+    fixtures = {n for n, (dump, fx) in od.items() if fx and nd.get(n, (None,))[0] != dump}
+    helpers = {n for n, (dump, fx) in od.items() if not fx and nd.get(n, (None,))[0] != dump}
+    module_level = sorted(oo) != sorted(no) or bool(oi - ni)   # changed statements or a removed import
+    return fixtures, helpers, module_level
 
 
 def _shared_test_code_tests(root: str, covmap: dict, touched: list[str], test_files: set[str]) -> tuple[set, list]:
-    """Tests reached by edits to shared test code. A fixture edited in a conftest.py: the tests that used that fixture
-    (fixture records are keyed "<conftest dir>::<name>@..."). Any other conftest.py edit, or an edited helper module
-    in a test directory (not a test module itself): every test below that directory."""
+    """Tests reached by edits to shared test code (a conftest.py, or a helper module in a test directory that is not a
+    test module itself). A changed fixture: the tests that used it (fixture records are keyed
+    "<conftest dir>::<name>@..."). A changed helper function or class: tests whose test file names it, and users of
+    fixtures in the same file that name it. Other module-level changes (settings, hooks): every test below the
+    directory. New definitions change nothing."""
     nodes = list(tests_of(covmap))
     out: set[str] = set()
     why: list[str] = []
+    file_src: dict[str, str] = {}
+
+    def mentions(test_file: str, names: set[str]) -> bool:
+        if test_file not in file_src:
+            try:
+                file_src[test_file] = open(os.path.join(root, test_file), encoding="utf-8").read()
+            except OSError:
+                file_src[test_file] = ""
+        return any(re.search(rf"\b{re.escape(n)}\b", file_src[test_file]) for n in names)
+
     for t in touched:
         if not t.endswith(".py"):
             continue
         base = t.rsplit("/", 1)[-1]
+        if base != "conftest.py" and (t in test_files or base.startswith("test_") or base.endswith("_test.py")):
+            continue   # a test module: runs itself
         d = t.rsplit("/", 1)[0] if "/" in t else ""
         below = [n for n in nodes if not d or n.startswith(d + "/")]
-        if base == "conftest.py":
-            names = _changed_fixtures(root, t)
-            if names is None:
-                out.update(below)
-                why.append(f"{t}: every test below {d or 'the root'}")
-            else:
-                prefixes = tuple(f"{d}::{x}@" for x in names)
-                out.update(n for n in below if any(k.startswith(prefixes) for k in covmap[n].get("fx", [])))
-                why.append(f"{t}: tests using fixture(s) {', '.join(sorted(names))}")
-        elif t not in test_files and not base.startswith("test_") and not base.endswith("_test.py"):
+        fixtures, helpers, module_level = _test_code_changes(root, t)
+        if module_level:
             out.update(below)
             why.append(f"{t}: every test below {d or 'the root'}")
+            continue
+        if base == "conftest.py" and helpers:
+            # fixtures of this conftest that call a changed helper are changed in effect
+            try:
+                src = open(os.path.join(root, t), encoding="utf-8").read()
+                tree = ast.parse(src)
+                for node in tree.body:
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and \
+                            any("fixture" in ast.unparse(x) for x in node.decorator_list) and \
+                            any(isinstance(x, ast.Name) and x.id in helpers for x in ast.walk(node)):
+                        fixtures.add(node.name)
+            except (OSError, SyntaxError):
+                out.update(below)
+                continue
+        if fixtures and base == "conftest.py":
+            prefixes = tuple(f"{d}::{x}@" for x in fixtures)
+            out.update(n for n in below if any(k.startswith(prefixes) for k in covmap[n].get("fx", [])))
+            why.append(f"{t}: tests using fixture(s) {', '.join(sorted(fixtures))}")
+        if helpers:
+            out.update(n for n in below if mentions(n.split("::", 1)[0], helpers))
+            why.append(f"{t}: tests naming {', '.join(sorted(helpers))}")
     return out, why
 
 

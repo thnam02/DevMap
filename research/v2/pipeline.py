@@ -802,6 +802,8 @@ def reproviso_worker(i, n):
                 tree = make_tree(f"w{i}", r["commit"] + "^")
                 b0 = jload(os.path.join(d, "base_outcomes.json")) or {}
                 cov = jload(os.path.join(d, "covmap.json")) or {}
+                if not cov and b0 and os.environ.get("PROVISO_RERECORD") == "1":
+                    cov = covmap(tree, os.path.join(d, "covmap.json"), max(1, WORKERS // NR_WORKERS))
                 if not cov or not b0:
                     raise RuntimeError("no coverage map or baseline recorded for this commit")
                 reset(tree)
@@ -819,6 +821,20 @@ def reproviso():
     """Re-score Proviso with the current dc_engine (after the latest import-time snapshot fix). The previous rows
     are kept as "proviso_v10" for the comparison the paper discloses; the report shows the current "proviso"."""
     jobs = list(merged("select").values()) + list(merged("realeval").values())
+    if os.environ.get("PROVISO_RERECORD") == "1":
+        # re-record the dependency maps with the current recorder (v2 changed what it records: subprocesses), once
+        # per snapshot format; the old maps are kept as covmap.v1.json
+        marker = os.path.join(WORK, f"rerecord.format{IS.FORMAT}")
+        if not os.path.exists(marker):
+            for p in [os.path.join(WORK, "covmap.json"), *glob.glob(os.path.join(WORK, "real", "*", "covmap.json"))]:
+                if os.path.exists(p):
+                    if os.path.exists(p[:-5] + ".v1.json"):
+                        os.remove(p)   # the v1 map is already kept; never overwrite it
+                    else:
+                        os.replace(p, p[:-5] + ".v1.json")
+            open(marker, "w").write(time.strftime("%F %T"))
+            log("reproviso: dependency maps moved aside for re-recording (covmap.v1.json)")
+        covmap()   # the planted bugs' base map, once, before the workers share it
     parallel("reproviso", jobs)
     new = {}   # rows of the current snapshot format win over older ones, whichever worker file they are in
     for p in glob.glob(os.path.join(RES, "reproviso.w*.jsonl")):
@@ -840,6 +856,9 @@ def reproviso():
                 sel = row["selectors"]
                 if "proviso_v10" not in sel and "proviso" in sel:
                     sel["proviso_v10"] = sel["proviso"]
+                # the v1 result (snapshot format 13, the version evaluated before v2) is kept next to the current one
+                if "proviso_v1" not in sel and "proviso" in sel and IS.FORMAT > 13:
+                    sel["proviso_v1"] = sel["proviso"]
                 changed += sel.get("proviso", {}).get("selected") != nr["proviso"]["selected"]
                 sel["proviso"] = nr["proviso"]
             jdump_lines(rows, p)
@@ -989,7 +1008,8 @@ def report():
         brk = [r for r in rows if r["truth"]]
         order = SELECTORS + ["namerts", "tdad", "tdad_nocap"]
         for r in rows:
-            r["selectors"].pop("proviso_v10", None)   # kept in the data for the before/after comparison
+            r["selectors"].pop("proviso_v10", None)
+            r["selectors"].pop("proviso_v1", None)   # kept in the data for the before/after comparison
         names = sorted({k for r in rows for k in r["selectors"]}, key=lambda k: order.index(k) if k in order else 99)
         nfl = sum(r.get("flaky_dropped", 0) for r in rows)
         nnew = sum(r.get("new_tests_excluded", 0) for r in rows)

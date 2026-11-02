@@ -213,9 +213,30 @@ class SharedTestCode(unittest.TestCase):
         self.edit("tests/conftest.py", "MARK = 1", "MARK = 2")
         self.assertEqual(self.files(), ["tests/conftest.py", "tests/sub/test_c.py", "tests/test_a.py", "tests/test_b.py"])
 
-    def test_helper_module_edit_selects_every_test_below_it(self):
+    def test_helper_function_edit_selects_tests_naming_it(self):
+        open(os.path.join(self.root, "tests", "test_a.py"), "w").write(
+            "from tests.helpers import make\n\ndef test_x():\n    assert make()\n")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "u"], cwd=self.root)
         self.edit("tests/helpers.py", "return 1", "return 2")
+        self.assertEqual(self.files(), ["tests/helpers.py", "tests/test_a.py"])
+
+    def test_module_level_helper_edit_selects_every_test_below_it(self):
+        self.edit("tests/helpers.py", "def make():", "LIMIT = 3\n\n\ndef make():")
         self.assertEqual(self.files(), ["tests/helpers.py", "tests/sub/test_c.py", "tests/test_a.py", "tests/test_b.py"])
+
+    def test_new_helper_in_conftest_selects_nothing_more(self):
+        # loguru added two helper functions to its conftest; existing tests cannot use them
+        self.edit("tests/conftest.py", "MARK = 1", "MARK = 1\n\n\ndef new_loop():\n    return None")
+        self.assertEqual(self.files(), ["tests/conftest.py"])
+
+    def test_helper_used_by_a_fixture_selects_the_fixture_users(self):
+        self.edit("tests/conftest.py", "MARK = 1",
+                  "MARK = 1\n\n\ndef rows():\n    return 1")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "h"], cwd=self.root)
+        self.edit("tests/conftest.py", 'return {"rows": 1}', 'return {"rows": rows()}')
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "h2"], cwd=self.root)
+        self.edit("tests/conftest.py", "def rows():\n    return 1", "def rows():\n    return 2")
+        self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_a.py"])
 
     def test_root_conftest_fixture_edit_selects_its_users(self):
         open(os.path.join(self.root, "conftest.py"), "w").write("import pytest\n\n\n@pytest.fixture\ndef cfg():\n    return 1\n")

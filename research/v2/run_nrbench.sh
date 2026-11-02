@@ -58,8 +58,10 @@ for p in $PROJECTS; do
   fi
   "$venv/bin/python" -c 'import pytest' || { echo "== $p: pytest missing in its venv; skipped"; continue; }
   python3 research/v2/nrbench.py "$p" 50 --python "$venv/bin/python" 2>&1 | tee -a "$PROVISO_WORK/nrbench.log"
-  python3 research/v2/nrbench.py report > research/v2/results/nrbench/report.md
-  git add research/v2/results/nrbench
+  OUTD=${NRBENCH_OUT:-research/v2/results/nrbench}
+  mkdir -p "$OUTD"
+  python3 research/v2/nrbench.py report > "$OUTD/report.md"
+  git add "$OUTD"
   git commit -qm "NameRTS benchmark: $p ($(hostname), $(date +%F))" && { git pull -q --rebase && git push -q && echo "== pushed"; }
 done
 echo "== finished ($(date +%T))"
