@@ -29,7 +29,7 @@ import tempfile
 
 HERE = os.path.abspath(__file__)
 SNAPSHOT_TIMEOUT = 300
-FORMAT = 14  # bump when fingerprints change; cached base snapshots of another format are rebuilt
+FORMAT = 15  # bump when fingerprints change; cached base snapshots of another format are rebuilt
 # bookkeeping that changes whenever lines move, or that Python fills in itself
 IGNORED_CLASS_KEYS = {"__dict__", "__weakref__", "__doc__", "__module__", "__qualname__", "__annotations__",
                       "__firstlineno__", "__static_attributes__", "__annotate__", "__annotate_func__",
@@ -121,6 +121,11 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
     if mon is not None:
         mon.set_events(4, 0)
         mon.free_tool_id(4)
+    if os.environ.get("DC_IMPORT_ONLY") == "1":
+        # only which functions run at import (cheap): no fingerprints
+        json.dump({"state": {}, "overrides": [], "errors": errors, "import_funcs": sorted(import_funcs)},
+                  open(out_path, "w"))
+        return
 
     def code_hash(co, h):
         h.update(co.co_code)
@@ -141,6 +146,15 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
     USE_MEMO = os.environ.get("DC_NO_MEMO") != "1"  # for checking the memoisation against plain fingerprinting
     impure = [0]
 
+    class OverBudget(Exception):
+        pass
+
+    # A value whose object graph is too large to fingerprint in reasonable time (pylint's test helpers build a whole
+    # linter at import) is recorded as unknown instead of letting one value time out the whole snapshot; unknown
+    # values always count as changed (diff), so their readers are selected.
+    BUDGET = int(os.environ.get("DC_VALUE_BUDGET", "200000"))
+    budget = {"left": BUDGET}
+
     def dig(v, depth, seen):
         t = type(v)
         if t is str:
@@ -160,6 +174,9 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
             return got[0]
         imp0, seq0 = impure[0], mode["seq"]
         mode["seq"] = False
+        budget["left"] -= 1
+        if budget["left"] < 0:
+            raise OverBudget
         r = body(v, t, depth, seen)
         r = r if len(r) <= 40 else "h:" + sha(r)
         has_seq = mode["seq"]
@@ -262,8 +279,11 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
             if not ordered and not mode["seq"]:
                 break
             mode["ordered"] = ordered
+            budget["left"] = BUDGET
             try:
                 d = dig(v, 0, frozenset())
+            except OverBudget:
+                return UNKNOWN
             except Exception as e:  # noqa: BLE001
                 d = f"<error {type(e).__name__}>"
             res.append(sha(d)[:16])
@@ -317,7 +337,10 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
                "import_funcs": sorted(import_funcs)}, open(out_path, "w"))
 
 
-def snapshot(tree: str, files: list[str], python: str, heap_pad: int = 0) -> dict | None:
+UNKNOWN = "<unknown>"   # a value too large to fingerprint (see the budget in _snapshot_main): always counts as changed
+
+
+def snapshot(tree: str, files: list[str], python: str, heap_pad: int = 0, import_only: bool = False) -> dict | None:
     """Import-time state of `tree` (only `tree` importable). None if the snapshot could not be taken."""
     fd, files_path = tempfile.mkstemp(suffix=".json")
     os.close(fd)
@@ -328,7 +351,8 @@ def snapshot(tree: str, files: list[str], python: str, heap_pad: int = 0) -> dic
                                          and not os.path.exists(os.path.join(tree, d, "__init__.py"))])
         env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "PYTHONPATH": path, "HOME": os.environ.get("HOME", "/tmp"),
                "PYTHONDONTWRITEBYTECODE": "1", "PYTHONHASHSEED": str(heap_pad % 97),
-               "DC_HEAP_PAD": str(heap_pad)}
+               "DC_HEAP_PAD": str(heap_pad), "DC_IMPORT_ONLY": "1" if import_only else "0",
+               "DC_VALUE_BUDGET": os.environ.get("DC_VALUE_BUDGET", "200000")}
         r = subprocess.run([python, HERE, tree, files_path, out_path], cwd=tree, env=env, capture_output=True,
                            text=True, timeout=SNAPSHOT_TIMEOUT)
         if r.returncode != 0 or not os.path.exists(out_path):
@@ -390,6 +414,36 @@ def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> 
     return snap
 
 
+def import_funcs_of(root: str, files: list[str], python: str, cache_path: str) -> list | None:
+    """Functions of the HEAD commit that run while its package is imported (an import-only pass: no fingerprints),
+    cached per commit. Used when only function bodies changed, to tell whether an edited function runs at import."""
+    tops = sorted({f.split("/", 1)[0] for f in files})
+    head = cache_key(root, tops, python, files)
+    try:
+        cached = json.load(open(cache_path))
+        if cached.get("head") == head and cached.get("format") == FORMAT:
+            return cached["import_funcs"]
+    except (OSError, ValueError, KeyError):
+        pass
+    tmp = tempfile.mkdtemp(prefix="dc-base-")
+    try:
+        arch = subprocess.run(["git", "-C", root, "archive", "HEAD", *tops], capture_output=True)
+        if arch.returncode != 0:
+            return None
+        subprocess.run(["tar", "-x", "-C", tmp], input=arch.stdout, capture_output=True)
+        snap = snapshot(tmp, files, python, import_only=True)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    if snap is None:
+        return None
+    try:
+        os.makedirs(os.path.dirname(cache_path) or ".", exist_ok=True)
+        json.dump({"head": head, "format": FORMAT, "import_funcs": snap["import_funcs"]}, open(cache_path, "w"))
+    except OSError:
+        pass
+    return snap["import_funcs"]
+
+
 def _same(a: str | None, b: str | None, unstable: bool) -> bool:
     """Fingerprints are 'ordered' or 'ordered~unordered'; unstable keys (sequence order differs between two
     imports of the same code, e.g. tuple(set_of_classes)) are compared without order."""
@@ -407,7 +461,8 @@ def diff(base: dict, cur: dict, ignore_added: set[str] = frozenset()) -> dict[st
     errors: modules that import at base but not now."""
     b, c = base["state"], cur["state"]
     unstable = set(base.get("unstable", []))
-    changed = sorted(k for k in b if not _same(b[k], c.get(k), k in unstable))
+    changed = sorted(k for k in b if b[k] == UNKNOWN or c.get(k) == UNKNOWN
+                     or not _same(b[k], c.get(k), k in unstable))
     added = sorted(k for k in c if k not in b)
     added_class = [k for k in added if "." in k.split(":", 1)[1]]
     added_mod = [k for k in added if "." not in k.split(":", 1)[1] and k.split(":", 1)[1] not in ignore_added]

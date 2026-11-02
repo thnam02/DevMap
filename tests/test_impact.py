@@ -250,5 +250,36 @@ class Hooks(unittest.TestCase):
         self.assertIn("dc_engine.impact run", out["hookSpecificOutput"]["updatedInput"]["command"])
 
 
+
+class TestSupportCode(unittest.TestCase):
+    """Test helpers shipped in the package (pkg/testing) are not snapshotted; edits to their module-level code select
+    the tests that ran their code."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp(prefix="impact-ts-")
+        os.makedirs(os.path.join(self.root, "pkg", "testing"))
+        os.makedirs(os.path.join(self.root, "tests"))
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write("def f():\n    return 1\n")
+        open(os.path.join(self.root, "pkg", "testing", "__init__.py"), "w").write("")
+        open(os.path.join(self.root, "pkg", "testing", "helpers.py"), "w").write(
+            "LINTER = object()\n\n\ndef make():\n    return LINTER\n")
+        open(os.path.join(self.root, "tests", "test_a.py"), "w").write("def test_x():\n    pass\n")
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root,
+                                      capture_output=True)
+        g("init", "-q"); g("add", "-A"); g("commit", "-qm", "b")
+        self.cov = {"tests/test_a.py::test_x": {"funcs": [["pkg/testing/helpers.py", 4]]},
+                    "tests/test_a.py::test_y": {"funcs": [["pkg/__init__.py", 1]]}}
+
+    def tearDown(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def test_support_module_statement_edit_selects_its_users(self):
+        p = os.path.join(self.root, "pkg", "testing", "helpers.py")
+        open(p, "w").write(open(p).read().replace("LINTER = object()", "LINTER = object()\nEXTRA = 2"))
+        sel, why = I.selection(self.root, self.cov, sys.executable)
+        self.assertEqual(sel, ["tests/test_a.py::test_x"])
+        self.assertNotIn("reason", why)
+
+
 if __name__ == "__main__":
     unittest.main()

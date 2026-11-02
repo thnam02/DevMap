@@ -164,6 +164,20 @@ class _DepView:
         return bool(v.get("always")) or any(self.fx.get(k, (None, None, False))[2] for k in v.get("fx", ()))
 
 
+_TEST_SUPPORT_DIRS = {"testing", "testutils", "test_utils", "_testing"}
+
+
+def _is_test_support(p: str) -> bool:
+    """Test-support code shipped inside the package (pylint/testutils, sympy/testing): helpers for tests, not package
+    state. Left out of the import-time snapshot (pylint's builds a whole linter at import, too large to fingerprint);
+    statement-level edits to it select the tests that ran its code instead."""
+    return any(part in _TEST_SUPPORT_DIRS for part in p.split("/")[:-1])
+
+
+def _snapshot_files(covmap: dict) -> list[str]:
+    return sorted(f for f in map_files(covmap) if not _is_test_path(f) and not _is_test_support(f))
+
+
 def packages(covmap: dict) -> list[str]:
     return sorted({f.split("/", 1)[0] for f in map_files(covmap)})
 
@@ -412,7 +426,7 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     import-time effect; None: unknown), and classes to treat as edited (they gained an attribute that is looked up
     by computed name, or their bases changed)."""
     from . import importstate
-    files = sorted(f for f in map_files(covmap) if not _is_test_path(f))
+    files = _snapshot_files(covmap)
     base = importstate.base_snapshot(root, files, python, os.path.join(root, STATE_DIR, "importstate_base.json"))
     cur = importstate.snapshot(root, files, python) if base is not None else None
     if base is None or cur is None:
@@ -468,6 +482,11 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             if best is not None and best[3]:
                 funcs.add((f, best[1]))
                 continue
+            if _is_test_support(f):
+                # test-support code is not in the snapshot: every test that ran code of this file
+                funcs |= {tuple(x) for v in dep.tests.values() for x in v.get("funcs", []) if x[0] == f} | \
+                    {k for r in dep.fx.values() for k in r[0] if k[0] == f}
+                continue
             # statements in a class body or at module level run at import: their effect is read off the
             # import-time state below
             module_level.add(f)
@@ -484,10 +503,11 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     if funcs:
         # functions that run while the package is imported, as recorded by the base snapshot itself (v2): an edit to
         # one can change import-time state however the test runner happened to import the package
+        # (an import-only pass: no fingerprints, so plain function edits do not pay for a full snapshot)
         from . import importstate
-        files_all = sorted(f for f in map_files(covmap) if not _is_test_path(f))
-        base = importstate.base_snapshot(root, files_all, python, os.path.join(root, STATE_DIR, "importstate_base.json"))
-        glob_funcs |= {tuple(x) for x in (base or {}).get("import_funcs", [])}
+        imp = importstate.import_funcs_of(root, _snapshot_files(covmap), python,
+                                          os.path.join(root, STATE_DIR, "import_funcs.json"))
+        glob_funcs |= {tuple(x) for x in (imp or [])}
     hit_global = sorted(funcs & glob_funcs)
     why: dict[str, Any] = {"functions": len(funcs), "files": sorted(module_level),
                            "changed_functions": sorted([f, ln] for f, ln in funcs)}
