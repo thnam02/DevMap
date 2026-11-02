@@ -29,7 +29,7 @@ import tempfile
 
 HERE = os.path.abspath(__file__)
 SNAPSHOT_TIMEOUT = 300
-FORMAT = 13  # bump when fingerprints change; cached base snapshots of another format are rebuilt
+FORMAT = 14  # bump when fingerprints change; cached base snapshots of another format are rebuilt
 # bookkeeping that changes whenever lines move, or that Python fills in itself
 IGNORED_CLASS_KEYS = {"__dict__", "__weakref__", "__doc__", "__module__", "__qualname__", "__annotations__",
                       "__firstlineno__", "__static_attributes__", "__annotate__", "__annotate_func__",
@@ -89,6 +89,16 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
     # (recorded here, independent of when a test runner happens to import the package)
     base_dir = os.path.realpath(tree)
     wanted = {os.path.join(base_dir, f) for f in files}
+    # where the tree lives is not part of its state: the base snapshot is taken from an export in a temporary folder,
+    # the current one from the working tree, and values may hold the package's own path (loguru keeps its file path
+    # inside `logger`); both spellings of the location are replaced by one placeholder
+    roots = sorted({base_dir, os.path.abspath(tree)}, key=len, reverse=True)
+
+    def unroot(text: str) -> str:
+        for r in roots:
+            if r in text:
+                text = text.replace(r, "<root>")
+        return text
     import_funcs: set = set()
     mon = getattr(sys, "monitoring", None)
     if mon is not None:
@@ -133,7 +143,10 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
 
     def dig(v, depth, seen):
         t = type(v)
-        if v is None or t in (bool, int, float, complex, str, bytes):
+        if t is str:
+            r = "str:" + repr(unroot(v))
+            return r if len(r) <= 40 else "h:" + sha(r)
+        if v is None or t in (bool, int, float, complex, bytes):
             r = t.__name__ + ":" + repr(v)
             return r if len(r) <= 40 else "h:" + sha(r)
         if depth > 80:
@@ -237,7 +250,7 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
             r = repr(v)
         except Exception:  # noqa: BLE001
             r = "<unrepr>"
-        return f"{t.__module__}.{t.__qualname__}:{addr.sub('', r)};"
+        return f"{t.__module__}.{t.__qualname__}:{unroot(addr.sub('', r))};"
 
     mode = {"ordered": True, "seq": False}
 

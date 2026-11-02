@@ -75,6 +75,19 @@ class ImportStateNoise(unittest.TestCase):
         d = S.diff(base, S.snapshot(self.root, files, sys.executable), set())
         self.assertIn("pkg.reg:REG", d["changed"])
 
+    def test_paths_of_the_tree_itself_are_not_a_change(self):
+        # the base snapshot is taken from an export in a temporary folder and the current one from the working tree;
+        # values holding the package's own location (loguru keeps its file path inside `logger`) must compare equal
+        p = os.path.join(self.root, "pkg", "paths.py")
+        open(p, "w").write("import os\nHERE = os.path.dirname(os.path.abspath(__file__))\n"
+                           "class Holder:\n    def __init__(self):\n        self.file = __file__\n"
+                           "HOLDER = Holder()\nDATA = {'dir': HERE, 'files': [os.path.join(HERE, 'x.csv')]}\n")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "paths")
+        files = self.files + ["pkg/paths.py"]
+        base = S.base_snapshot(self.root, files, sys.executable, os.path.join(self.root, "base3.json"))
+        self.assertEqual(S.diff(base, S.snapshot(self.root, files, sys.executable), set())["changed"], [])
+
     def test_real_table_change_is_reported(self):
         open(os.path.join(self.root, "pkg", "core.py"), "w").write(CORE.replace('"b": 2', '"b": 3'))
         self.assertIn("pkg.core:TABLE", self.changed())
