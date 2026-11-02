@@ -817,6 +817,18 @@ def reproviso_worker(i, n):
             reset(tree)
 
 
+def require_importable():
+    """Stop unless the package imports with this interpreter at the base commit. Proviso's import-time snapshot
+    imports it with PY: without the repository's dependencies both snapshots fail alike, no change is seen, and
+    every class or module edit selects nothing (a samemaps run under the system python3 did exactly that)."""
+    tree = make_tree("w0", CFG["commit"])
+    path = os.pathsep.join([tree] + [os.path.join(tree, p) for p in CFG.get("pythonpath", [])])
+    r = subprocess.run([PY, "-c", f"import {CFG['pkg']}"], cwd=tree, capture_output=True, text=True,
+                       env={**os.environ, "PYTHONPATH": path})
+    if r.returncode:
+        sys.exit(f"{CFG['pkg']} does not import with {PY} (activate the evaluation venv):\n{r.stderr[-800:]}")
+
+
 def samemaps_worker(i, n):
     """The current Proviso's selection on the v1 dependency maps (covmap.v1.json), to compare selection logic alone
     with v1's on identical maps: re-recording mixes logic changes with run-to-run differences in what the recorder
@@ -861,6 +873,7 @@ def samemaps():
     """Run samemaps_worker, then compare with v1 on the same maps: changes where the current logic misses a failing
     test that v1 caught, and the time share either way. Written to results/<repo>/samemaps.md."""
     jobs = list(merged("select").values()) + list(merged("realeval").values())
+    require_importable()
     parallel("samemaps", jobs)
     new = {r["id"]: r for r in merged("samemaps").values() if r.get("format") == IS.FORMAT}
     lines = [f"# {REPO}: current Proviso (snapshot format {IS.FORMAT}) vs v1, both on the v1 dependency maps", "",

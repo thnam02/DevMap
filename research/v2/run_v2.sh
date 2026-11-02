@@ -17,10 +17,15 @@ case $step in
   gate)
     PROVISO_RERECORD=1 bash research/v2/run_reproviso.sh ;;
   samemaps)
-    # selection logic alone: the current Proviso on the v1 dependency maps, compared with v1 on the same maps
+    # selection logic alone: the current Proviso on the v1 dependency maps, compared with v1 on the same maps.
+    # Same interpreter as the gate (the evaluation venv): the import-time snapshot imports the package with it, and
+    # a Python without the repository's dependencies makes every snapshot fail on both sides (no change seen)
+    export PROVISO_WORK=${PROVISO_WORK:-$HOME/proviso-work/v2}
+    # shellcheck disable=SC1091
+    . "${PROVISO_VENV:-$HOME/proviso-work/venv}/bin/activate"
     for r in sqlglot sympy sqlalchemy pygments datasette; do
       echo "== $r: samemaps ($(date +%T))"
-      python3 research/v2/pipeline.py "$r" samemaps 2>&1 | tail -3
+      python research/v2/pipeline.py "$r" samemaps 2>&1 | tail -3
     done
     cat research/v2/results/*/samemaps.md
     git add research/v2/results
