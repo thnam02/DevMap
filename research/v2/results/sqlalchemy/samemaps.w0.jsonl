@@ -1,0 +1,12 @@
+{"id": "select:function:lib/sqlalchemy/sql/compiler.py:2928", "proviso": {"selected": 96, "time_share": 0.6454, "missed": [], "selection_s": 0.87, "reason": null}, "format": 16}
+{"id": "select:function:lib/sqlalchemy/sql/sqltypes.py:1947", "proviso": {"selected": 127, "time_share": 0.6449, "missed": [], "selection_s": 0.84, "reason": null}, "format": 16}
+{"id": "select:class:lib/sqlalchemy/sql/coercions.py:1236", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.61, "reason": null}, "format": 16}
+{"id": "select:function:lib/sqlalchemy/sql/coercions.py:889", "proviso": {"selected": 716, "time_share": 0.6867, "missed": [], "selection_s": 0.58, "reason": null}, "format": 16}
+{"id": "select:function:lib/sqlalchemy/sql/annotation.py:458", "proviso": {"selected": 41, "time_share": 0.6446, "missed": [], "selection_s": 0.58, "reason": null}, "format": 16}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:309", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.77, "reason": null}, "format": 16}
+{"id": "select:function:lib/sqlalchemy/sql/traversals.py:778", "proviso": {"selected": 131, "time_share": 0.665, "missed": [], "selection_s": 0.57, "reason": null}, "format": 16}
+{"id": "select:class:lib/sqlalchemy/sql/elements.py:378", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.76, "reason": null}, "format": 16}
+{"id": "select:module:lib/sqlalchemy/sql/operators.py:2794", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.62, "reason": null}, "format": 16}
+{"id": "realeval:e3f7bc683a", "proviso": {"selected": 375, "time_share": 0.2273, "missed": [], "selection_s": 10.8, "reason": null}, "format": 16}
+{"id": "realeval:7c70ab8c6b", "proviso": {"selected": 2958, "time_share": 0.3621, "missed": [], "selection_s": 9.85, "reason": null}, "format": 16}
+{"id": "realeval:cf951a246e", "proviso": {"selected": 9664, "time_share": 1.0, "missed": [], "selection_s": 1.47, "reason": null}, "format": 16}
