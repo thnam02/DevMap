@@ -40,3 +40,17 @@
 {"id": "realeval:6a62df1d1f", "proviso": {"selected": 8, "time_share": 0.0273, "missed": [], "selection_s": 1.59, "reason": null}, "format": 13}
 {"id": "realeval:ba6c1d6d6c", "proviso": {"selected": 4576, "time_share": 0.9806, "missed": [], "selection_s": 1.56, "reason": null}, "format": 13}
 {"id": "realeval:80d738c6b6", "proviso": {"selected": 8, "time_share": 0.0215, "missed": [], "selection_s": 1.02, "reason": null}, "format": 13}
+{"id": "select:function:pygments/lexers/scripting.py:1441", "proviso": {"selected": 19, "time_share": 0.0159, "missed": [], "selection_s": 0.15, "reason": null}, "format": 16}
+{"id": "select:class:pygments/lexers/haxe.py:583", "proviso": {"selected": 6, "time_share": 0.013, "missed": [], "selection_s": 1.82, "reason": null}, "format": 16}
+{"id": "select:module:pygments/styles/_mapping.py:37", "proviso": {"selected": 874, "time_share": 0.3333, "missed": [], "selection_s": 1.79, "reason": null}, "format": 16}
+{"id": "select:function:pygments/lexers/scripting.py:1439", "proviso": {"selected": 19, "time_share": 0.0159, "missed": [], "selection_s": 0.17, "reason": null}, "format": 16}
+{"id": "select:class:pygments/styles/stata_dark.py:39", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 1.68, "reason": null}, "format": 16}
+{"id": "select:module:pygments/lexers/_mapping.py:240", "proviso": {"selected": 5291, "time_share": 0.9831, "missed": [], "selection_s": 1.85, "reason": null}, "format": 16}
+{"id": "select:function:pygments/formatters/rtf.py:336", "proviso": {"selected": 28, "time_share": 0.1194, "missed": [], "selection_s": 0.12, "reason": null}, "format": 16}
+{"id": "select:class:pygments/styles/nord.py:57", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 1.72, "reason": null}, "format": 16}
+{"id": "select:module:pygments/lexers/css.py:347", "proviso": {"selected": 8, "time_share": 0.0247, "missed": [], "selection_s": 2.17, "reason": null}, "format": 16}
+{"id": "realeval:04beeedecf", "proviso": {"selected": 4549, "time_share": 0.9777, "missed": [], "selection_s": 3.24, "reason": null}, "format": 16}
+{"id": "realeval:e5e4cf7b61", "proviso": {"selected": 5, "time_share": 0.0099, "missed": [], "selection_s": 2.12, "reason": null}, "format": 16}
+{"id": "realeval:6a62df1d1f", "proviso": {"selected": 6, "time_share": 0.0132, "missed": [], "selection_s": 3.03, "reason": null}, "format": 16}
+{"id": "realeval:ba6c1d6d6c", "proviso": {"selected": 4576, "time_share": 0.9806, "missed": [], "selection_s": 1.77, "reason": null}, "format": 16}
+{"id": "realeval:80d738c6b6", "proviso": {"selected": 6, "time_share": 0.0107, "missed": [], "selection_s": 1.01, "reason": null}, "format": 16}

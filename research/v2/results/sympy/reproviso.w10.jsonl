@@ -31,3 +31,13 @@
 {"id": "select:module:sympy/core/assumptions_generated.py:1484", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 3.94, "reason": null}, "format": 13}
 {"id": "realeval:a1021ffb1f", "proviso": {"selected": 2, "time_share": 0.0229, "missed": [], "selection_s": 0.2, "reason": null}, "format": 13}
 {"id": "realeval:850d9a3f79", "proviso": {"selected": 10, "time_share": 0.0488, "missed": [], "selection_s": 0.2, "reason": null}, "format": 13}
+{"id": "select:function:sympy/functions/elementary/integers.py:558", "proviso": {"selected": 4, "time_share": 0.1224, "missed": [], "selection_s": 0.15, "reason": null}, "format": 16}
+{"id": "select:module:sympy/core/relational.py:1580", "proviso": {"selected": 356, "time_share": 0.9401, "missed": [], "selection_s": 3.79, "reason": null}, "format": 16}
+{"id": "select:function:sympy/core/function.py:629", "proviso": {"selected": 132, "time_share": 0.5927, "missed": [], "selection_s": 0.16, "reason": null}, "format": 16}
+{"id": "select:function:sympy/functions/elementary/miscellaneous.py:561", "proviso": {"selected": 53, "time_share": 0.1032, "missed": [], "selection_s": 0.15, "reason": null}, "format": 16}
+{"id": "select:module:sympy/core/relational.py:1576", "proviso": {"selected": 356, "time_share": 0.9401, "missed": [], "selection_s": 3.92, "reason": null}, "format": 16}
+{"id": "select:function:sympy/functions/elementary/integers.py:266", "proviso": {"selected": 1, "time_share": 0.0611, "missed": [], "selection_s": 0.14, "reason": null}, "format": 16}
+{"id": "select:class:sympy/core/numbers.py:3877", "proviso": {"selected": 578, "time_share": 0.9997, "missed": [], "selection_s": 3.9, "reason": null}, "format": 16}
+{"id": "select:module:sympy/core/assumptions_generated.py:1484", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 3.82, "reason": null}, "format": 16}
+{"id": "realeval:a1021ffb1f", "proviso": {"selected": 2, "time_share": 0.0229, "missed": [], "selection_s": 0.29, "reason": null}, "format": 16}
+{"id": "realeval:850d9a3f79", "proviso": {"selected": 10, "time_share": 0.0488, "missed": [], "selection_s": 0.31, "reason": null}, "format": 16}
