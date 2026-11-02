@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -29,7 +28,6 @@ import nrbench as N  # noqa: E402
 
 OUT = N.OUT
 TIMEOUT = int(os.environ.get("NRCHECK_TIMEOUT", "3600"))
-_LINE = re.compile(r"^(PASSED|FAILED|ERROR|SKIPPED|XFAIL|XPASS)\s+(\S+)")
 
 
 def venv_python(proj):
@@ -37,23 +35,37 @@ def venv_python(proj):
 
 
 def outcomes(proj, tree, files, python):
-    """{test id: outcome} for the given test files in `tree` ('collect-error:<file>' if a file fails to load)."""
+    """{test: outcome} for the given test files in `tree`, from pytest's JUnit XML report ('passed', 'failed',
+    'error', 'skipped'); 'collect-error:<file>' when a file yields no test at all."""
+    import tempfile
+    import xml.etree.ElementTree as ET
     extra = [x for x in os.environ.get("PROVISO_EXTRA_PATH", "").split(os.pathsep) if x]
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([tree, *extra]), "PYTHONDONTWRITEBYTECODE": "1"}
     files = [f for f in files if os.path.exists(os.path.join(tree, f))]
     if not files:
         return {}
-    r = subprocess.run([python, "-m", "pytest", "-p", "no:cacheprovider", "-p", "no:randomly", "-q", "-rA",
-                        "--tb=no", "-o", "addopts=", *files], cwd=tree, env=env, capture_output=True, text=True,
-                       timeout=TIMEOUT)
-    res = {}
-    for line in r.stdout.splitlines():
-        m = _LINE.match(line.strip())
-        if m:
-            res[m.group(2)] = m.group(1)
+    fd, xml_path = tempfile.mkstemp(suffix=".xml")
+    os.close(fd)
+    try:
+        subprocess.run([python, "-m", "pytest", "-p", "no:cacheprovider", "-p", "no:randomly", "-q", "--tb=no",
+                        "-o", "addopts=", f"--junitxml={xml_path}", *files], cwd=tree, env=env, capture_output=True,
+                       text=True, timeout=TIMEOUT)
+        res = {}
+        try:
+            root = ET.parse(xml_path).getroot()
+        except (ET.ParseError, OSError):
+            root = None
+        for tc in (root.iter("testcase") if root is not None else []):
+            key = f"{tc.get('classname', '')}::{tc.get('name', '')}"
+            kids = {c.tag for c in tc}
+            res[key] = ("failed" if "failure" in kids else "error" if "error" in kids
+                        else "skipped" if "skipped" in kids else "passed")
+    finally:
+        os.remove(xml_path)
     for f in files:
-        if not any(k.split("::", 1)[0] == f for k in res):
-            res[f"collect-error:{f}"] = "ERROR"
+        mod = f[:-3].replace("/", ".")
+        if not any(k.startswith(mod) for k in res):
+            res[f"collect-error:{f}"] = "error"
     return res
 
 
@@ -85,10 +97,10 @@ def verify(proj):
             after = outcomes(proj, tree, files, py)
             changed = {k: [before.get(k), after.get(k)] for k in sorted(set(before) | set(after))
                        if before.get(k) != after.get(k)}
-            ok_before = sum(1 for v in before.values() if v == "PASSED")
+            ok_before = sum(1 for v in before.values() if v == "passed")
             row = {"current": r["current"], "true_parent": r["true_parent"], "files": files,
                    "tests_before": len(before), "passed_before": ok_before,
-                   "not_passed_before": {k: v for k, v in before.items() if v != "PASSED"},
+                   "not_passed_before": {k: v for k, v in before.items() if v != "passed"},
                    "changed": changed, "real_miss": bool(changed), "secs": round(time.time() - t)}
         except Exception as e:  # noqa: BLE001
             row = {"current": r["current"], "true_parent": r["true_parent"], "files": files, "error": repr(e)[:400]}
