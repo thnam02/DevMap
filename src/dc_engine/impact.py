@@ -498,6 +498,8 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
         return None, {"reason": "empty coverage map"}
     diff = _git(root, "diff", "-U0", "HEAD", "--", *pk)
     extra_dirs = ["tests"] if os.path.isdir(os.path.join(root, "tests")) else []
+    if os.path.isfile(os.path.join(root, "conftest.py")) or "conftest.py" in _git(root, "ls-files", "conftest.py"):
+        extra_dirs.append("conftest.py")  # a root conftest's fixtures are shared by every test
     status = _git(root, "status", "--porcelain", "-uall", "--", *pk, *extra_dirs)
     new_src = [l[3:] for l in status.splitlines() if l.startswith("??") and not _is_test_path(l[3:])
                and l.endswith(".py")]
@@ -643,8 +645,74 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     test_files = {n.split("::", 1)[0] for n in tests_of(covmap)}
     extra = sorted({t for t in touched_tests if t.endswith(".py") or t in test_files})
     why["agent_tests"] = extra
+    # shared test code: fixtures in conftest.py, other conftest code, helper modules in test directories
+    shared, shared_why = _shared_test_code_tests(root, covmap, touched_tests, test_files)
+    if shared_why:
+        why["shared_test_code"] = shared_why
     _flush_file_names()
-    return sorted(set(sel)) + extra, why
+    return sorted(set(sel) | shared) + extra, why
+
+
+def _changed_fixtures(root: str, path: str) -> set[str] | None:
+    """Names of the fixtures in conftest `path` whose definitions contain every changed line; None if any change is
+    outside a fixture (module-level code, hooks, helpers) or the file is new."""
+    lines = _changed_old_lines(_git(root, "diff", "-U0", "HEAD", "--", path)).get(path)
+    src = _git(root, "show", f"HEAD:{path}")
+    if not lines or not src:
+        return None
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return None
+    spans = []
+    for node in tree.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for dec in node.decorator_list:
+            if "fixture" not in ast.unparse(dec):
+                continue
+            name = node.name
+            if isinstance(dec, ast.Call):
+                for kw in dec.keywords:
+                    if kw.arg == "name" and isinstance(kw.value, ast.Constant):
+                        name = kw.value.value
+            start = min([node.lineno] + [d.lineno for d in node.decorator_list])
+            spans.append((start, node.end_lineno, name))
+    names = set()
+    for ln in lines:
+        hit = [n for a, b, n in spans if a <= ln <= b]
+        if not hit:
+            return None
+        names.update(hit)
+    return names
+
+
+def _shared_test_code_tests(root: str, covmap: dict, touched: list[str], test_files: set[str]) -> tuple[set, list]:
+    """Tests reached by edits to shared test code. A fixture edited in a conftest.py: the tests that used that fixture
+    (fixture records are keyed "<conftest dir>::<name>@..."). Any other conftest.py edit, or an edited helper module
+    in a test directory (not a test module itself): every test below that directory."""
+    nodes = list(tests_of(covmap))
+    out: set[str] = set()
+    why: list[str] = []
+    for t in touched:
+        if not t.endswith(".py"):
+            continue
+        base = t.rsplit("/", 1)[-1]
+        d = t.rsplit("/", 1)[0] if "/" in t else ""
+        below = [n for n in nodes if not d or n.startswith(d + "/")]
+        if base == "conftest.py":
+            names = _changed_fixtures(root, t)
+            if names is None:
+                out.update(below)
+                why.append(f"{t}: every test below {d or 'the root'}")
+            else:
+                prefixes = tuple(f"{d}::{x}@" for x in names)
+                out.update(n for n in below if any(k.startswith(prefixes) for k in covmap[n].get("fx", [])))
+                why.append(f"{t}: tests using fixture(s) {', '.join(sorted(names))}")
+        elif t not in test_files and not base.startswith("test_") and not base.endswith("_test.py"):
+            out.update(below)
+            why.append(f"{t}: every test below {d or 'the root'}")
+    return out, why
 
 
 # --------------------------------------------------------------------------- interception

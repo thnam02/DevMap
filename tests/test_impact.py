@@ -154,6 +154,83 @@ class Selection(unittest.TestCase):
         self.assertEqual(self.sel()[0], [])
 
 
+class SharedTestCode(unittest.TestCase):
+    """Edits to test infrastructure (conftest.py fixtures, helper modules) reach the tests that use it."""
+
+    CONFTEST = textwrap.dedent('''\
+        import pytest
+
+        MARK = 1
+
+
+        @pytest.fixture
+        def db():
+            return {"rows": 1}
+
+
+        @pytest.fixture
+        def clock():
+            return 0
+    ''')
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp(prefix="impact-fx-")
+        os.makedirs(os.path.join(self.root, "pkg"))
+        os.makedirs(os.path.join(self.root, "tests", "sub"))
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write("def f():\n    return 1\n")
+        open(os.path.join(self.root, "tests", "conftest.py"), "w").write(self.CONFTEST)
+        open(os.path.join(self.root, "tests", "helpers.py"), "w").write("def make():\n    return 1\n")
+        for name in ("test_a.py", "test_b.py", "sub/test_c.py"):
+            open(os.path.join(self.root, "tests", name), "w").write("def test_x():\n    pass\n")
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root,
+                                      capture_output=True)
+        g("init", "-q"); g("add", "-A"); g("commit", "-qm", "b")
+        fx = lambda name, node: f"tests::{name}@{node}[0]"
+        self.cov = {"tests/test_a.py::test_x": {"funcs": [["pkg/__init__.py", 1]], "fx": [fx("db", "tests/test_a.py::test_x")]},
+                    "tests/test_b.py::test_x": {"funcs": [["pkg/__init__.py", 1]], "fx": [fx("clock", "tests/test_b.py::test_x")]},
+                    "tests/sub/test_c.py::test_x": {"funcs": [["pkg/__init__.py", 1]], "fx": []},
+                    "__fixtures__": {fx("db", "tests/test_a.py::test_x"): {"funcs": [], "classes": [], "always": False},
+                                     fx("clock", "tests/test_b.py::test_x"): {"funcs": [], "classes": [], "always": False}}}
+
+    def tearDown(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def edit(self, rel, old, new):
+        p = os.path.join(self.root, rel)
+        text = open(p).read()
+        assert old in text
+        open(p, "w").write(text.replace(old, new))
+
+    def files(self):
+        sel, _ = I.selection(self.root, self.cov, sys.executable)
+        return sorted({n.split("::", 1)[0] for n in sel})
+
+    def test_fixture_edit_selects_tests_using_the_fixture(self):
+        self.edit("tests/conftest.py", 'return {"rows": 1}', 'return {"rows": 2}')
+        self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_a.py"])
+
+    def test_module_level_conftest_edit_selects_every_test_below_it(self):
+        self.edit("tests/conftest.py", "MARK = 1", "MARK = 2")
+        self.assertEqual(self.files(), ["tests/conftest.py", "tests/sub/test_c.py", "tests/test_a.py", "tests/test_b.py"])
+
+    def test_helper_module_edit_selects_every_test_below_it(self):
+        self.edit("tests/helpers.py", "return 1", "return 2")
+        self.assertEqual(self.files(), ["tests/helpers.py", "tests/sub/test_c.py", "tests/test_a.py", "tests/test_b.py"])
+
+    def test_root_conftest_fixture_edit_selects_its_users(self):
+        open(os.path.join(self.root, "conftest.py"), "w").write("import pytest\n\n\n@pytest.fixture\ndef cfg():\n    return 1\n")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A"], cwd=self.root)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "c"], cwd=self.root)
+        self.cov["tests/test_b.py::test_x"]["fx"].append("::cfg@tests/test_b.py::test_x[0]")
+        self.cov["__fixtures__"]["::cfg@tests/test_b.py::test_x[0]"] = {"funcs": [], "classes": [], "always": False}
+        self.edit("conftest.py", "return 1", "return 2")
+        self.assertEqual(self.files(), ["conftest.py", "tests/test_b.py"])
+
+    def test_edited_test_module_runs_itself_only(self):
+        self.edit("tests/test_a.py", "pass", "assert True")
+        self.assertEqual(self.files(), ["tests/test_a.py"])
+
+
 class Runner(unittest.TestCase):
     """run_selected end to end with real pytest, tests living inside the package (sympy layout)."""
 
