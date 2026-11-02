@@ -9,9 +9,9 @@
 [loguru] bc2ec9abe9 files 34: 1100 tests, 3 not passing before, 0 outcome changes -> harmless (77 s)
 [loguru] 92952b912c files 6: 230 tests, 0 not passing before, 0 outcome changes -> harmless (3 s)
 == pylint: 1 pairs with missed files that recorded tests (0 already verified)
-[pylint] d69d13a459 files 2: 870 tests, 35 not passing before, 1 outcome changes -> REAL MISS (74 s)
+[pylint] d69d13a459 files 2: 870 tests, 35 not passing before, 1 outcome changes -> REAL MISS (75 s)
 == pvlib: 0 pairs with missed files that recorded tests (0 already verified)
-loguru     pairs 9: real misses 0, harmless 9, errors 0
-pylint     pairs 1: real misses 1, harmless 0, errors 0
-   REAL d69d13a459 [('tests.test_functional::test_functional[unnecessary_default_type_args_py313]', ['passed', None])]
-all: {'pairs': 10, 'real': 1, 'harmless': 9, 'errors': 0}
+loguru     (format 17) pairs 9: real misses 0, harmless 9, errors 0 (of the harmless: 0 where only tests the change deletes differ)
+pylint     (format 17) pairs 1: real misses 0, harmless 1, errors 0 (of the harmless: 1 where only tests the change deletes differ)
+   deleted tests only d69d13a459 ['tests.test_functional::test_functional[unnecessary_default_type_args_py313]']
+all: {'pairs': 10, 'real': 0, 'harmless': 10, 'errors': 0, 'removed_tests_only': 1}
