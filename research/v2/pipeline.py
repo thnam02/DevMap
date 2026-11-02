@@ -767,7 +767,10 @@ def _confirmed(rows, stage):
 # ---------------------------------------------------------------------------------------------------- repair
 
 def _proviso_row(tree, cov, universe, truth, plain):
-    """Proviso's row exactly as score_all computes it (warm caches, then timed)."""
+    """Proviso's row as score_all computes it (warm caches, then timed), except that a failing test missing from the
+    map's universe counts as missed here (score_all drops such tests, created by the change, from the truth). With
+    the map the row was first scored on the two agree (checked: every re-scored v1 row equals its original); with a
+    re-recorded map, a test the new recording lost is not selectable and counts as missed, as it would be in use."""
     tot = sum(plain.get(n, 0) for n in universe) or 1e-9
     I.selection(tree, cov, PY)
     t = time.time()

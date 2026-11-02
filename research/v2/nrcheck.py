@@ -74,7 +74,9 @@ def verify(proj):
     rows = [r for r in N._rows(path) if "error" not in r]
     todo = [r for r in rows if set(r["proviso_missed"]) - set(r.get("gt_not_recorded", []))]
     out = os.path.join(OUT, f"verify_{proj}.jsonl")
-    done = {json.loads(l)["current"] for l in open(out)} if os.path.exists(out) else set()
+    # a pair counts as verified only for the current Proviso (another version may miss other files)
+    done = {r["current"] for r in map(json.loads, open(out)) if r.get("format") == N.IS.FORMAT} \
+        if os.path.exists(out) else set()
     tree = os.path.join(N.WORK, "nrbench", proj, "repo")
     py = venv_python(proj)
     C = N.PROJECTS[proj]
@@ -107,6 +109,7 @@ def verify(proj):
         finally:
             N.git(tree, "checkout", "-q", "-f", r["true_parent"], check=False)
             N.git(tree, "clean", "-q", "-fdx", check=False)
+        row["format"] = N.IS.FORMAT
         with open(out, "a") as fh:
             fh.write(json.dumps(row) + "\n")
         print(f"[{proj}] {r['current'][:10]} files {len(files)}: "
@@ -116,25 +119,38 @@ def verify(proj):
                  f" ({row['secs']} s)"), flush=True)
 
 
+def real_changes(r):
+    """Outcome changes that a selection could have caught: a test present before and after whose outcome differs, or a
+    file that no longer loads. A test the change deletes (before: passed, after: absent) is not one: nothing can run
+    it after the change (pylint d69d13a459 removed its unnecessary_default_type_args_py313 case)."""
+    return {k: v for k, v in r.get("changed", {}).items() if v[1] is not None and (v[0] is not None
+                                                                                  or k.startswith("collect-error:"))}
+
+
 def summary():
-    tot = {"pairs": 0, "real": 0, "harmless": 0, "errors": 0}
+    tot = {"pairs": 0, "real": 0, "harmless": 0, "errors": 0, "removed_tests_only": 0}
     for f in sorted(os.listdir(OUT)):
         if not (f.startswith("verify_") and f.endswith(".jsonl")):
             continue
         rows = {}
         for line in open(os.path.join(OUT, f)):
             r = json.loads(line)
-            rows[r["current"]] = r
+            rows[r["current"]] = r   # the newest verification of each pair (rows are appended)
         rows = list(rows.values())
-        real = [r for r in rows if r.get("real_miss")]
+        real = [r for r in rows if "error" not in r and real_changes(r)]
+        removed = [r for r in rows if "error" not in r and r.get("changed") and not real_changes(r)]
         err = [r for r in rows if "error" in r]
-        print(f"{f[7:-6]:10s} pairs {len(rows)}: real misses {len(real)}, harmless {len(rows) - len(real) - len(err)},"
-              f" errors {len(err)}")
+        fmts = sorted({str(r.get("format", "?")) for r in rows})
+        print(f"{f[7:-6]:10s} (format {'/'.join(fmts)}) pairs {len(rows)}: real misses {len(real)}, harmless {len(rows) - len(real) - len(err)},"
+              f" errors {len(err)} (of the harmless: {len(removed)} where only tests the change deletes differ)")
         for r in real:
-            print("   REAL", r["current"][:10], list(r["changed"].items())[:3])
+            print("   REAL", r["current"][:10], list(real_changes(r).items())[:3])
+        for r in removed:
+            print("   deleted tests only", r["current"][:10], list(r["changed"])[:3])
         tot["pairs"] += len(rows)
         tot["real"] += len(real)
         tot["errors"] += len(err)
+        tot["removed_tests_only"] += len(removed)
         tot["harmless"] += len(rows) - len(real) - len(err)
     print("all:", tot)
 

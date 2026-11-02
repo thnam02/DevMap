@@ -30,13 +30,21 @@ SUBPROC = "subprocess.py"
 PKG_NAME = os.path.basename(os.path.normpath(os.environ.get("COVMAP_PKG", "sqlglot")))
 
 
+_LAUNCHERS = {"sh", "bash", "zsh", "dash", "fish", "cmd", "cmd.exe", "powershell", "pwsh", "make", "tox", "nox",
+              "uv", "uvx", "poetry", "hatch", "pdm", "pipx", "pip", "pip3", "coverage", "conda", "mamba", "xvfb-run",
+              "nohup", "timeout", "sudo", "su", "nice", "time", "exec"}
+
+
 def _runs_project_code(args) -> bool:
     """Whether a subprocess can run the package's own code, which the recorder cannot see: a Python interpreter (or
     pytest), or a command named after the package (pylint, sphinx-build). External tools (git, latex, dot) cannot, so
     starting one does not make a test depend on everything (pytest-benchmark's git calls at session start had marked
     every pylint test as always selected)."""
     if isinstance(args, (str, bytes)):
-        args = (args.decode() if isinstance(args, bytes) else args).split()
+        line = args.decode(errors="replace") if isinstance(args, bytes) else args
+        if any(c in line for c in ";&|`$<>()"):
+            return True  # a shell command line (shell=True): any of its commands may run Python
+        args = line.split()
     try:
         words = [os.fspath(a) for a in args]
     except TypeError:
@@ -48,6 +56,8 @@ def _runs_project_code(args) -> bool:
         base = os.path.basename(w).lower()
         if base.startswith(("python", "pypy", "pytest", "py.test")) or w == sys.executable:
             return True
+        if base in _LAUNCHERS or base.endswith((".sh", ".py", ".bat", ".cmd", ".ps1")):
+            return True  # shells, scripts and build tools may start Python themselves
         if PKG_NAME and PKG_NAME.lower() in base:
             return True
     return False

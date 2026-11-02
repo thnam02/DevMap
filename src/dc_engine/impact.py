@@ -508,6 +508,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     funcs: set[tuple[str, int]] = set()
     module_level: set[str] = set()
     class_names: set[str] = set()
+    support_edits: set[str] = set()   # test-support files with statement-level edits
     for f, lines in _changed_old_lines(diff).items():
         if _is_test_path(f):
             continue  # edited tests run themselves (below)
@@ -523,6 +524,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
                 # test-support code is not in the snapshot: every test that ran code of this file
                 funcs |= {tuple(x) for v in dep.tests.values() for x in v.get("funcs", []) if x[0] == f} | \
                     {k for r in dep.fx.values() for k in r[0] if k[0] == f}
+                support_edits.add(f)   # and the tests that name a changed value of it (below)
                 continue
             # statements in a class body or at module level run at import: their effect is read off the
             # import-time state below
@@ -647,10 +649,107 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     why["agent_tests"] = extra
     # shared test code: fixtures in conftest.py, other conftest code, helper modules in test directories
     shared, shared_why = _shared_test_code_tests(root, covmap, touched_tests, test_files)
+    # test-support modules in the package: a changed constant or class is read by tests that run none of the
+    # module's functions (`from pkg.testing import TIMEOUT`), so tests whose file names a changed value are added
+    naming = _Naming(root)
+    for f in sorted(support_edits):
+        names, unnamed = _changed_top_names(_git(root, "show", f"HEAD:{f}"), _read(root, f))
+        stem = f.rsplit("/", 1)[-1][:-3]
+        if names is None or unnamed:   # unparsable, or a changed statement that binds no name: the module itself
+            names = (names or set()) | {stem if stem != "__init__" else f.rsplit("/", 2)[-2]}
+        if names:
+            hit = {n for n in tests_of(covmap) if naming.mentions(n.split("::", 1)[0], names)}
+            shared |= hit
+            shared_why.append(f"{f}: tests naming {', '.join(sorted(names)[:8])}")
     if shared_why:
         why["shared_test_code"] = shared_why
     _flush_file_names()
     return sorted(set(sel) | shared) + extra, why
+
+
+def _read(root: str, path: str) -> str:
+    try:
+        return open(os.path.join(root, path), encoding="utf-8").read()
+    except OSError:
+        return ""
+
+
+class _Naming:
+    """Whether a test file names any of some identifiers (whole words), with file contents cached."""
+
+    def __init__(self, root: str):
+        self.root, self.src = root, {}
+
+    def mentions(self, test_file: str, names: set[str]) -> bool:
+        if test_file not in self.src:
+            self.src[test_file] = _read(self.root, test_file)
+        return any(re.search(rf"\b{re.escape(n)}\b", self.src[test_file]) for n in names)
+
+
+def _bound_names(node) -> set[str]:
+    """Names a top-level statement binds (definitions, assignment targets, imports, also inside if/try blocks)."""
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        return {node.name}
+    out: set[str] = set()
+    for x in ast.walk(node):
+        if isinstance(x, ast.Name) and isinstance(x.ctx, ast.Store):
+            out.add(x.id)
+        elif isinstance(x, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            out.add(x.name)
+        elif isinstance(x, (ast.Import, ast.ImportFrom)):
+            out.update((a.asname or a.name).split(".")[0] for a in x.names)
+    return out
+
+
+def _refs(node) -> set[str]:
+    return {x.id for x in ast.walk(node) if isinstance(x, ast.Name)} | \
+        {x.attr for x in ast.walk(node) if isinstance(x, ast.Attribute)}
+
+
+def _change_closure(tree, changed: set[str]) -> set[str]:
+    """`changed` plus the module's own top-level definitions that refer to a changed name, transitively (a helper
+    calling a changed helper, a fixture calling either)."""
+    refs: dict[str, set[str]] = {}
+    for node in tree.body:
+        r = _refs(node)
+        for b in _bound_names(node):
+            refs.setdefault(b, set()).update(r)
+    out, grew = set(changed), True
+    while grew:
+        grew = False
+        for b, r in refs.items():
+            if b not in out and r & out:
+                out.add(b)
+                grew = True
+    return out
+
+
+def _changed_top_names(old_src: str, new_src: str) -> tuple[set[str] | None, bool]:
+    """(top-level names whose binding statements changed or disappeared, with the module's own definitions that refer
+    to them; whether a changed statement binds no name at all, e.g. a registration call). (None, True) if either
+    version does not parse."""
+    def index(src):
+        tree = ast.parse(src)
+        by_name: dict[str, list[str]] = {}
+        unnamed: list[str] = []
+        for node in tree.body:
+            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+                continue   # a docstring
+            names = _bound_names(node)
+            for n in names:
+                by_name.setdefault(n, []).append(ast.dump(node))
+            if not names:
+                unnamed.append(ast.dump(node))
+        return tree, by_name, unnamed
+    try:
+        (_, o, ou), (nt, n, nu) = index(old_src), index(new_src)
+    except (SyntaxError, ValueError):
+        return None, True
+    changed = {k for k, v in o.items() if n.get(k) != v}
+    # an import binding is only a means: the definitions using it count (closure), not every test naming `os`
+    only_imports = {k for k, v in {**o, **n}.items()
+                    if all(d.startswith(("Import(", "ImportFrom(")) for d in o.get(k, []) + n.get(k, []))}
+    return _change_closure(nt, changed) - only_imports, sorted(ou) != sorted(nu)
 
 
 def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool]:
@@ -731,19 +830,18 @@ def _shared_test_code_tests(root: str, covmap: dict, touched: list[str], test_fi
             out.update(below)
             why.append(f"{t}: every test below {d or 'the root'}")
             continue
-        if base == "conftest.py" and helpers:
-            # fixtures of this conftest that call a changed helper are changed in effect
+        if helpers or fixtures:
+            # definitions of this file that use a changed one, transitively, are changed in effect (a fixture calling
+            # a helper that calls the edited helper)
             try:
-                src = open(os.path.join(root, t), encoding="utf-8").read()
-                tree = ast.parse(src)
-                for node in tree.body:
-                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and \
-                            any("fixture" in ast.unparse(x) for x in node.decorator_list) and \
-                            any(isinstance(x, ast.Name) and x.id in helpers for x in ast.walk(node)):
-                        fixtures.add(node.name)
-            except (OSError, SyntaxError):
+                tree = ast.parse(_read(root, t))
+            except (SyntaxError, ValueError):
                 out.update(below)
                 continue
+            is_fx = {node.name: any("fixture" in ast.unparse(x) for x in node.decorator_list) for node in tree.body
+                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+            for name in _change_closure(tree, fixtures | helpers) - fixtures - helpers:
+                (fixtures if is_fx.get(name) else helpers).add(name)
         if fixtures and base == "conftest.py":
             prefixes = tuple(f"{d}::{x}@" for x in fixtures)
             out.update(n for n in below if any(k.startswith(prefixes) for k in covmap[n].get("fx", [])))

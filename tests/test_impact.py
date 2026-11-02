@@ -238,6 +238,15 @@ class SharedTestCode(unittest.TestCase):
         self.edit("tests/conftest.py", "def rows():\n    return 1", "def rows():\n    return 2")
         self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_a.py"])
 
+    def test_helper_two_calls_away_from_a_fixture_selects_the_fixture_users(self):
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root)
+        self.edit("tests/conftest.py", "MARK = 1",
+                  "MARK = 1\n\n\ndef base():\n    return 1\n\n\ndef rows():\n    return base()")
+        self.edit("tests/conftest.py", 'return {"rows": 1}', 'return {"rows": rows()}')
+        g("commit", "-qam", "h")
+        self.edit("tests/conftest.py", "def base():\n    return 1", "def base():\n    return 2")
+        self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_a.py"])
+
     def test_root_conftest_fixture_edit_selects_its_users(self):
         open(os.path.join(self.root, "conftest.py"), "w").write("import pytest\n\n\n@pytest.fixture\ndef cfg():\n    return 1\n")
         subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A"], cwd=self.root)
@@ -379,6 +388,30 @@ class TestSupportCode(unittest.TestCase):
         self.assertNotIn("reason", why)
 
 
+    def test_support_constant_edit_selects_tests_naming_it(self):
+        # a test reading a constant of the support module runs none of its functions
+        open(os.path.join(self.root, "tests", "test_b.py"), "w").write(
+            "from pkg.testing.helpers import TIMEOUT\n\ndef test_t():\n    assert TIMEOUT\n")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A"], cwd=self.root)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "t"], cwd=self.root)
+        p = os.path.join(self.root, "pkg", "testing", "helpers.py")
+        open(p, "w").write("TIMEOUT = 5\n" + open(p).read())
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "c"], cwd=self.root)
+        self.cov["tests/test_b.py::test_t"] = {"funcs": [["pkg/__init__.py", 1]]}
+        open(p, "w").write(open(p).read().replace("TIMEOUT = 5", "TIMEOUT = 0"))
+        sel, why = I.selection(self.root, self.cov, sys.executable)
+        self.assertEqual(sorted(sel), ["tests/test_a.py::test_x", "tests/test_b.py::test_t"])
+
+    def test_changed_top_names(self):
+        old = "import os\nX = 1\nY = 2\n\ndef f():\n    return X\n\ndef g():\n    return os.sep\n"
+        names, unnamed = I._changed_top_names(old, old.replace("X = 1", "X = 3"))
+        self.assertEqual((names, unnamed), ({"X", "f"}, False))
+        names, unnamed = I._changed_top_names(old, old.replace("import os\n", ""))
+        self.assertEqual(names, {"g"})   # the removed import itself is not a name tests are searched for
+        self.assertEqual(I._changed_top_names(old, old + "register(f)\n")[1], True)
+        self.assertEqual(I._changed_top_names(old, "def ("), (None, True))
+
+
 class SubprocessRule(unittest.TestCase):
     """Starting a subprocess marks a test 'always selected' only when the subprocess can run the package's code."""
 
@@ -399,10 +432,14 @@ class SubprocessRule(unittest.TestCase):
 
             def test_python():
                 subprocess.run([sys.executable, "-c", "pass"], capture_output=True)
+
+            def test_shell():
+                subprocess.run("true && true", shell=True)
         '''))
         env = {**os.environ, "PYTHONPATH": root}
         cov = REC.record(root, "pkg", os.path.join(root, "cov.json"), sys.executable, ["tests"], 1, "", [], env)
         self.assertFalse(cov["tests/test_s.py::test_git"]["always"])
+        self.assertTrue(cov["tests/test_s.py::test_shell"]["always"])
         self.assertTrue(cov["tests/test_s.py::test_python"]["always"])
 
 
@@ -429,3 +466,15 @@ class ImportBindings(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LaunchRule(unittest.TestCase):
+    def test_runs_project_code(self):
+        from dc_engine import covplugin as C
+        self.assertFalse(C._runs_project_code(["git", "log"]))
+        self.assertFalse(C._runs_project_code("git status"))
+        self.assertTrue(C._runs_project_code(["bash", "run.sh"]))
+        self.assertTrue(C._runs_project_code(["./run_tests.sh"]))
+        self.assertTrue(C._runs_project_code("cd x && git log"))
+        self.assertTrue(C._runs_project_code(["env", "A=1", "python3", "-c", "1"]))
+        self.assertTrue(C._runs_project_code([sys.executable, "-c", "1"]))
