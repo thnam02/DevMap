@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -80,8 +81,11 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
         except (OSError, ValueError):
             return {}
 
-    with ThreadPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:
-        parts = list(ex.map(one, enumerate(files)))
+    try:
+        with ThreadPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:
+            parts = list(ex.map(one, enumerate(files)))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)  # one folder of per-file parts per recording (19 GB over a benchmark)
     m = merge(parts)
     json.dump(m, open(out, "w"))
     return m
