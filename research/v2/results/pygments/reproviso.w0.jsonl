@@ -55,3 +55,17 @@
 {"id": "realeval:d24e272894", "proviso": {"selected": 193, "time_share": 0.1944, "missed": ["tests/examplefiles/python/linecontinuation.py::", "tests/examplefiles/python/unicodedoc.py::", "tests/test_irc_formatter.py::test_linecount_output"], "selection_s": 2.28, "reason": null}, "format": 16}
 {"id": "realeval:72101ab2ee", "proviso": {"selected": 97, "time_share": 0.0378, "missed": [], "selection_s": 1.32, "reason": null}, "format": 16}
 {"id": "realeval:209a33deb1", "proviso": {"selected": 11, "time_share": 0.0105, "missed": [], "selection_s": 0.97, "reason": null}, "format": 16}
+{"id": "select:function:pygments/lexers/dsls.py:896", "proviso": {"selected": 21, "time_share": 0.0169, "missed": [], "selection_s": 1.93, "reason": null}, "format": 17}
+{"id": "select:function:pygments/lexers/data.py:605", "proviso": {"selected": 26, "time_share": 0.0026, "missed": [], "selection_s": 0.12, "reason": null}, "format": 17}
+{"id": "select:class:pygments/filters/__init__.py:239", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 1.83, "reason": null}, "format": 17}
+{"id": "select:function:pygments/lexers/php.py:119", "proviso": {"selected": 3, "time_share": 0.0002, "missed": [], "selection_s": 0.13, "reason": null}, "format": 17}
+{"id": "select:function:pygments/util.py:193", "proviso": {"selected": 25, "time_share": 0.0159, "missed": [], "selection_s": 0.12, "reason": null}, "format": 17}
+{"id": "select:module:pygments/lexers/_mapping.py:584", "proviso": {"selected": 5291, "time_share": 0.9831, "missed": [], "selection_s": 2.02, "reason": null}, "format": 17}
+{"id": "select:function:pygments/style.py:99", "proviso": {"selected": 5339, "time_share": 1.0, "missed": [], "selection_s": 1.63, "reason": "module pygments.styles.lilypond no longer imports"}, "format": 17}
+{"id": "select:class:pygments/styles/coffee.py:48", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 2.03, "reason": null}, "format": 17}
+{"id": "select:module:pygments/token.py:211", "proviso": {"selected": 1637, "time_share": 0.8554, "missed": [], "selection_s": 2.16, "reason": null}, "format": 17}
+{"id": "realeval:398050e157", "proviso": {"selected": 20, "time_share": 0.0164, "missed": ["tests/test_html_formatter.py::test_external_css"], "selection_s": 0.24, "reason": null}, "format": 17}
+{"id": "realeval:a43b45dcf0", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 2.24, "reason": null}, "format": 17}
+{"id": "realeval:b073d8adf1", "proviso": {"selected": 60, "time_share": 0.1422, "missed": [], "selection_s": 3.4, "reason": null}, "format": 17}
+{"id": "realeval:d24e272894", "proviso": {"selected": 193, "time_share": 0.1944, "missed": ["tests/examplefiles/python/linecontinuation.py::", "tests/examplefiles/python/unicodedoc.py::", "tests/test_irc_formatter.py::test_linecount_output"], "selection_s": 1.96, "reason": null}, "format": 17}
+{"id": "realeval:72101ab2ee", "proviso": {"selected": 97, "time_share": 0.0378, "missed": [], "selection_s": 1.12, "reason": null}, "format": 17}

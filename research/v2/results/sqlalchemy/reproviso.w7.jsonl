@@ -42,3 +42,14 @@
 {"id": "realeval:ae11d43079", "proviso": {"selected": 9629, "time_share": 1.0, "missed": [], "selection_s": 4.87, "reason": null}, "format": 16}
 {"id": "realeval:156fef6113", "proviso": {"selected": 6645, "time_share": 1.0, "missed": [], "selection_s": 6.01, "reason": null}, "format": 16}
 {"id": "realeval:ef23611a6b", "proviso": {"selected": 6855, "time_share": 1.0, "missed": [], "selection_s": 1.35, "reason": null}, "format": 16}
+{"id": "select:function:lib/sqlalchemy/sql/schema.py:5021", "proviso": {"selected": 990, "time_share": 0.6742, "missed": [], "selection_s": 0.8, "reason": null}, "format": 17}
+{"id": "select:class:lib/sqlalchemy/sql/functions.py:1823", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.89, "reason": null}, "format": 17}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:295", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 3.22, "reason": null}, "format": 17}
+{"id": "select:function:lib/sqlalchemy/engine/base.py:1076", "proviso": {"selected": 34, "time_share": 0.6557, "missed": [], "selection_s": 0.75, "reason": null}, "format": 17}
+{"id": "select:class:lib/sqlalchemy/engine/base.py:2214", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.89, "reason": null}, "format": 17}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:357", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 3.54, "reason": null}, "format": 17}
+{"id": "select:function:lib/sqlalchemy/sql/schema.py:5865", "proviso": {"selected": 1721, "time_share": 0.7442, "missed": [], "selection_s": 0.75, "reason": null}, "format": 17}
+{"id": "select:class:lib/sqlalchemy/sql/functions.py:2017", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.82, "reason": null}, "format": 17}
+{"id": "realeval:ae11d43079", "proviso": {"selected": 9629, "time_share": 1.0, "missed": [], "selection_s": 5.37, "reason": null}, "format": 17}
+{"id": "realeval:156fef6113", "proviso": {"selected": 6606, "time_share": 1.0, "missed": [], "selection_s": 1.06, "reason": "your edited functions run in 90% of the test time"}, "format": 17}
+{"id": "realeval:ef23611a6b", "proviso": {"selected": 6855, "time_share": 1.0, "missed": [], "selection_s": 1.57, "reason": null}, "format": 17}

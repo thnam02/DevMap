@@ -16,7 +16,7 @@
 | tdad | 56 of 59 | 743 | 1.1% (0.8%) |
 | tdad_nocap | 45 of 59 | 418 | 47.3% (84.4%) |
 
-End to end (plain s): full suite median 27.4; Proviso median 3.0, mean 8.0; faster on 79 of 95; selection median 1.81 s
+End to end (plain s): full suite median 27.4; Proviso median 3.1, mean 8.2; faster on 80 of 95; selection median 1.91 s
 
 ## Real commits: 52 changes, 32 break tests (45 failing tests)
 
@@ -34,7 +34,7 @@ End to end (plain s): full suite median 27.4; Proviso median 3.0, mean 8.0; fast
 | tdad | 29 of 32 | 39 | 0.9% (0.3%) |
 | tdad_nocap | 19 of 32 | 24 | 37.6% (2.9%) |
 
-End to end (plain s): full suite median 31.2; Proviso median 5.8, mean 12.0; faster on 42 of 52; selection median 1.50 s
+End to end (plain s): full suite median 31.2; Proviso median 5.7, mean 12.1; faster on 42 of 52; selection median 1.56 s
 
 # sympy (01c75e920f; targets sympy/functions)
 
@@ -56,7 +56,7 @@ End to end (plain s): full suite median 31.2; Proviso median 5.8, mean 12.0; fas
 
 testmon: could not run on 8 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 58.0; Proviso median 48.2, mean 41.6; faster on 50 of 91; selection median 3.78 s
+End to end (plain s): full suite median 58.0; Proviso median 48.2, mean 42.3; faster on 50 of 91; selection median 4.22 s
 
 ## Real commits: 21 changes, 1 break tests (2 failing tests)
 
@@ -72,7 +72,7 @@ End to end (plain s): full suite median 58.0; Proviso median 48.2, mean 41.6; fa
 | proviso | 0 of 1 | 0 | 44.0% (9.8%) |
 | namerts | 0 of 1 | 0 | 57.2% (94.2%) |
 
-End to end (plain s): full suite median 60.5; Proviso median 6.4, mean 28.5; faster on 14 of 21; selection median 0.32 s
+End to end (plain s): full suite median 60.5; Proviso median 6.0, mean 28.5; faster on 14 of 21; selection median 0.34 s
 
 TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
 
@@ -94,7 +94,7 @@ TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
 | tdad | 61 of 61 | 8241 | 0.2% (0.0%) |
 | tdad_nocap | 34 of 61 | 5439 | 83.7% (87.1%) |
 
-End to end (plain s): full suite median 24.2; Proviso median 27.0, mean 23.3; faster on 38 of 94; selection median 2.82 s
+End to end (plain s): full suite median 24.2; Proviso median 27.1, mean 23.3; faster on 38 of 94; selection median 2.90 s
 
 ## Real commits: 30 changes, 10 break tests (27 failing tests)
 
@@ -112,7 +112,7 @@ End to end (plain s): full suite median 24.2; Proviso median 27.0, mean 23.3; fa
 | tdad | 10 of 10 | 27 | 0.1% (0.0%) |
 | tdad_nocap | 3 of 10 | 6 | 74.7% (84.6%) |
 
-End to end (plain s): full suite median 24.5; Proviso median 26.0, mean 23.5; faster on 7 of 30; selection median 2.90 s
+End to end (plain s): full suite median 24.5; Proviso median 25.6, mean 23.2; faster on 7 of 30; selection median 2.59 s
 
 # pygments (156d85fdd1; targets tests)
 
@@ -132,7 +132,7 @@ End to end (plain s): full suite median 24.5; Proviso median 26.0, mean 23.5; fa
 | tdad | 56 of 56 | 629 | 2.3% (0.1%) |
 | tdad_nocap | 56 of 56 | 627 | 4.8% (0.1%) |
 
-End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.4; faster on 70 of 94; selection median 1.73 s
+End to end (plain s): full suite median 7.9; Proviso median 1.9, mean 3.5; faster on 70 of 94; selection median 1.84 s
 
 (2 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -152,7 +152,7 @@ End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.4; faste
 | tdad | 29 of 29 | 55 | 1.5% (0.4%) |
 | tdad_nocap | 29 of 29 | 55 | 2.2% (0.4%) |
 
-End to end (plain s): full suite median 9.5; Proviso median 3.1, mean 4.0; faster on 45 of 54; selection median 2.79 s
+End to end (plain s): full suite median 9.5; Proviso median 3.2, mean 4.2; faster on 45 of 54; selection median 2.96 s
 
 testmon: run without the test files that have no extension (pytest-testmon crashes on them); their tests count as always selected by testmon and file_coverage
 
@@ -175,7 +175,7 @@ testmon: run without the test files that have no extension (pytest-testmon crash
 
 testmon: could not run on 2 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; faster on 39 of 95; selection median 1.80 s
+End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.4; faster on 39 of 95; selection median 1.76 s
 
 (1 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -189,12 +189,12 @@ End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; fa
 | testmon | 1 of 4 | 1 | 95.1% (94.5%) |
 | func_only | 3 of 4 | 3 | 52.3% (41.7%) |
 | func_file | 3 of 4 | 3 | 59.9% (65.3%) |
-| proviso | 1 of 4 | 1 | 69.7% (98.6%) |
+| proviso | 1 of 4 | 1 | 69.7% (98.5%) |
 | namerts | 0 of 4 | 0 | 62.2% (71.7%) |
 | tdad | 3 of 4 | 5 | 1.4% (1.1%) |
 | tdad_nocap | 0 of 4 | 0 | 62.2% (79.3%) |
 
-End to end (plain s): full suite median 64.3; Proviso median 53.5, mean 46.4; faster on 10 of 24; selection median 0.32 s
+End to end (plain s): full suite median 64.3; Proviso median 53.4, mean 46.5; faster on 10 of 24; selection median 0.36 s
 
 file_coverage: not reported here: testmon's per-test coverage records link project code to only about 250 of 2,939 tests on datasette, so file-level selection from them is not meaningful
 

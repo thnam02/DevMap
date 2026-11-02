@@ -37,3 +37,13 @@
 {"id": "select:module:sympy/core/assumptions_generated.py:1485", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 5.48, "reason": null}, "format": 16}
 {"id": "realeval:94f14043f5", "proviso": {"selected": 32, "time_share": 0.0453, "missed": [], "selection_s": 0.42, "reason": null}, "format": 16}
 {"id": "realeval:751a370416", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 0.13, "reason": "your edited functions run in 100% of the test time"}, "format": 16}
+{"id": "select:function:sympy/core/mul.py:827", "proviso": {"selected": 160, "time_share": 0.7322, "missed": ["sympy/functions/special/tests/test_hyper.py::test_eval_nseries"], "selection_s": 0.27, "reason": null}, "format": 17}
+{"id": "select:class:sympy/core/numbers.py:3517", "proviso": {"selected": 576, "time_share": 0.999, "missed": [], "selection_s": 5.09, "reason": null}, "format": 17}
+{"id": "select:module:sympy/core/assumptions_generated.py:1522", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 4.21, "reason": null}, "format": 17}
+{"id": "select:function:sympy/core/numbers.py:985", "proviso": {"selected": 67, "time_share": 0.3394, "missed": [], "selection_s": 0.18, "reason": null}, "format": 17}
+{"id": "select:module:sympy/core/relational.py:1586", "proviso": {"selected": 352, "time_share": 0.9397, "missed": [], "selection_s": 4.38, "reason": null}, "format": 17}
+{"id": "select:class:sympy/core/numbers.py:775", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 46.21, "reason": "module sympy no longer imports"}, "format": 17}
+{"id": "select:function:sympy/core/containers.py:262", "proviso": {"selected": 192, "time_share": 0.7715, "missed": ["sympy/functions/special/tests/test_elliptic_integrals.py::test_E"], "selection_s": 5.57, "reason": null}, "format": 17}
+{"id": "select:module:sympy/core/assumptions_generated.py:1485", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 5.96, "reason": null}, "format": 17}
+{"id": "realeval:94f14043f5", "proviso": {"selected": 32, "time_share": 0.0453, "missed": [], "selection_s": 0.39, "reason": null}, "format": 17}
+{"id": "realeval:751a370416", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 0.14, "reason": "your edited functions run in 100% of the test time"}, "format": 17}
