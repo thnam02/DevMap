@@ -1,0 +1,17 @@
+== loguru: 9 pairs with missed files that recorded tests (0 already verified)
+[loguru] 3a901de465 files 32: 898 tests, 27 not passing before, 0 outcome changes -> harmless (77 s)
+[loguru] 46fd1b3c59 files 44: 1311 tests, 27 not passing before, 0 outcome changes -> harmless (123 s)
+[loguru] 620772ad02 files 6: 267 tests, 24 not passing before, 0 outcome changes -> harmless (3 s)
+[loguru] 5f3c3e9687 files 5: 293 tests, 3 not passing before, 0 outcome changes -> harmless (67 s)
+[loguru] 2f7007afcb files 32: 1074 tests, 3 not passing before, 0 outcome changes -> harmless (77 s)
+[loguru] b2a5f7328b files 34: 1099 tests, 3 not passing before, 0 outcome changes -> harmless (77 s)
+[loguru] 7b6f6e3741 files 34: 1099 tests, 3 not passing before, 0 outcome changes -> harmless (77 s)
+[loguru] bc2ec9abe9 files 34: 1100 tests, 3 not passing before, 0 outcome changes -> harmless (77 s)
+[loguru] 92952b912c files 6: 230 tests, 0 not passing before, 0 outcome changes -> harmless (3 s)
+== pylint: 1 pairs with missed files that recorded tests (0 already verified)
+[pylint] d69d13a459 files 2: 870 tests, 35 not passing before, 1 outcome changes -> REAL MISS (74 s)
+== pvlib: 0 pairs with missed files that recorded tests (0 already verified)
+loguru     pairs 9: real misses 0, harmless 9, errors 0
+pylint     pairs 1: real misses 1, harmless 0, errors 0
+   REAL d69d13a459 [('tests.test_functional::test_functional[unnecessary_default_type_args_py313]', ['passed', None])]
+all: {'pairs': 10, 'real': 1, 'harmless': 9, 'errors': 0}
