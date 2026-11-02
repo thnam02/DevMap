@@ -308,5 +308,26 @@ class SubprocessRule(unittest.TestCase):
         self.assertTrue(cov["tests/test_s.py::test_python"]["always"])
 
 
+class ImportBindings(unittest.TestCase):
+    """An import binding that changes or disappears in one module is read only by that module's code."""
+
+    def test_removed_import_selects_only_its_own_module(self):
+        root = tempfile.mkdtemp(prefix="impact-imp-")
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, "pkg"))
+        open(os.path.join(root, "pkg", "__init__.py"), "w").write("")
+        a_src = "import warnings\n\n\ndef old():\n    warnings.warn('x')\n\n\ndef keep():\n    return 1\n"
+        open(os.path.join(root, "pkg", "a.py"), "w").write(a_src)
+        open(os.path.join(root, "pkg", "b.py"), "w").write("import warnings\n\n\ndef g():\n    warnings.warn('y')\n")
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=root,
+                                      capture_output=True)
+        g("init", "-q"); g("add", "-A"); g("commit", "-qm", "b")
+        cov = {"t::a_keep": {"funcs": [["pkg/a.py", 8]]}, "t::b": {"funcs": [["pkg/b.py", 4]]}}
+        # remove the import and its only user from a.py
+        open(os.path.join(root, "pkg", "a.py"), "w").write("\n\n\ndef keep():\n    return 1\n")
+        sel, why = I.selection(root, cov, sys.executable)
+        self.assertNotIn("t::b", sel or ["<all>"])
+
+
 if __name__ == "__main__":
     unittest.main()

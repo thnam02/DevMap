@@ -363,6 +363,41 @@ def _new_top_level_defs(root: str, files: set[str]) -> set[str]:
     return out
 
 
+def _import_bindings(root: str, files: set[str]) -> dict[str, set[str]]:
+    """{file: names bound by top-level import statements, in the base or the working tree}. Such a binding in module
+    A (`import warnings`, `from .tools import deprecated`) is read by A's own code; other modules have their own
+    bindings, so when it changes or disappears only A's readers count (pvlib: a removed `import warnings` had selected
+    every function anywhere that mentions `warnings`)."""
+    def bound(src: str) -> set[str]:
+        try:
+            tree = ast.parse(src)
+        except SyntaxError:
+            return set()
+        out = set()
+        for node in tree.body:
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                out.update((a.asname or a.name).split(".")[0] for a in node.names)
+        return out
+    res: dict[str, set[str]] = {}
+    for f in files:
+        names = bound(_git(root, "show", f"HEAD:{f}"))
+        try:
+            names |= bound(open(os.path.join(root, f), encoding="utf-8").read())
+        except OSError:
+            pass
+        res[f] = names
+    return res
+
+
+def _key_module_file(key: str, prefix: str, known: set[str]) -> str | None:
+    """'pkg.mod:name' -> 'pkg/mod.py' or 'pkg/mod/__init__.py', whichever is a known file."""
+    mod = key.split(":", 1)[0].replace(".", "/")
+    for f in (f"{prefix}{mod}.py", f"{prefix}{mod}/__init__.py"):
+        if f in known:
+            return f
+    return None
+
+
 def _computed_lookup_patterns(root: str, files: list[str]) -> set[tuple[str, str]]:
     return {tuple(x) for x in _head_cached(root, "lookup_patterns", files,
                                            lambda r, fs: sorted(_computed_lookup_patterns_uncached(r, fs)))}
@@ -537,11 +572,13 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
                 by_name.setdefault(n, set()).add(fl)
         def_name = {fl: n[4:] for fl, ns in idx.items() for n in ns if n.startswith("def:")}
 
-        def readers_of(attr: str) -> set[tuple[str, int]]:
+        def readers_of(attr: str, only_file: str | None = None) -> set[tuple[str, int]]:
             # code that names the value, plus the callers of that code: a reader's result is often computed once
             # and cached (e.g. a dispatch table built from TRANSFORMS on first use), after which only its caller
             # runs, so the coverage map credits the reader to whichever test happened to run first
             direct = set(by_name.get(attr, set()))
+            if only_file is not None:  # an import binding: read only by its own module's code
+                direct = {fl for fl in direct if fl[0] == only_file}
             # names bound at import from the value (aliases), and their aliases in turn: their users read it too
             seen_alias, frontier = set(), {attr}
             for _ in range(3):
@@ -558,14 +595,22 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             return direct | callers
 
         prefix = _layout_prefix(map_files(covmap))
+        changed_src = {f for f in _changed_old_lines(diff) if not _is_test_path(f)}
+        bindings = _import_bindings(root, changed_src)
         for key in read_names:
             cls = _key_class(key, prefix)
             attr = key.rsplit(":", 1)[1].rsplit(".", 1)[-1]
-            fl = readers_of(attr)
             if cls is None:
+                kf = _key_module_file(key, prefix, set(bindings))
+                if kf is not None and attr in bindings[kf]:
+                    # an import binding: only its own module reads it (and the callers of that code)
+                    readers_any |= readers_of(attr, only_file=kf)
+                    continue
+                fl = readers_of(attr)
                 readers_any |= fl
                 test_attrs_any.add(attr)
             else:
+                fl = readers_of(attr)
                 for c in {cls, cls.replace("/__init__.py:", ".py:")}:
                     readers_cls.setdefault(c, set()).update(fl)
                     test_attrs_cls.setdefault(c, set()).add(attr)
