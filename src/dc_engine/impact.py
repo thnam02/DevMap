@@ -21,6 +21,7 @@ the input came from (e.g. a MySQL input run as StarRocks) are reported once.
 from __future__ import annotations
 
 import ast
+import collections
 import copy
 import types
 import functools
@@ -210,9 +211,26 @@ def _head_cached(root: str, kind: str, files: list[str], compute):
 
 
 def _name_index(root: str, files: list[str]) -> dict[tuple[str, int], set[str]]:
-    rows = _head_cached(root, "names_index2", files, lambda r, fs: [[f, ln, sorted(ns)] for (f, ln), ns in
+    rows = _head_cached(root, "names_index3", files, lambda r, fs: [[f, ln, sorted(ns)] for (f, ln), ns in
                                                                    _name_index_uncached(r, fs).items()])
     return {(f, ln): set(ns) for f, ln, ns in rows}
+
+
+def _annotations(node) -> list:
+    """The annotation expressions a node carries (function parameters and return, annotated assignments inside
+    functions; class-level annotations are left alone: dataclasses and the like read them at import)."""
+    out = []
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+        a = node.args
+        for arg in a.posonlyargs + a.args + a.kwonlyargs + [x for x in (a.vararg, a.kwarg) if x]:
+            if arg.annotation is not None:
+                out.append(arg.annotation)
+        if getattr(node, "returns", None) is not None:
+            out.append(node.returns)
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.AnnAssign) and sub is not node:
+                out.append(sub.annotation)
+    return out
 
 
 def _name_index_uncached(root: str, files: list[str]) -> dict[tuple[str, int], set[str]]:
@@ -225,6 +243,9 @@ def _name_index_uncached(root: str, files: list[str]) -> dict[tuple[str, int], s
             tree = ast.parse(_git(root, "show", f"HEAD:{f}"))
         except SyntaxError:
             continue
+        # names inside type annotations are not read when the code runs (`x: Optional[int]`, `-> Union[A, B]`):
+        # modernising them (Optional[X] -> X | None, dropping a typing import) changes no behaviour
+        in_annotation = {id(sub) for node in ast.walk(tree) for ann in _annotations(node) for sub in ast.walk(ann)}
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
                 start = min([d.lineno for d in getattr(node, "decorator_list", [])] + [node.lineno])
@@ -233,6 +254,8 @@ def _name_index_uncached(root: str, files: list[str]) -> dict[tuple[str, int], s
                     names.add(node.name)  # a test that ran the base `m` on a subclass now runs the subclass's `m`
                     names.add("def:" + node.name)
                 for sub in ast.walk(node):
+                    if id(sub) in in_annotation:
+                        continue
                     if isinstance(sub, ast.Call):
                         fn = sub.func
                         nm = fn.id if isinstance(fn, ast.Name) else fn.attr if isinstance(fn, ast.Attribute) else None
@@ -457,7 +480,17 @@ def _layout_prefix(files) -> str:
     return layout_prefix(files)
 
 
-def _import_state_effect(root: str, covmap: dict, python: str, changed_files: set[str]
+def _module_of(path: str, prefix: str = "") -> str | None:
+    """'pkg/sub/mod.py' -> 'pkg.sub.mod' ('pkg/sub/__init__.py' -> 'pkg.sub'), the layout prefix ('src/') removed."""
+    if not path.endswith(".py"):
+        return None
+    if prefix and path.startswith(prefix):
+        path = path[len(prefix):]
+    mod = path[:-3].replace("/", ".")
+    return mod[:-9] if mod.endswith(".__init__") else mod
+
+
+def _import_state_effect(root: str, covmap: dict, python: str, changed_files: set[str], gone: list[str] = ()
                          ) -> tuple[set[str] | None, set[str], dict]:
     """Keys ('module:Name' or 'module:Class.attr') whose import-time values the working tree changes (empty: no
     import-time effect; None: unknown), and classes to treat as edited (they gained an attribute that is looked up
@@ -473,6 +506,14 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     base_mods = {k.split(":", 1)[0] for k in base["state"]}
     d["changed"] = [k for k in d["changed"] if k.split(":", 1)[0] in base_mods]
     d["added_class_attrs"] = [k for k in d["added_class_attrs"] if k.split(":", 1)[0] in base_mods]
+    # a module the change deletes cannot import and its values disappear; that is the deletion itself (its users are
+    # selected by the caller), unlike an existing module that stops importing
+    prefix0 = _layout_prefix(files)
+    gone_mods = {m for m in (_module_of(g, prefix0) for g in gone) if m}
+    if gone_mods:
+        inside = lambda m: any(m == g or m.startswith(g + ".") for g in gone_mods)
+        d["errors"] = [m for m in d["errors"] if not inside(m)]
+        d["changed"] = [k for k in d["changed"] if not inside(k.split(":", 1)[0])]
     if d["errors"]:
         return None, set(), {"reason": f"module {d['errors'][0]} no longer imports"}
     names = set(d["changed"])
@@ -509,6 +550,8 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     status = _git(root, "status", "--porcelain", "-uall", "--", *pk, *extra_dirs)
     new_src = [l[3:] for l in status.splitlines() if l.startswith("??") and not _is_test_path(l[3:])
                and l.endswith(".py")]
+    gone_src = [l[3:] for l in status.splitlines() if l[:2].strip() == "D" and not _is_test_path(l[3:])
+                and l.endswith(".py")]
     # a new source file changes existing code only through what importing it does (a registration, a patched
     # value), which the import-time comparison below sees; its own definitions are new, so nothing existing reads them
     funcs: set[tuple[str, int]] = set()
@@ -566,14 +609,22 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     if hit_global or module_level or new_src:
         names, gained, info = _import_state_effect(root, covmap, python,
                                                    {f for f in _changed_old_lines(diff) if not _is_test_path(f)}
-                                                   | set(new_src))
+                                                   | set(new_src), gone=gone_src)
         why.update(info)
         if names is None:
             return None, why
         if len({k.rsplit(".", 1)[-1].rsplit(":", 1)[-1] for k in names}) > IMPORT_STATE_MAX_NAMES:
             return None, {**why, "reason": f"your change alters {len(names)} values computed at import time"}
-        read_names = names
+        read_names = set(names)
         class_names |= gained
+        # a deleted module: code that still reaches it by name (a lazy `from .x import y`, `pkg.x.f()`) and tests
+        # naming it; its own functions were edited away (selected above) and importers that break fail the snapshot
+        for g in gone_src:
+            mod = _module_of(g, _layout_prefix(map_files(covmap)))
+            if mod and "." in mod:
+                read_names.add(f"{mod.rsplit('.', 1)[0]}:{mod.rsplit('.', 1)[1]}")
+        if gone_src:
+            why["deleted_source_files"] = sorted(gone_src)
     # a changed value is read by code that names it; a class attribute only through that class or a subclass,
     # so its readers count only in tests that use the class
     readers_any: set[tuple[str, int]] = set()
@@ -833,31 +884,74 @@ def _changed_top_names(old_src: str, new_src: str) -> tuple[set[str] | None, boo
     return _change_closure(nt, changed) - only_imports, sorted(ou) != sorted(nu)
 
 
-def _flat_statements(body) -> tuple[list, list[str]]:
+def _flat_statements(body) -> tuple[list, list]:
     """The statements of a module with if/try/with blocks opened up (a fixture defined under `if sys.version_info`
-    is compared like any other), and the blocks' own conditions (if tests, handled exceptions, with items)."""
+    is compared like any other), and the blocks' own conditions as (description, statements inside the block)."""
     stmts, guards = [], []
     for node in body:
         if isinstance(node, (ast.If, ast.While)):
-            guards.append(type(node).__name__ + ":" + ast.dump(node.test))
+            g = type(node).__name__ + ":" + ast.dump(node.test)
         elif isinstance(node, ast.Try) or type(node).__name__ == "TryStar":
-            guards.append("Try:" + ",".join(ast.dump(h.type) if h.type else "*" for h in node.handlers))
+            g = "Try:" + ",".join(ast.dump(h.type) if h.type else "*" for h in node.handlers)
         elif isinstance(node, (ast.With, ast.AsyncWith)):
-            guards.append("With:" + ",".join(ast.dump(it) for it in node.items))
+            g = "With:" + ",".join(ast.dump(it) for it in node.items)
         else:
             stmts.append(node)
             continue
+        inner, inner_guards = [], []
         for field in ("body", "orelse", "finalbody"):
             sub = getattr(node, field, None)
             if isinstance(sub, list):
                 s2, g2 = _flat_statements(sub)
-                stmts += s2
-                guards += g2
+                inner += s2
+                inner_guards += g2
         for hnd in getattr(node, "handlers", None) or []:
             s2, g2 = _flat_statements(hnd.body)
-            stmts += s2
-            guards += g2
+            inner += s2
+            inner_guards += g2
+        stmts += inner
+        guards.append((g, inner + [x for gg in inner_guards for x in gg[1]]))
+        guards += inner_guards
     return stmts, guards
+
+
+_PURE_CALLS = ("pytest.", "os.environ.get", "os.getenv", "os.path.", "Version", "version.parse", "parse_version",
+               "packaging.version.", "Path", "pathlib.Path", "importlib.util.find_spec", "str", "int", "float", "bool",
+               "tuple", "list", "dict", "set", "frozenset", "len", "sorted", "shutil.which", "sys.platform.startswith")
+
+
+def _inert(expr) -> bool:
+    """An expression without side effects worth tracking: literals, names, attribute and item access, operators, and
+    calls of a few pure constructors (pytest.mark.skipif(...), pytest.param(...), Version(...), os.environ.get(...))."""
+    for sub in ast.walk(expr):
+        if isinstance(sub, ast.Call):
+            try:
+                name = ast.unparse(sub.func)
+            except Exception:  # noqa: BLE001
+                return False
+            if not any(name == p or (p.endswith(".") and name.startswith(p)) for p in _PURE_CALLS):
+                return False
+        elif isinstance(sub, (ast.Lambda, ast.NamedExpr, ast.Await, ast.Yield, ast.YieldFrom)):
+            return False
+    return True
+
+
+def _new_definition(node, old_names: set[str]) -> bool:
+    """A statement that only defines something new: binds at least one name the base did not bind (none of them
+    special to pytest) from inert expressions (`requires_x = pytest.mark.skipif(not HAS_X, reason=...)`)."""
+    if isinstance(node, ast.Pass) or (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)):
+        return True
+    if isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        names = _bound_names(node)
+        return bool(names) and not names & old_names and not any(n.startswith(("pytest_", "collect_ignore"))
+                                                                  for n in names)
+    if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None:
+        names = _bound_names(node)
+        return bool(names) and not names & old_names and \
+            not any(n.startswith(("pytest_", "collect_ignore")) for n in names) and _inert(node.value) and \
+            all(isinstance(t, (ast.Name, ast.Tuple, ast.List)) for t in (node.targets if isinstance(node, ast.Assign)
+                                                                        else [node.target]))
+    return False
 
 
 def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, set[str]]:
@@ -873,7 +967,7 @@ def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, 
             return None
         stmts, guards = _flat_statements(tree.body)
         defs: dict[str, tuple[str, bool]] = {}
-        other: list[str] = list(guards)
+        other: list = [(g, inner) for g, inner in guards]   # (description, the statements it guards)
         imports: dict[str, set[str]] = {}
         for node in stmts:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -888,23 +982,31 @@ def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, 
                 dump = ast.dump(_strip_docstrings(node))
                 defs[name] = (dump, fixture and not hook)
                 if hook:
-                    other.append(dump)
+                    other.append((dump, [node]))
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 imports[ast.dump(node)] = {(a.asname or a.name).split(".")[0] for a in node.names}
             elif isinstance(node, ast.Pass):
                 continue
             elif not (isinstance(node, ast.Expr) and isinstance(getattr(node, "value", None), ast.Constant)):
-                other.append(ast.dump(node))   # module-level statements (docstrings aside)
-        return defs, other, imports
+                other.append((ast.dump(node), [node]))   # module-level statements (docstrings aside)
+        names = {n for node in stmts for n in _bound_names(node)}
+        return defs, other, imports, names
     old_src = _git(root, "show", f"HEAD:{path}")
     new_src = _read(root, path)
     old, new = parse(old_src) if old_src else None, parse(new_src) if new_src else None
     if old is None or new is None:   # a new, deleted or unparsable file: assume it affects everything below it
         return set(), set(), True, set()
-    (od, oo, oi), (nd, no, ni) = old, new
+    (od, oo, oi, onames), (nd, no, ni, _) = old, new
     fixtures = {n for n, (dump, fx) in od.items() if fx and nd.get(n, (None,))[0] != dump}
     helpers = {n for n, (dump, fx) in od.items() if not fx and nd.get(n, (None,))[0] != dump}
-    module_level = sorted(oo) != sorted(no)
+    # module-level code: a removed or changed statement (or block condition) counts; an added one only if it does more
+    # than define something new (pvlib adds `requires_ecmwf_credentials = pytest.mark.skipif(...)` blocks)
+    old_dumps = collections.Counter(d for d, _ in oo)
+    new_dumps = collections.Counter(d for d, _ in no)
+    removed_other = old_dumps - new_dumps
+    added_other = [(d, inner) for d, inner in no if (new_dumps - old_dumps)[d] > 0]
+    module_level = bool(removed_other) or any(not all(_new_definition(x, onames) for x in inner)
+                                              for _, inner in added_other)
     still = set().union(*ni.values()) if ni else set()
     removed = {n for d in set(oi) - set(ni) for n in oi[d]} - still
     return fixtures, helpers, module_level, removed

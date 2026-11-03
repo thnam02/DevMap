@@ -165,6 +165,25 @@ class Selection(unittest.TestCase):
         open(os.path.join(self.root, "pkg", "new.py"), "w").write("x = 1\n")
         self.assertEqual(self.sel()[0], ["tests/test_calc.py::test_mode"])
 
+    def test_annotation_only_mention_is_not_a_read(self):
+        # TABLE appears only in an annotation of area(): changing TABLE does not change what area() does
+        self.edit("def area(self, w, h):", "def area(self, w: TABLE, h):")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "a"], cwd=self.root)
+        self.edit('TABLE = {"a": 1}', 'TABLE = {"a": 2}')
+        self.assertEqual(self.sel()[0], ["t::helper"])
+
+    def test_deleted_module_selects_its_users_not_the_full_suite(self):
+        open(os.path.join(self.root, "pkg", "extra.py"), "w").write("def run():\n    return 1\n")
+        open(os.path.join(self.root, "tests", "test_extra.py"), "w").write(
+            "from pkg import extra\n\ndef test_run():\n    assert extra.run()\n")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A"], cwd=self.root)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "e"], cwd=self.root)
+        self.cov["tests/test_extra.py::test_run"] = {"funcs": [["pkg/extra.py", 1]], "time": 1.0}
+        os.remove(os.path.join(self.root, "pkg", "extra.py"))
+        sel, why = self.sel()
+        self.assertEqual(sel, ["tests/test_extra.py::test_run"])
+        self.assertEqual(why["deleted_source_files"], ["pkg/extra.py"])
+
     def test_no_change_selects_nothing(self):
         self.assertEqual(self.sel()[0], [])
 
@@ -236,8 +255,19 @@ class SharedTestCode(unittest.TestCase):
         self.assertEqual(self.files(), ["tests/helpers.py", "tests/test_a.py"])
 
     def test_module_level_helper_edit_selects_every_test_below_it(self):
-        self.edit("tests/helpers.py", "def make():", "LIMIT = 3\n\n\ndef make():")
+        # a statement with a side effect (not a new definition)
+        self.edit("tests/helpers.py", "def make():", "import sys\nsys.path.insert(0, 'x')\n\n\ndef make():")
         self.assertEqual(self.files(), ["tests/helpers.py", "tests/sub/test_c.py", "tests/test_a.py", "tests/test_b.py"])
+
+    def test_new_skip_marker_in_conftest_selects_nothing_more(self):
+        # pvlib adds `requires_x = pytest.mark.skipif(...)` (in try blocks) for new tests; existing tests cannot use it
+        self.edit("tests/conftest.py", "MARK = 1", "MARK = 1\n\ntry:\n    import json\n    HAS_X = True\n"
+                  "except ImportError:\n    HAS_X = False\n\nrequires_x = pytest.mark.skipif(not HAS_X, reason='x')")
+        self.assertEqual(self.files(), ["tests/conftest.py"])
+
+    def test_changed_module_level_value_in_conftest_selects_every_test_below_it(self):
+        self.edit("tests/conftest.py", "MARK = 1", "MARK = 1\nMARK = 3")
+        self.assertEqual(len(self.files()), 4)
 
     def test_new_helper_in_conftest_selects_nothing_more(self):
         # loguru added two helper functions to its conftest; existing tests cannot use them
@@ -466,6 +496,17 @@ class SubprocessRule(unittest.TestCase):
             def clock():
                 return 0
 
+            @pytest.fixture
+            def broken():
+                raise RuntimeError("setup fails in this environment")
+
+            def test_broken_setup(broken):
+                pass
+
+            @pytest.mark.skip(reason="not here")
+            def test_skipped():
+                pass
+
             def test_git(clock):
                 subprocess.run(["git", "--version"], capture_output=True)
                 assert pkg.f() == 1
@@ -489,6 +530,9 @@ class SubprocessRule(unittest.TestCase):
         self.assertFalse(cov["tests/test_s.py::test_git"]["always"])
         self.assertTrue(cov["tests/test_s.py::test_shell"]["always"])
         self.assertTrue(cov["tests/test_s.py::test_mp"]["always"])
+        # a test whose setup fails has no record: it is kept and always selected; a skipped test is not
+        self.assertTrue(cov["tests/test_s.py::test_broken_setup"]["always"])
+        self.assertNotIn("tests/test_s.py::test_skipped", cov)
         # a fixture that runs no package code is still listed for the tests that use it
         self.assertTrue(any(k.startswith("tests/test_s.py::clock@") for k in cov["tests/test_s.py::test_git"]["fx"]))
         self.assertTrue(cov["tests/test_s.py::test_python"]["always"])

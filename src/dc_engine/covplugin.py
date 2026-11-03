@@ -335,9 +335,21 @@ def pytest_runtest_makereport(item, call):
 _times: dict = {}
 
 
+_reported: set = set()      # tests pytest reported anything for
+_setup_failed: set = set()  # tests whose setup failed (their body never ran, so they have no record)
+_collected: list = []
+
+
+def pytest_collection_finish(session):
+    _collected[:] = [i.nodeid for i in session.items]
+
+
 def pytest_runtest_logreport(report):
+    _reported.add(report.nodeid)
     if report.when == "call":
         _times[report.nodeid] = (round(report.duration, 4), report.passed)
+    elif report.when == "setup" and report.failed:
+        _setup_failed.add(report.nodeid)
 
 
 if hasattr(os, "register_at_fork"):
@@ -347,6 +359,13 @@ if hasattr(os, "register_at_fork"):
 def pytest_sessionfinish(session, exitstatus):
     mon.set_events(TOOL, 0)
     mon.free_tool_id(TOOL)
+    # a test collected here whose body never ran (its setup failed, or the run stopped before it) has no record of
+    # what it depends on: it is always selected, so a recording glitch costs time, not safety (sqlalchemy lost 39
+    # tests from one recording). Skipped tests stay out: in the same environment they are skipped again.
+    for nid in sorted(_setup_failed) + [n for n in _collected if n not in _reported]:
+        if nid not in _map:
+            _map[nid] = {"funcs": [], "classes": [], "always": True, "time": 0.0, "ok": False, "fx": [],
+                         "unrecorded": True}
     used = {k for v in _map.values() for k in v["fx"]}
     _map["__fixtures__"] = {k: {"funcs": sorted(t.funcs), "classes": sorted(t.classes), "always": t.always}
                             for k, t in _fixtures.items() if k in used and (t.funcs or t.classes or t.always)}
