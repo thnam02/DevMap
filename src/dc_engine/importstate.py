@@ -29,7 +29,7 @@ import tempfile
 
 HERE = os.path.abspath(__file__)
 SNAPSHOT_TIMEOUT = 300
-FORMAT = 19  # bump when fingerprints, recording or selection change: cached base snapshots and result rows of another format are recomputed
+FORMAT = 20  # bump when fingerprints, recording or selection change: cached base snapshots and result rows of another format are recomputed
 # bookkeeping that changes whenever lines move, or that Python fills in itself
 IGNORED_CLASS_KEYS = {"__dict__", "__weakref__", "__doc__", "__module__", "__qualname__", "__annotations__",
                       "__firstlineno__", "__static_attributes__", "__annotate__", "__annotate_func__",

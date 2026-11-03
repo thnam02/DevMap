@@ -144,11 +144,26 @@ class Selection(unittest.TestCase):
         self.assertIsNone(sel)
         self.assertIn("no longer imports", why["reason"])
 
-    def test_new_source_file_falls_back_to_full_suite(self):
-        open(os.path.join(self.root, "pkg", "new.py"), "w").write("x = 1\n")
+    def test_new_source_file_nothing_imports_selects_nothing(self):
+        open(os.path.join(self.root, "pkg", "new.py"), "w").write("x = 1\n\ndef helper():\n    return 2\n")
         sel, why = self.sel()
-        self.assertIsNone(sel)
-        self.assertIn("new source file", why["reason"])
+        self.assertEqual(sel, [])
+        self.assertEqual(why["new_source_files"], ["pkg/new.py"])
+
+    def test_new_source_file_imported_by_the_package_selects_readers_of_what_it_changes(self):
+        # the new module registers itself into an existing table at import: readers of TABLE are affected
+        open(os.path.join(self.root, "pkg", "plugin.py"), "w").write(
+            "from pkg import calc\n\ncalc.TABLE['b'] = 2\n\ndef extra():\n    return 1\n")
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write("from pkg import plugin\n")
+        sel, why = self.sel()
+        self.assertEqual(sel, ["t::helper"])
+
+    def test_new_source_file_selects_tests_that_discover_modules(self):
+        open(os.path.join(self.root, "tests", "test_calc.py"), "w").write(
+            "import pkgutil, pkg\n\ndef test_mode():\n    assert list(pkgutil.iter_modules(pkg.__path__))\n")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qam", "t"], cwd=self.root)
+        open(os.path.join(self.root, "pkg", "new.py"), "w").write("x = 1\n")
+        self.assertEqual(self.sel()[0], ["tests/test_calc.py::test_mode"])
 
     def test_no_change_selects_nothing(self):
         self.assertEqual(self.sel()[0], [])

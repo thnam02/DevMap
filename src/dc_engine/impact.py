@@ -469,6 +469,10 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     if base is None or cur is None:
         return None, set(), {"reason": "could not compare import-time state"}
     d = importstate.diff(base, cur, _new_top_level_defs(root, changed_files))
+    # values of a module the base did not have (a new source file): new, so no existing code reads them
+    base_mods = {k.split(":", 1)[0] for k in base["state"]}
+    d["changed"] = [k for k in d["changed"] if k.split(":", 1)[0] in base_mods]
+    d["added_class_attrs"] = [k for k in d["added_class_attrs"] if k.split(":", 1)[0] in base_mods]
     if d["errors"]:
         return None, set(), {"reason": f"module {d['errors'][0]} no longer imports"}
     names = set(d["changed"])
@@ -505,8 +509,8 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     status = _git(root, "status", "--porcelain", "-uall", "--", *pk, *extra_dirs)
     new_src = [l[3:] for l in status.splitlines() if l.startswith("??") and not _is_test_path(l[3:])
                and l.endswith(".py")]
-    if new_src:
-        return None, {"reason": f"new source file {new_src[0]}"}
+    # a new source file changes existing code only through what importing it does (a registration, a patched
+    # value), which the import-time comparison below sees; its own definitions are new, so nothing existing reads them
     funcs: set[tuple[str, int]] = set()
     module_level: set[str] = set()
     class_names: set[str] = set()
@@ -557,9 +561,12 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     why: dict[str, Any] = {"functions": len(funcs), "files": sorted(module_level),
                            "changed_functions": sorted([f, ln] for f, ln in funcs)}
     read_names: set[str] = set()
-    if hit_global or module_level:
+    if new_src:
+        why["new_source_files"] = sorted(new_src)
+    if hit_global or module_level or new_src:
         names, gained, info = _import_state_effect(root, covmap, python,
-                                                   {f for f in _changed_old_lines(diff) if not _is_test_path(f)})
+                                                   {f for f in _changed_old_lines(diff) if not _is_test_path(f)}
+                                                   | set(new_src))
         why.update(info)
         if names is None:
             return None, why
@@ -658,6 +665,13 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     # test-support modules in the package: a changed constant or class is read by tests that run none of the
     # module's functions (`from pkg.testing import TIMEOUT`), so tests whose file names a changed value are added
     naming = _Naming(root)
+    if new_src:
+        # tests that find modules by walking the package (pkgutil, importlib) may pick the new one up
+        finders = {n for n in tests_of(covmap) if naming.mentions(
+            n.split("::", 1)[0], {"walk_packages", "iter_modules", "import_module", "__import__", "pkgutil"})}
+        shared |= finders
+        shared_why.append(f"new source file(s) {', '.join(sorted(new_src)[:3])}: {len(finders)} test(s) that "
+                          f"discover modules")
     if doc_only:
         doc_readers = {n for n in tests_of(covmap) if dep.reaches(n, doc_only, "funcs")
                        and naming.mentions(n.split("::", 1)[0], {"__doc__", "doctest", "getdoc"})}
