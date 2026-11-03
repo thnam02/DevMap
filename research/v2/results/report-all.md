@@ -11,12 +11,12 @@
 | testmon | 5 of 59 | 170 | 99.1% (100.0%) |
 | func_only | 37 of 59 | 245 | 4.7% (0.0%) |
 | func_file | 14 of 59 | 93 | 16.9% (5.2%) |
-| proviso | 0 of 59 | 0 | 24.1% (4.5%) |
+| proviso | 0 of 59 | 0 | 19.7% (4.5%) |
 | namerts | 25 of 59 | 91 | 50.9% (20.7%) |
 | tdad | 56 of 59 | 743 | 1.1% (0.8%) |
 | tdad_nocap | 45 of 59 | 418 | 47.3% (84.4%) |
 
-End to end (plain s): full suite median 27.4; Proviso median 2.8, mean 8.0; faster on 80 of 95; selection median 1.51 s
+End to end (plain s): full suite median 27.4; Proviso median 2.8, mean 6.8; faster on 80 of 95; selection median 1.58 s
 
 ## Real commits: 52 changes, 32 break tests (45 failing tests)
 
@@ -29,12 +29,12 @@ End to end (plain s): full suite median 27.4; Proviso median 2.8, mean 8.0; fast
 | testmon | 0 of 32 | 0 | 100.0% (100.0%) |
 | func_only | 9 of 32 | 10 | 13.5% (1.2%) |
 | func_file | 1 of 32 | 1 | 23.6% (6.1%) |
-| proviso | 0 of 32 | 0 | 32.4% (7.8%) |
+| proviso | 0 of 32 | 0 | 22.6% (7.3%) |
 | namerts | 14 of 32 | 19 | 46.7% (20.3%) |
 | tdad | 29 of 32 | 39 | 0.9% (0.3%) |
 | tdad_nocap | 19 of 32 | 24 | 37.6% (2.9%) |
 
-End to end (plain s): full suite median 31.2; Proviso median 5.9, mean 12.6; faster on 41 of 52; selection median 2.29 s
+End to end (plain s): full suite median 31.2; Proviso median 3.7, mean 8.6; faster on 43 of 52; selection median 1.47 s
 
 # sympy (01c75e920f; targets sympy/functions)
 
@@ -51,12 +51,12 @@ End to end (plain s): full suite median 31.2; Proviso median 5.9, mean 12.6; fas
 | testmon | 6 of 39 | 85 | 31.6% (4.0%) |
 | func_only | 26 of 47 | 4749 | 10.0% (0.0%) |
 | func_file | 13 of 47 | 630 | 38.3% (10.3%) |
-| proviso | 3 of 47 | 3 | 56.5% (77.3%) |
+| proviso | 3 of 47 | 3 | 53.6% (56.3%) |
 | namerts | 7 of 47 | 837 | 66.1% (98.5%) |
 
 testmon: could not run on 8 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 58.0; Proviso median 48.4, mean 41.9; faster on 50 of 91; selection median 3.96 s
+End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 35.8; faster on 55 of 91; selection median 3.32 s
 
 ## Real commits: 21 changes, 1 break tests (2 failing tests)
 
@@ -72,7 +72,7 @@ End to end (plain s): full suite median 58.0; Proviso median 48.4, mean 41.9; fa
 | proviso | 0 of 1 | 0 | 41.9% (4.5%) |
 | namerts | 0 of 1 | 0 | 57.2% (94.2%) |
 
-End to end (plain s): full suite median 60.5; Proviso median 6.5, mean 27.8; faster on 15 of 21; selection median 0.61 s
+End to end (plain s): full suite median 60.5; Proviso median 3.4, mean 26.7; faster on 15 of 21; selection median 0.34 s
 
 TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
 
@@ -94,7 +94,7 @@ TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
 | tdad | 61 of 61 | 8241 | 0.2% (0.0%) |
 | tdad_nocap | 34 of 61 | 5439 | 83.7% (87.1%) |
 
-End to end (plain s): full suite median 24.2; Proviso median 27.1, mean 24.0; faster on 38 of 94; selection median 2.93 s
+End to end (plain s): full suite median 24.2; Proviso median 27.0, mean 23.8; faster on 38 of 94; selection median 2.78 s
 
 ## Real commits: 30 changes, 10 break tests (27 failing tests)
 
@@ -112,7 +112,7 @@ End to end (plain s): full suite median 24.2; Proviso median 27.1, mean 24.0; fa
 | tdad | 10 of 10 | 27 | 0.1% (0.0%) |
 | tdad_nocap | 3 of 10 | 6 | 74.7% (84.6%) |
 
-End to end (plain s): full suite median 24.5; Proviso median 27.9, mean 26.0; faster on 7 of 30; selection median 3.88 s
+End to end (plain s): full suite median 24.5; Proviso median 26.6, mean 24.1; faster on 7 of 30; selection median 2.60 s
 
 # pygments (156d85fdd1; targets tests)
 
@@ -127,12 +127,12 @@ End to end (plain s): full suite median 24.5; Proviso median 27.9, mean 26.0; fa
 | testmon | 26 of 56 | 421 | 7.0% (3.8%) |
 | func_only | 31 of 56 | 411 | 2.1% (0.0%) |
 | func_file | 22 of 56 | 390 | 6.0% (1.6%) |
-| proviso | 0 of 56 | 0 | 27.9% (1.5%) |
+| proviso | 0 of 56 | 0 | 25.1% (1.5%) |
 | namerts | 56 of 56 | 588 | 4.8% (0.0%) |
 | tdad | 56 of 56 | 629 | 2.3% (0.1%) |
 | tdad_nocap | 56 of 56 | 627 | 4.8% (0.1%) |
 
-End to end (plain s): full suite median 7.9; Proviso median 1.9, mean 3.5; faster on 70 of 94; selection median 1.84 s
+End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.2; faster on 73 of 94; selection median 1.73 s
 
 (2 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -147,12 +147,12 @@ End to end (plain s): full suite median 7.9; Proviso median 1.9, mean 3.5; faste
 | testmon | 15 of 29 | 32 | 17.3% (5.3%) |
 | func_only | 24 of 29 | 48 | 1.4% (0.0%) |
 | func_file | 1 of 29 | 10 | 9.7% (4.2%) |
-| proviso | 1 of 29 | 1 | 18.5% (1.9%) |
+| proviso | 1 of 29 | 1 | 14.9% (1.8%) |
 | namerts | 29 of 29 | 55 | 2.2% (0.0%) |
 | tdad | 29 of 29 | 55 | 1.5% (0.4%) |
 | tdad_nocap | 29 of 29 | 55 | 2.2% (0.4%) |
 
-End to end (plain s): full suite median 9.5; Proviso median 3.1, mean 4.3; faster on 45 of 54; selection median 2.92 s
+End to end (plain s): full suite median 9.5; Proviso median 1.9, mean 2.9; faster on 48 of 54; selection median 1.75 s
 
 testmon: run without the test files that have no extension (pytest-testmon crashes on them); their tests count as always selected by testmon and file_coverage
 
@@ -175,7 +175,7 @@ testmon: run without the test files that have no extension (pytest-testmon crash
 
 testmon: could not run on 2 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; faster on 39 of 95; selection median 1.77 s
+End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; faster on 39 of 95; selection median 1.82 s
 
 (1 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -194,7 +194,7 @@ End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; fa
 | tdad | 3 of 4 | 5 | 1.4% (1.1%) |
 | tdad_nocap | 0 of 4 | 0 | 62.2% (79.3%) |
 
-End to end (plain s): full suite median 64.3; Proviso median 53.9, mean 47.3; faster on 10 of 24; selection median 0.87 s
+End to end (plain s): full suite median 64.3; Proviso median 53.7, mean 46.5; faster on 10 of 24; selection median 0.62 s
 
 file_coverage: not reported here: testmon's per-test coverage records link project code to only about 250 of 2,939 tests on datasette, so file-level selection from them is not meaningful
 
