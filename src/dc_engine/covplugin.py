@@ -31,15 +31,18 @@ PKG_NAME = os.path.basename(os.path.normpath(os.environ.get("COVMAP_PKG", "sqlgl
 
 
 _LAUNCHERS = {"sh", "bash", "zsh", "dash", "fish", "cmd", "cmd.exe", "powershell", "pwsh", "make", "tox", "nox",
-              "uv", "uvx", "poetry", "hatch", "pdm", "pipx", "pip", "pip3", "coverage", "conda", "mamba", "xvfb-run",
-              "nohup", "timeout", "sudo", "su", "nice", "time", "exec"}
+              "uv", "uvx", "poetry", "hatch", "pdm", "pipx", "pip", "pip3", "coverage", "conda", "mamba", "sudo", "su"}
+# programs that run the command after them (their own options, VAR=value and numbers are skipped)
+_WRAPPERS = {"env", "nice", "nohup", "timeout", "time", "exec", "stdbuf", "ionice", "taskset", "xvfb-run"}
 
 
 def _runs_project_code(args) -> bool:
     """Whether a subprocess can run the package's own code, which the recorder cannot see: a Python interpreter (or
-    pytest), or a command named after the package (pylint, sphinx-build). External tools (git, latex, dot) cannot, so
-    starting one does not make a test depend on everything (pytest-benchmark's git calls at session start had marked
-    every pylint test as always selected)."""
+    pytest), a shell, script or launcher that may start one, or a command named after the package (pylint,
+    sphinx-build). Only the program counts, after wrappers such as `env VAR=1` or `timeout 10`: an external tool
+    (git, file, latex, dot) cannot run the package even when an argument names Python (platform.architecture() runs
+    `file -b /usr/bin/python3.13` at pytest-benchmark's session start, which had marked every pylint test as always
+    selected)."""
     if isinstance(args, (str, bytes)):
         line = args.decode(errors="replace") if isinstance(args, bytes) else args
         if any(c in line for c in ";&|`$<>()"):
@@ -49,18 +52,28 @@ def _runs_project_code(args) -> bool:
         words = [os.fspath(a) for a in args]
     except TypeError:
         return True  # unknown form: keep the conservative rule
-    if not words:
+    words = [w.decode(errors="replace") if isinstance(w, bytes) else w for w in words]
+    i = 0
+    while i < len(words):
+        w = words[i]
+        if os.path.basename(w).lower() in _WRAPPERS or (i and (w.startswith("-") or "=" in w
+                                                                   or w.replace(".", "", 1).isdigit())):
+            i += 1
+            continue
+        break
+    if i >= len(words):
+        return True  # nothing but wrappers (or no command): keep the conservative rule
+    prog = words[i]
+    base = os.path.basename(prog).lower()
+    if base.startswith(("python", "pypy", "pytest", "py.test")) or prog == sys.executable:
         return True
-    words = [w.decode() if isinstance(w, bytes) else w for w in words]
-    for w in words[:3]:  # program, or a wrapper such as `env VAR=1 python`
-        base = os.path.basename(w).lower()
-        if base.startswith(("python", "pypy", "pytest", "py.test")) or w == sys.executable:
-            return True
-        if base in _LAUNCHERS or base.endswith((".sh", ".py", ".bat", ".cmd", ".ps1")):
-            return True  # shells, scripts and build tools may start Python themselves
-        if PKG_NAME and PKG_NAME.lower() in base:
-            return True
+    if base in _LAUNCHERS or base.endswith((".sh", ".py", ".bat", ".cmd", ".ps1")):
+        return True  # shells, scripts and build tools may start Python themselves
+    if PKG_NAME and PKG_NAME.lower() in base:
+        return True
     return False
+
+
 TOOL = 3
 mon = sys.monitoring
 DISABLE = mon.DISABLE
@@ -157,7 +170,8 @@ def _classify(code):
     if fn.startswith(PKG):
         method = bool(code.co_argcount and code.co_varnames[0] in ("self", "cls"))
         k = ((fn[len(ROOT) + 1:], code.co_firstlineno), method)
-    elif code.co_name == "__init__" and fn.endswith(SUBPROC):
+    elif code.co_name == "__init__" and fn.endswith(SUBPROC) and \
+            getattr(code, "co_qualname", "Popen.__init__") == "Popen.__init__":   # not CompletedProcess or errors
         k = "subprocess"
     else:
         k = None

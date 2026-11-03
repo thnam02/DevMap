@@ -473,6 +473,10 @@ class LaunchRule(unittest.TestCase):
         from dc_engine import covplugin as C
         self.assertFalse(C._runs_project_code(["git", "log"]))
         self.assertFalse(C._runs_project_code("git status"))
+        # platform.architecture() at pytest-benchmark's session start: Python is an argument, not the program
+        self.assertFalse(C._runs_project_code(["file", "-b", "/usr/bin/python3.13"]))
+        self.assertFalse(C._runs_project_code(["nice", "-n", "5", "git", "gc"]))
+        self.assertTrue(C._runs_project_code(["timeout", "10", "python", "-c", "1"]))
         self.assertTrue(C._runs_project_code(["bash", "run.sh"]))
         self.assertTrue(C._runs_project_code(["./run_tests.sh"]))
         self.assertTrue(C._runs_project_code("cd x && git log"))
