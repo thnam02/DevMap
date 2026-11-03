@@ -65,3 +65,14 @@
 {"id": "select:class:sympy/core/numbers.py:3950", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 125.51, "reason": "module sympy no longer imports"}, "format": 20}
 {"id": "realeval:fd5d037a88", "proviso": {"selected": 78, "time_share": 0.5298, "missed": [], "selection_s": 0.74, "reason": null}, "format": 20}
 {"id": "realeval:1f818f624d", "proviso": {"selected": 261, "time_share": 0.8708, "missed": [], "selection_s": 0.13, "reason": null}, "format": 20}
+{"id": "select:function:sympy/core/relational.py:1962", "proviso": {"selected": 266, "time_share": 0.8742, "missed": [], "selection_s": 0.27, "reason": null}, "format": 21}
+{"id": "select:function:sympy/functions/combinatorial/numbers.py:131", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.43, "reason": null}, "format": 21}
+{"id": "select:module:sympy/core/assumptions_generated.py:1501", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 4.06, "reason": null}, "format": 21}
+{"id": "select:function:sympy/functions/elementary/exponential.py:1219", "proviso": {"selected": 2, "time_share": 0.0008, "missed": [], "selection_s": 0.35, "reason": null}, "format": 21}
+{"id": "select:class:sympy/core/mul.py:31", "proviso": {"selected": 0, "time_share": 0.0, "missed": ["sympy/functions/elementary/tests/test_exponential.py::test_as_numer_denom"], "selection_s": 3.79, "reason": null}, "format": 21}
+{"id": "select:module:sympy/core/assumptions_generated.py:1509", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 4.1, "reason": null}, "format": 21}
+{"id": "select:function:sympy/core/random.py:220", "proviso": {"selected": 23, "time_share": 0.1865, "missed": [], "selection_s": 3.41, "reason": null}, "format": 21}
+{"id": "select:class:sympy/functions/combinatorial/numbers.py:1983", "proviso": {"selected": 1, "time_share": 0.0, "missed": [], "selection_s": 3.88, "reason": null}, "format": 21}
+{"id": "select:class:sympy/core/numbers.py:3950", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 136.06, "reason": "module sympy no longer imports"}, "format": 21}
+{"id": "realeval:fd5d037a88", "proviso": {"selected": 78, "time_share": 0.5298, "missed": [], "selection_s": 0.81, "reason": null}, "format": 21}
+{"id": "realeval:1f818f624d", "proviso": {"selected": 269, "time_share": 0.8716, "missed": [], "selection_s": 0.14, "reason": null}, "format": 21}

@@ -76,3 +76,16 @@
 {"id": "realeval:b3b6c57cea", "proviso": {"selected": 283, "time_share": 0.1247, "missed": [], "selection_s": 0.23, "reason": null}, "format": 20}
 {"id": "realeval:afd6b69462", "proviso": {"selected": 345, "time_share": 0.9004, "missed": [], "selection_s": 1.7, "reason": null}, "format": 20}
 {"id": "realeval:4b84b4d4f3", "proviso": {"selected": 9, "time_share": 0.0087, "missed": [], "selection_s": 1.9, "reason": null}, "format": 20}
+{"id": "select:function:sqlglot/generators/sqlite.py:334", "proviso": {"selected": 2, "time_share": 0.0078, "missed": [], "selection_s": 0.16, "reason": null}, "format": 21}
+{"id": "select:class:sqlglot/expressions/math.py:114", "proviso": {"selected": 4, "time_share": 0.0269, "missed": [], "selection_s": 1.44, "reason": null}, "format": 21}
+{"id": "select:module:sqlglot/executor/env.py:268", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.4, "reason": null}, "format": 21}
+{"id": "select:function:sqlglot/parser.py:5944", "proviso": {"selected": 1164, "time_share": 1.0, "missed": [], "selection_s": 1.4, "reason": "your edited functions run in 97% of the test time"}, "format": 21}
+{"id": "select:class:sqlglot/generators/redshift.py:88", "proviso": {"selected": 83, "time_share": 0.0738, "missed": [], "selection_s": 1.52, "reason": null}, "format": 21}
+{"id": "select:module:sqlglot/expressions/core.py:2491", "proviso": {"selected": 1091, "time_share": 0.9993, "missed": [], "selection_s": 1.73, "reason": null}, "format": 21}
+{"id": "select:function:sqlglot/generator.py:4862", "proviso": {"selected": 813, "time_share": 0.2012, "missed": [], "selection_s": 1.13, "reason": null}, "format": 21}
+{"id": "select:class:sqlglot/dialects/exasol.py:20", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.39, "reason": null}, "format": 21}
+{"id": "select:module:sqlglot/executor/env.py:259", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.65, "reason": null}, "format": 21}
+{"id": "realeval:6de29fdce7", "proviso": {"selected": 1157, "time_share": 1.0, "missed": [], "selection_s": 3.81, "reason": "your edited functions run in 97% of the test time"}, "format": 21}
+{"id": "realeval:b3b6c57cea", "proviso": {"selected": 283, "time_share": 0.1247, "missed": [], "selection_s": 0.23, "reason": null}, "format": 21}
+{"id": "realeval:afd6b69462", "proviso": {"selected": 345, "time_share": 0.9004, "missed": [], "selection_s": 2.44, "reason": null}, "format": 21}
+{"id": "realeval:4b84b4d4f3", "proviso": {"selected": 9, "time_share": 0.0087, "missed": [], "selection_s": 2.24, "reason": null}, "format": 21}

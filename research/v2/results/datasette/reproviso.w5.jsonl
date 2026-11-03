@@ -64,3 +64,14 @@
 {"id": "select:module:datasette/views/table_create_alter.py:371", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 1.92, "reason": null}, "format": 20}
 {"id": "realeval:374b194ff5", "proviso": {"selected": 2018, "time_share": 0.9917, "missed": [], "selection_s": 2.97, "reason": null}, "format": 20}
 {"id": "realeval:aa8c2e36f7", "proviso": {"selected": 2837, "time_share": 1.0, "missed": [], "selection_s": 1.57, "reason": null}, "format": 20}
+{"id": "select:function:datasette/views/table_create_alter.py:1383", "proviso": {"selected": 42, "time_share": 0.0836, "missed": [], "selection_s": 0.36, "reason": null}, "format": 21}
+{"id": "select:class:datasette/views/stored_queries.py:28", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 2.0, "reason": null}, "format": 21}
+{"id": "select:module:datasette/views/table_create_alter.py:360", "proviso": {"selected": 2849, "time_share": 1.0, "missed": [], "selection_s": 1.75, "reason": "module datasette.app no longer imports"}, "format": 21}
+{"id": "select:function:datasette/views/database.py:930", "proviso": {"selected": 191, "time_share": 0.2162, "missed": [], "selection_s": 0.42, "reason": null}, "format": 21}
+{"id": "select:function:datasette/utils/sql_analysis.py:585", "proviso": {"selected": 117, "time_share": 0.1248, "missed": [], "selection_s": 0.25, "reason": null}, "format": 21}
+{"id": "select:module:datasette/utils/sql_analysis.py:84", "proviso": {"selected": 2220, "time_share": 0.9832, "missed": [], "selection_s": 1.85, "reason": null}, "format": 21}
+{"id": "select:function:datasette/views/table.py:1803", "proviso": {"selected": 545, "time_share": 0.452, "missed": [], "selection_s": 0.59, "reason": null}, "format": 21}
+{"id": "select:class:datasette/views/table_extras.py:618", "proviso": {"selected": 2202, "time_share": 0.9831, "missed": [], "selection_s": 1.79, "reason": null}, "format": 21}
+{"id": "select:module:datasette/views/table_create_alter.py:371", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 2.17, "reason": null}, "format": 21}
+{"id": "realeval:374b194ff5", "proviso": {"selected": 2018, "time_share": 0.9917, "missed": [], "selection_s": 3.52, "reason": null}, "format": 21}
+{"id": "realeval:aa8c2e36f7", "proviso": {"selected": 2837, "time_share": 1.0, "missed": [], "selection_s": 1.71, "reason": null}, "format": 21}
