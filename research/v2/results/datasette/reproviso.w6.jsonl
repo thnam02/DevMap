@@ -53,3 +53,14 @@
 {"id": "select:module:datasette/views/execute_write.py:32", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 1.78, "reason": null}, "format": 17}
 {"id": "realeval:0c31778580", "proviso": {"selected": 2546, "time_share": 1.0, "missed": [], "selection_s": 0.07, "reason": "new source file datasette/background_tasks.py"}, "format": 17}
 {"id": "realeval:d2098e9f84", "proviso": {"selected": 173, "time_share": 0.2826, "missed": [], "selection_s": 0.38, "reason": null}, "format": 17}
+{"id": "select:function:datasette/utils/__init__.py:1139", "proviso": {"selected": 32, "time_share": 0.0868, "missed": [], "selection_s": 0.43, "reason": null}, "format": 20}
+{"id": "select:class:datasette/views/table_extras.py:662", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 2.05, "reason": null}, "format": 20}
+{"id": "select:class:datasette/views/base.py:79", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 2.01, "reason": null}, "format": 20}
+{"id": "select:function:datasette/views/table_create_alter.py:900", "proviso": {"selected": 102, "time_share": 0.1045, "missed": [], "selection_s": 0.37, "reason": null}, "format": 20}
+{"id": "select:function:datasette/telemetry_registry.py:390", "proviso": {"selected": 26, "time_share": 0.0779, "missed": [], "selection_s": 0.23, "reason": null}, "format": 20}
+{"id": "select:module:datasette/views/table_create_alter.py:370", "proviso": {"selected": 2849, "time_share": 1.0, "missed": [], "selection_s": 1.6, "reason": "module datasette.app no longer imports"}, "format": 20}
+{"id": "select:function:datasette/views/table_create_alter.py:1280", "proviso": {"selected": 42, "time_share": 0.0836, "missed": [], "selection_s": 0.43, "reason": null}, "format": 20}
+{"id": "select:class:datasette/views/stored_queries.py:253", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 1.75, "reason": null}, "format": 20}
+{"id": "select:module:datasette/views/execute_write.py:32", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 1.97, "reason": null}, "format": 20}
+{"id": "realeval:0c31778580", "proviso": {"selected": 2546, "time_share": 1.0, "missed": [], "selection_s": 0.91, "reason": "your edited functions run in 91% of the test time"}, "format": 20}
+{"id": "realeval:d2098e9f84", "proviso": {"selected": 173, "time_share": 0.2826, "missed": [], "selection_s": 0.32, "reason": null}, "format": 20}

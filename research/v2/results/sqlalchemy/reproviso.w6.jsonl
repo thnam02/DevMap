@@ -53,3 +53,14 @@
 {"id": "realeval:9ad90693bc", "proviso": {"selected": 643, "time_share": 0.705, "missed": [], "selection_s": 0.75, "reason": null}, "format": 17}
 {"id": "realeval:5462cec4c5", "proviso": {"selected": 9467, "time_share": 1.0, "missed": [], "selection_s": 5.06, "reason": null}, "format": 17}
 {"id": "realeval:009aa8cb63", "proviso": {"selected": 23, "time_share": 0.1366, "missed": [], "selection_s": 0.36, "reason": null}, "format": 17}
+{"id": "select:function:lib/sqlalchemy/sql/compiler.py:2749", "proviso": {"selected": 976, "time_share": 0.7614, "missed": [], "selection_s": 1.28, "reason": null}, "format": 20}
+{"id": "select:class:lib/sqlalchemy/sql/coercions.py:1137", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.64, "reason": null}, "format": 20}
+{"id": "select:module:lib/sqlalchemy/sql/operators.py:2740", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.64, "reason": null}, "format": 20}
+{"id": "select:function:lib/sqlalchemy/sql/schema.py:4739", "proviso": {"selected": 44, "time_share": 0.6921, "missed": [], "selection_s": 1.02, "reason": null}, "format": 20}
+{"id": "select:class:lib/sqlalchemy/engine/default.py:311", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.66, "reason": null}, "format": 20}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:351", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 3.2, "reason": null}, "format": 20}
+{"id": "select:function:lib/sqlalchemy/sql/compiler.py:3806", "proviso": {"selected": 1620, "time_share": 0.7843, "missed": [], "selection_s": 1.57, "reason": null}, "format": 20}
+{"id": "select:class:lib/sqlalchemy/sql/functions.py:2138", "proviso": {"selected": 9721, "time_share": 1.0, "missed": [], "selection_s": 2.57, "reason": null}, "format": 20}
+{"id": "realeval:9ad90693bc", "proviso": {"selected": 646, "time_share": 0.7531, "missed": [], "selection_s": 1.28, "reason": null}, "format": 20}
+{"id": "realeval:5462cec4c5", "proviso": {"selected": 9467, "time_share": 1.0, "missed": [], "selection_s": 14.8, "reason": null}, "format": 20}
+{"id": "realeval:009aa8cb63", "proviso": {"selected": 1, "time_share": 0.012, "missed": [], "selection_s": 0.41, "reason": null}, "format": 20}
