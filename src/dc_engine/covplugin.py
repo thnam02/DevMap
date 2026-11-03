@@ -27,6 +27,15 @@ import pytest
 ROOT = os.getcwd()
 PKG = os.path.join(ROOT, os.environ.get("COVMAP_PKG", "sqlglot")) + os.sep
 SUBPROC = "subprocess.py"
+MPPROC = os.path.join("multiprocessing", "process.py")
+
+
+def _forked():
+    """os.fork() (multiprocessing's fork context, or a test forking itself): the child may run package code."""
+    try:
+        _target().always = True
+    except Exception:  # noqa: BLE001
+        pass
 PKG_NAME = os.path.basename(os.path.normpath(os.environ.get("COVMAP_PKG", "sqlglot")))
 
 
@@ -173,6 +182,9 @@ def _classify(code):
     elif code.co_name == "__init__" and fn.endswith(SUBPROC) and \
             getattr(code, "co_qualname", "Popen.__init__") == "Popen.__init__":   # not CompletedProcess or errors
         k = "subprocess"
+    elif code.co_name == "start" and fn.endswith(MPPROC) and \
+            getattr(code, "co_qualname", "BaseProcess.start") == "BaseProcess.start":
+        k = "process"   # multiprocessing (Process, Pool, ProcessPoolExecutor): the child runs code the recorder cannot see
     else:
         k = None
     _kind[id(code)] = (code, k)  # keyed by identity: code objects of different files can compare equal
@@ -187,6 +199,9 @@ def _start(code, offset):
     if k is None:
         return DISABLE
     t = _target()
+    if k == "process":
+        t.always = True
+        return DISABLE
     if k == "subprocess":
         try:
             popen_args = sys._getframe(1).f_locals.get("args")
@@ -325,14 +340,17 @@ def pytest_runtest_logreport(report):
         _times[report.nodeid] = (round(report.duration, 4), report.passed)
 
 
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(before=_forked)
+
+
 def pytest_sessionfinish(session, exitstatus):
     mon.set_events(TOOL, 0)
     mon.free_tool_id(TOOL)
     used = {k for v in _map.values() for k in v["fx"]}
     _map["__fixtures__"] = {k: {"funcs": sorted(t.funcs), "classes": sorted(t.classes), "always": t.always}
                             for k, t in _fixtures.items() if k in used and (t.funcs or t.classes or t.always)}
-    for v in _map.values():
-        if "fx" in v:
-            v["fx"] = [k for k in v["fx"] if k in _map["__fixtures__"]]
+    # every test keeps the keys of all the fixture instances it used, also those whose own record is empty (a fixture
+    # that only patches the clock): an edit to such a fixture in conftest.py is traced to its users through them
     _map["__global__"] = {"funcs": sorted(GLOBAL.funcs)}
     json.dump(_map, open(os.environ["COVMAP_OUT"], "w"))

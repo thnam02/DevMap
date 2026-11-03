@@ -247,6 +247,25 @@ class SharedTestCode(unittest.TestCase):
         self.edit("tests/conftest.py", "def base():\n    return 1", "def base():\n    return 2")
         self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_a.py"])
 
+    def test_fixture_under_a_version_check_is_compared_like_any_other(self):
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root)
+        self.edit("tests/conftest.py", "@pytest.fixture\ndef clock():\n    return 0",
+                  "import sys\nif sys.version_info >= (3, 0):\n    @pytest.fixture\n    def clock():\n        return 0")
+        g("commit", "-qam", "v")
+        self.edit("tests/conftest.py", "        return 0", "        return 1")
+        self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_b.py"])
+        self.edit("tests/conftest.py", "(3, 0)", "(3, 1)")   # the condition itself: every test below
+        self.assertEqual(len(self.files()), 4)
+
+    def test_removed_import_changes_only_the_definitions_using_it(self):
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root)
+        self.edit("tests/conftest.py", "import pytest", "import pytest\nfrom collections import OrderedDict")
+        self.edit("tests/conftest.py", 'return {"rows": 1}', 'return OrderedDict(rows=1)')
+        g("commit", "-qam", "i")
+        self.edit("tests/conftest.py", "from collections import OrderedDict", "from collections import OrderedDict as OD")
+        self.edit("tests/conftest.py", 'return OrderedDict(rows=1)', 'return OD(rows=1)')
+        self.assertEqual(self.files(), ["tests/conftest.py", "tests/test_a.py"])
+
     def test_root_conftest_fixture_edit_selects_its_users(self):
         open(os.path.join(self.root, "conftest.py"), "w").write("import pytest\n\n\n@pytest.fixture\ndef cfg():\n    return 1\n")
         subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "-A"], cwd=self.root)
@@ -426,7 +445,13 @@ class SubprocessRule(unittest.TestCase):
             import subprocess, sys
             import pkg
 
-            def test_git():
+            import pytest
+
+            @pytest.fixture
+            def clock():
+                return 0
+
+            def test_git(clock):
                 subprocess.run(["git", "--version"], capture_output=True)
                 assert pkg.f() == 1
 
@@ -435,11 +460,22 @@ class SubprocessRule(unittest.TestCase):
 
             def test_shell():
                 subprocess.run("true && true", shell=True)
+
+            def _child():
+                pass
+
+            def test_mp():
+                import multiprocessing
+                p = multiprocessing.get_context("spawn").Process(target=_child)
+                p.start(); p.join()
         '''))
         env = {**os.environ, "PYTHONPATH": root}
         cov = REC.record(root, "pkg", os.path.join(root, "cov.json"), sys.executable, ["tests"], 1, "", [], env)
         self.assertFalse(cov["tests/test_s.py::test_git"]["always"])
         self.assertTrue(cov["tests/test_s.py::test_shell"]["always"])
+        self.assertTrue(cov["tests/test_s.py::test_mp"]["always"])
+        # a fixture that runs no package code is still listed for the tests that use it
+        self.assertTrue(any(k.startswith("tests/test_s.py::clock@") for k in cov["tests/test_s.py::test_git"]["fx"]))
         self.assertTrue(cov["tests/test_s.py::test_python"]["always"])
 
 
@@ -482,3 +518,41 @@ class LaunchRule(unittest.TestCase):
         self.assertTrue(C._runs_project_code("cd x && git log"))
         self.assertTrue(C._runs_project_code(["env", "A=1", "python3", "-c", "1"]))
         self.assertTrue(C._runs_project_code([sys.executable, "-c", "1"]))
+
+
+class DocstringOnlyEdits(unittest.TestCase):
+    """A function edit that changes only its docstring, comments or formatting changes no behaviour."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp(prefix="impact-doc-")
+        os.makedirs(os.path.join(self.root, "pkg"))
+        os.makedirs(os.path.join(self.root, "tests"))
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write(
+            'def f(x):\n    """Double x."""\n    return 2 * x\n')
+        open(os.path.join(self.root, "tests", "test_a.py"), "w").write("def test_f():\n    pass\n")
+        open(os.path.join(self.root, "tests", "test_doc.py"), "w").write(
+            "import pkg\n\ndef test_doc():\n    assert pkg.f.__doc__\n")
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root,
+                                      capture_output=True)
+        g("init", "-q"); g("add", "-A"); g("commit", "-qm", "b")
+        self.cov = {"tests/test_a.py::test_f": {"funcs": [["pkg/__init__.py", 1]]},
+                    "tests/test_doc.py::test_doc": {"funcs": [["pkg/__init__.py", 1]]}}
+
+    def tearDown(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def write(self, text):
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write(text)
+        return I.selection(self.root, self.cov, sys.executable)[0]
+
+    def test_docstring_edit_runs_only_docstring_readers(self):
+        self.assertEqual(self.write('def f(x):\n    """Return 2x."""\n    return 2 * x\n'),
+                         ["tests/test_doc.py::test_doc"])
+
+    def test_comment_and_formatting_edit_runs_nothing(self):
+        self.assertEqual(self.write('def f(x):\n    """Double x."""\n    # twice\n    return 2*x\n'),
+                         ["tests/test_doc.py::test_doc"][:0])
+
+    def test_code_edit_still_runs_its_tests(self):
+        self.assertEqual(sorted(self.write('def f(x):\n    """Double x."""\n    return 3 * x\n')),
+                         ["tests/test_a.py::test_f", "tests/test_doc.py::test_doc"])

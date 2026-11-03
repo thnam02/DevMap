@@ -21,6 +21,8 @@ the input came from (e.g. a MySQL input run as StarRocks) are reported once.
 from __future__ import annotations
 
 import ast
+import copy
+import types
 import functools
 import glob
 import hashlib
@@ -529,6 +531,10 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             # statements in a class body or at module level run at import: their effect is read off the
             # import-time state below
             module_level.add(f)
+    # an edit that leaves a function's code as it was (docstrings, comments, formatting) changes no behaviour; only its
+    # __doc__ differs, so tests that read docstrings still run it (below)
+    doc_only, format_only = _docstring_only_edits(root, funcs)
+    funcs -= doc_only | format_only
     # the edited functions alone already reach nearly all of the test time: the selection can only grow from here
     # (import-time readers are added, never removed), so run the full suite and skip the import-time snapshot
     if funcs and EARLY_FULL_SHARE < 1:
@@ -652,6 +658,12 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     # test-support modules in the package: a changed constant or class is read by tests that run none of the
     # module's functions (`from pkg.testing import TIMEOUT`), so tests whose file names a changed value are added
     naming = _Naming(root)
+    if doc_only:
+        doc_readers = {n for n in tests_of(covmap) if dep.reaches(n, doc_only, "funcs")
+                       and naming.mentions(n.split("::", 1)[0], {"__doc__", "doctest", "getdoc"})}
+        shared |= doc_readers
+        shared_why.append(f"{len(doc_only)} function(s) with docstring/format-only edits: "
+                          f"{len(doc_readers)} test(s) that read docstrings")
     for f in sorted(support_edits):
         names, unnamed = _changed_top_names(_git(root, "show", f"HEAD:{f}"), _read(root, f))
         stem = f.rsplit("/", 1)[-1][:-3]
@@ -665,6 +677,59 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
         why["shared_test_code"] = shared_why
     _flush_file_names()
     return sorted(set(sel) | shared) + extra, why
+
+
+def _strip_docstrings(node):
+    """A copy of a definition without the docstrings of it and of the definitions inside it."""
+    node = copy.deepcopy(node)
+    for n in ast.walk(node):
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and n.body and \
+                isinstance(n.body[0], ast.Expr) and isinstance(n.body[0].value, ast.Constant) and \
+                isinstance(n.body[0].value.value, str):
+            n.body = n.body[1:] or [ast.Pass()]
+    return node
+
+
+def _func_code(src: str) -> dict[str, tuple[int, str, str]]:
+    """{qualified function name: (first line incl. decorators, code without docstrings, code with them)}; comments
+    and formatting are not part of the syntax tree, so they never count."""
+    try:
+        tree = ast.parse(src)
+    except SyntaxError:
+        return {}
+    out: dict[str, tuple[int, str, str]] = {}
+
+    def walk(body, prefix):
+        for node in body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                start = min([d.lineno for d in node.decorator_list] + [node.lineno])
+                out.setdefault(prefix + node.name, (start, ast.dump(_strip_docstrings(node)), ast.dump(node)))
+            elif isinstance(node, ast.ClassDef):
+                walk(node.body, prefix + node.name + ".")
+            else:
+                for field in ("body", "orelse", "finalbody"):
+                    sub = getattr(node, field, None)
+                    if isinstance(sub, list):
+                        walk(sub, prefix)
+                for hnd in getattr(node, "handlers", None) or []:
+                    walk(hnd.body, prefix)
+    walk(tree.body, "")
+    return out
+
+
+def _docstring_only_edits(root: str, funcs: set[tuple[str, int]]) -> tuple[set, set]:
+    """The edited functions whose code is unchanged apart from docstrings, comments and formatting: (those whose
+    docstrings changed, those where only comments or formatting did)."""
+    doc, fmt = set(), set()
+    for f in {f for f, _ in funcs}:
+        old, new = _func_code(_git(root, "show", f"HEAD:{f}")), _func_code(_read(root, f))
+        by_start = {v[0]: (name, v) for name, v in old.items()}
+        for g, ln in funcs:
+            if g == f and ln in by_start:
+                name, (_, code, full) = by_start[ln]
+                if name in new and new[name][1] == code:
+                    (fmt if new[name][2] == full else doc).add((g, ln))
+    return doc, fmt
 
 
 def _read(root: str, path: str) -> str:
@@ -702,8 +767,10 @@ def _bound_names(node) -> set[str]:
 
 
 def _refs(node) -> set[str]:
+    """Names a definition uses, parameters included (a fixture requests another fixture by parameter name)."""
     return {x.id for x in ast.walk(node) if isinstance(x, ast.Name)} | \
-        {x.attr for x in ast.walk(node) if isinstance(x, ast.Attribute)}
+        {x.attr for x in ast.walk(node) if isinstance(x, ast.Attribute)} | \
+        {x.arg for x in ast.walk(node) if isinstance(x, ast.arg)}
 
 
 def _change_closure(tree, changed: set[str]) -> set[str]:
@@ -752,20 +819,49 @@ def _changed_top_names(old_src: str, new_src: str) -> tuple[set[str] | None, boo
     return _change_closure(nt, changed) - only_imports, sorted(ou) != sorted(nu)
 
 
-def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool]:
+def _flat_statements(body) -> tuple[list, list[str]]:
+    """The statements of a module with if/try/with blocks opened up (a fixture defined under `if sys.version_info`
+    is compared like any other), and the blocks' own conditions (if tests, handled exceptions, with items)."""
+    stmts, guards = [], []
+    for node in body:
+        if isinstance(node, (ast.If, ast.While)):
+            guards.append(type(node).__name__ + ":" + ast.dump(node.test))
+        elif isinstance(node, ast.Try) or type(node).__name__ == "TryStar":
+            guards.append("Try:" + ",".join(ast.dump(h.type) if h.type else "*" for h in node.handlers))
+        elif isinstance(node, (ast.With, ast.AsyncWith)):
+            guards.append("With:" + ",".join(ast.dump(it) for it in node.items))
+        else:
+            stmts.append(node)
+            continue
+        for field in ("body", "orelse", "finalbody"):
+            sub = getattr(node, field, None)
+            if isinstance(sub, list):
+                s2, g2 = _flat_statements(sub)
+                stmts += s2
+                guards += g2
+        for hnd in getattr(node, "handlers", None) or []:
+            s2, g2 = _flat_statements(hnd.body)
+            stmts += s2
+            guards += g2
+    return stmts, guards
+
+
+def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, set[str]]:
     """What an edit to shared test code (a conftest.py or a helper module) changes, by comparing its top-level
-    definitions in the base and the working tree: (changed fixtures, changed other functions/classes, whether other
-    module-level code changed). New definitions and added imports change nothing existing (tests using them were
-    edited and run anyway: loguru added two helpers to its conftest)."""
+    definitions in the base and the working tree (blocks such as `if sys.version_info ...:` opened up): (changed
+    fixtures, changed other functions/classes, whether other module-level code or a block condition changed, names
+    whose import was removed). New definitions and added imports change nothing existing (tests using them were edited
+    and run anyway: loguru added two helpers to its conftest); a removed import changes the definitions that use it."""
     def parse(src: str):
         try:
             tree = ast.parse(src)
         except SyntaxError:
             return None
+        stmts, guards = _flat_statements(tree.body)
         defs: dict[str, tuple[str, bool]] = {}
-        other: list[str] = []
-        imports: set[str] = set()
-        for node in tree.body:
+        other: list[str] = list(guards)
+        imports: dict[str, set[str]] = {}
+        for node in stmts:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 fixture = any("fixture" in ast.unparse(d) for d in getattr(node, "decorator_list", []))
                 name = node.name
@@ -775,27 +871,29 @@ def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool]:
                             if kw.arg == "name" and isinstance(kw.value, ast.Constant):
                                 name = kw.value.value
                 hook = name.startswith("pytest_")  # hooks act on every test
-                defs[name] = (ast.dump(node), fixture and not hook)
+                dump = ast.dump(_strip_docstrings(node))
+                defs[name] = (dump, fixture and not hook)
                 if hook:
-                    other.append(ast.dump(node))
+                    other.append(dump)
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
-                imports.add(ast.dump(node))
+                imports[ast.dump(node)] = {(a.asname or a.name).split(".")[0] for a in node.names}
+            elif isinstance(node, ast.Pass):
+                continue
             elif not (isinstance(node, ast.Expr) and isinstance(getattr(node, "value", None), ast.Constant)):
                 other.append(ast.dump(node))   # module-level statements (docstrings aside)
         return defs, other, imports
     old_src = _git(root, "show", f"HEAD:{path}")
-    try:
-        new_src = open(os.path.join(root, path), encoding="utf-8").read()
-    except OSError:
-        new_src = ""
+    new_src = _read(root, path)
     old, new = parse(old_src) if old_src else None, parse(new_src) if new_src else None
     if old is None or new is None:   # a new, deleted or unparsable file: assume it affects everything below it
-        return set(), set(), True
+        return set(), set(), True, set()
     (od, oo, oi), (nd, no, ni) = old, new
     fixtures = {n for n, (dump, fx) in od.items() if fx and nd.get(n, (None,))[0] != dump}
     helpers = {n for n, (dump, fx) in od.items() if not fx and nd.get(n, (None,))[0] != dump}
-    module_level = sorted(oo) != sorted(no) or bool(oi - ni)   # changed statements or a removed import
-    return fixtures, helpers, module_level
+    module_level = sorted(oo) != sorted(no)
+    still = set().union(*ni.values()) if ni else set()
+    removed = {n for d in set(oi) - set(ni) for n in oi[d]} - still
+    return fixtures, helpers, module_level, removed
 
 
 def _shared_test_code_tests(root: str, covmap: dict, touched: list[str], test_files: set[str]) -> tuple[set, list]:
@@ -825,26 +923,34 @@ def _shared_test_code_tests(root: str, covmap: dict, touched: list[str], test_fi
             continue   # a test module: runs itself
         d = t.rsplit("/", 1)[0] if "/" in t else ""
         below = [n for n in nodes if not d or n.startswith(d + "/")]
-        fixtures, helpers, module_level = _test_code_changes(root, t)
+        fixtures, helpers, module_level, removed = _test_code_changes(root, t)
         if module_level:
             out.update(below)
             why.append(f"{t}: every test below {d or 'the root'}")
             continue
-        if helpers or fixtures:
-            # definitions of this file that use a changed one, transitively, are changed in effect (a fixture calling
-            # a helper that calls the edited helper)
+        if helpers or fixtures or removed:
+            # definitions of this file that use a changed one or a removed import, transitively, are changed in effect
+            # (a fixture calling a helper that calls the edited helper)
             try:
-                tree = ast.parse(_read(root, t))
+                stmts, _ = _flat_statements(ast.parse(_read(root, t)).body)
             except (SyntaxError, ValueError):
                 out.update(below)
                 continue
-            is_fx = {node.name: any("fixture" in ast.unparse(x) for x in node.decorator_list) for node in tree.body
+            is_fx = {node.name: any("fixture" in ast.unparse(x) for x in node.decorator_list) for node in stmts
                      if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
-            for name in _change_closure(tree, fixtures | helpers) - fixtures - helpers:
+            seeds = fixtures | helpers | removed
+            for name in _change_closure(types.SimpleNamespace(body=stmts), seeds) - seeds:
                 (fixtures if is_fx.get(name) else helpers).add(name)
         if fixtures and base == "conftest.py":
             prefixes = tuple(f"{d}::{x}@" for x in fixtures)
-            out.update(n for n in below if any(k.startswith(prefixes) for k in covmap[n].get("fx", [])))
+            users = {n for n in below if any(k.startswith(prefixes) for k in covmap[n].get("fx", []))}
+            # a map recorded before every used fixture was kept has no keys for fixtures that ran no package code:
+            # then the tests whose file names the fixture
+            unknown = {x for x in fixtures
+                       if not any(k.startswith(f"{d}::{x}@") for n in below for k in covmap[n].get("fx", []))}
+            if unknown:
+                users |= {n for n in below if mentions(n.split("::", 1)[0], unknown)}
+            out.update(users)
             why.append(f"{t}: tests using fixture(s) {', '.join(sorted(fixtures))}")
         if helpers:
             out.update(n for n in below if mentions(n.split("::", 1)[0], helpers))
