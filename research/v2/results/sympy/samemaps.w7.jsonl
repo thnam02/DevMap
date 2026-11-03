@@ -8,3 +8,13 @@
 {"id": "select:module:sympy/core/assumptions_generated.py:1485", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 2.98, "reason": null}, "format": 17}
 {"id": "realeval:94f14043f5", "proviso": {"selected": 32, "time_share": 0.0453, "missed": [], "selection_s": 0.19, "reason": null}, "format": 17}
 {"id": "realeval:751a370416", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 0.11, "reason": "your edited functions run in 100% of the test time"}, "format": 17}
+{"id": "select:function:sympy/core/mul.py:827", "proviso": {"selected": 161, "time_share": 0.7322, "missed": ["sympy/functions/special/tests/test_hyper.py::test_eval_nseries"], "selection_s": 0.43, "reason": null}, "format": 20}
+{"id": "select:class:sympy/core/numbers.py:3517", "proviso": {"selected": 576, "time_share": 0.999, "missed": [], "selection_s": 3.85, "reason": null}, "format": 20}
+{"id": "select:module:sympy/core/assumptions_generated.py:1522", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 3.62, "reason": null}, "format": 20}
+{"id": "select:function:sympy/core/numbers.py:985", "proviso": {"selected": 67, "time_share": 0.3394, "missed": [], "selection_s": 0.52, "reason": null}, "format": 20}
+{"id": "select:module:sympy/core/relational.py:1586", "proviso": {"selected": 355, "time_share": 0.94, "missed": [], "selection_s": 3.63, "reason": null}, "format": 20}
+{"id": "select:class:sympy/core/numbers.py:775", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 22.87, "reason": "module sympy no longer imports"}, "format": 20}
+{"id": "select:function:sympy/core/containers.py:262", "proviso": {"selected": 193, "time_share": 0.7755, "missed": [], "selection_s": 2.55, "reason": null}, "format": 20}
+{"id": "select:module:sympy/core/assumptions_generated.py:1485", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 2.99, "reason": null}, "format": 20}
+{"id": "realeval:94f14043f5", "proviso": {"selected": 32, "time_share": 0.0453, "missed": [], "selection_s": 0.8, "reason": null}, "format": 20}
+{"id": "realeval:751a370416", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 0.26, "reason": "your edited functions run in 100% of the test time"}, "format": 20}

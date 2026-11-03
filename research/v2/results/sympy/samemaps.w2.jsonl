@@ -8,3 +8,13 @@
 {"id": "select:class:sympy/functions/special/error_functions.py:129", "proviso": {"selected": 22, "time_share": 0.0595, "missed": [], "selection_s": 3.59, "reason": null}, "format": 17}
 {"id": "select:class:sympy/core/numbers.py:3520", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 40.43, "reason": "module sympy no longer imports"}, "format": 17}
 {"id": "realeval:434184cdcf", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 0.14, "reason": "your edited functions run in 97% of the test time"}, "format": 17}
+{"id": "select:function:sympy/core/numbers.py:1191", "proviso": {"selected": 3, "time_share": 0.0005, "missed": [], "selection_s": 0.44, "reason": null}, "format": 20}
+{"id": "select:class:sympy/functions/combinatorial/numbers.py:1821", "proviso": {"selected": 1, "time_share": 0.0, "missed": [], "selection_s": 3.71, "reason": null}, "format": 20}
+{"id": "select:module:sympy/core/assumptions_generated.py:1504", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 3.69, "reason": null}, "format": 20}
+{"id": "select:function:sympy/functions/elementary/miscellaneous.py:883", "proviso": {"selected": 1, "time_share": 0.0012, "missed": [], "selection_s": 0.19, "reason": null}, "format": 20}
+{"id": "select:class:sympy/core/numbers.py:3569", "proviso": {"selected": 383, "time_share": 0.9385, "missed": [], "selection_s": 3.85, "reason": null}, "format": 20}
+{"id": "select:module:sympy/core/assumptions_generated.py:1506", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 3.64, "reason": null}, "format": 20}
+{"id": "select:function:sympy/core/operations.py:263", "proviso": {"selected": 52, "time_share": 0.4231, "missed": [], "selection_s": 0.19, "reason": null}, "format": 20}
+{"id": "select:class:sympy/functions/special/error_functions.py:129", "proviso": {"selected": 22, "time_share": 0.0595, "missed": [], "selection_s": 3.53, "reason": null}, "format": 20}
+{"id": "select:class:sympy/core/numbers.py:3520", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 41.1, "reason": "module sympy no longer imports"}, "format": 20}
+{"id": "realeval:434184cdcf", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 0.77, "reason": "your edited functions run in 97% of the test time"}, "format": 20}

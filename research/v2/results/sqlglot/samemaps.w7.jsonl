@@ -11,3 +11,16 @@
 {"id": "realeval:76004d7f33", "proviso": {"selected": 33, "time_share": 0.0349, "missed": [], "selection_s": 1.3, "reason": null}, "format": 17}
 {"id": "realeval:87b1402737", "proviso": {"selected": 19, "time_share": 0.0332, "missed": [], "selection_s": 0.11, "reason": null}, "format": 17}
 {"id": "realeval:bb6220b76a", "proviso": {"selected": 946, "time_share": 0.2072, "missed": [], "selection_s": 1.16, "reason": null}, "format": 17}
+{"id": "select:function:sqlglot/generators/duckdb.py:599", "proviso": {"selected": 3, "time_share": 0.0241, "missed": [], "selection_s": 0.63, "reason": null}, "format": 20}
+{"id": "select:class:sqlglot/dialects/tableau.py:10", "proviso": {"selected": 2, "time_share": 0.0081, "missed": [], "selection_s": 1.7, "reason": null}, "format": 20}
+{"id": "select:module:sqlglot/jsonpath.py:221", "proviso": {"selected": 1000, "time_share": 0.226, "missed": [], "selection_s": 1.59, "reason": null}, "format": 20}
+{"id": "select:function:sqlglot/optimizer/simplify.py:1619", "proviso": {"selected": 16, "time_share": 0.0284, "missed": [], "selection_s": 0.34, "reason": null}, "format": 20}
+{"id": "select:class:sqlglot/generators/mysql.py:171", "proviso": {"selected": 214, "time_share": 0.0979, "missed": [], "selection_s": 1.56, "reason": null}, "format": 20}
+{"id": "select:module:sqlglot/expressions/core.py:2481", "proviso": {"selected": 1091, "time_share": 0.9993, "missed": [], "selection_s": 1.78, "reason": null}, "format": 20}
+{"id": "select:function:sqlglot/generators/sqlite.py:328", "proviso": {"selected": 2, "time_share": 0.0078, "missed": [], "selection_s": 0.16, "reason": null}, "format": 20}
+{"id": "select:class:sqlglot/expressions/temporal.py:311", "proviso": {"selected": 2, "time_share": 0.0079, "missed": [], "selection_s": 1.56, "reason": null}, "format": 20}
+{"id": "realeval:1a782c55a8", "proviso": {"selected": 205, "time_share": 0.105, "missed": [], "selection_s": 1.5, "reason": null}, "format": 20}
+{"id": "realeval:a5804178a5", "proviso": {"selected": 336, "time_share": 0.895, "missed": [], "selection_s": 1.61, "reason": null}, "format": 20}
+{"id": "realeval:76004d7f33", "proviso": {"selected": 33, "time_share": 0.0349, "missed": [], "selection_s": 1.47, "reason": null}, "format": 20}
+{"id": "realeval:87b1402737", "proviso": {"selected": 19, "time_share": 0.0332, "missed": [], "selection_s": 0.31, "reason": null}, "format": 20}
+{"id": "realeval:bb6220b76a", "proviso": {"selected": 946, "time_share": 0.2072, "missed": [], "selection_s": 1.31, "reason": null}, "format": 20}
