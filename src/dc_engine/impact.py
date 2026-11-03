@@ -943,12 +943,15 @@ def _inert(expr) -> bool:
     return True
 
 
-def _new_definition(node, old_names: set[str]) -> bool:
+def _new_definition(node, old_names: set[str], old_imported: set[str] = frozenset()) -> bool:
     """A statement that only defines something new: binds at least one name the base did not bind (none of them
     special to pytest) from inert expressions (`requires_x = pytest.mark.skipif(not HAS_X, reason=...)`)."""
     if isinstance(node, ast.Pass) or (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)):
         return True
-    if isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+    if isinstance(node, (ast.Import, ast.ImportFrom)):
+        # an added import changes nothing existing, unless it rebinds a name that was something else
+        return not _bound_names(node) & (old_names - old_imported)
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
         names = _bound_names(node)
         return bool(names) and not names & old_names and not any(n.startswith(("pytest_", "collect_ignore"))
                                                                   for n in names)
@@ -974,7 +977,14 @@ def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, 
             return None
         stmts, guards = _flat_statements(tree.body)
         defs: dict[str, tuple[str, bool]] = {}
-        other: list = [(g, inner) for g, inner in guards]   # (description, the statements it guards)
+        # a block is identified by its condition and what it guards (pvlib has several `try: ... except KeyError:`)
+        # (definitions inside count by name, not body: an edited fixture under `if sys.version_info` is compared as
+        # a fixture, below, and leaves its block unchanged)
+        def ident(x):
+            if isinstance(x, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                return "def:" + x.name
+            return ast.dump(x)
+        other: list = [(g + "|" + "|".join(ident(x) for x in inner), inner) for g, inner in guards]
         imports: dict[str, set[str]] = {}
         for node in stmts:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -1011,8 +1021,14 @@ def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, 
     old_dumps = collections.Counter(d for d, _ in oo)
     new_dumps = collections.Counter(d for d, _ in no)
     removed_other = old_dumps - new_dumps
-    added_other = [(d, inner) for d, inner in no if (new_dumps - old_dumps)[d] > 0]
-    module_level = bool(removed_other) or any(not all(_new_definition(x, onames) for x in inner)
+    surplus = new_dumps - old_dumps
+    added_other = []
+    for d, inner in no:   # only the surplus copies of a statement are new
+        if surplus[d] > 0:
+            surplus[d] -= 1
+            added_other.append((d, inner))
+    imported = set().union(*oi.values()) if oi else set()
+    module_level = bool(removed_other) or any(not all(_new_definition(x, onames, imported) for x in inner)
                                               for _, inner in added_other)
     still = set().union(*ni.values()) if ni else set()
     removed = {n for d in set(oi) - set(ni) for n in oi[d]} - still

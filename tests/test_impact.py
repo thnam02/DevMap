@@ -265,6 +265,14 @@ class SharedTestCode(unittest.TestCase):
                   "except ImportError:\n    HAS_X = False\n\nrequires_x = pytest.mark.skipif(not HAS_X, reason='x')")
         self.assertEqual(self.files(), ["tests/conftest.py"])
 
+    def test_new_block_shaped_like_an_existing_one_selects_nothing_more(self):
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=self.root)
+        block = "try:\n    import json\n    HAS_{0} = True\nexcept ImportError:\n    HAS_{0} = False\n"
+        self.edit("tests/conftest.py", "MARK = 1", "MARK = 1\n\n" + block.format("A"))
+        g("commit", "-qam", "a")
+        self.edit("tests/conftest.py", "MARK = 1", "MARK = 1\n\n" + block.format("B"))
+        self.assertEqual(self.files(), ["tests/conftest.py"])
+
     def test_changed_module_level_value_in_conftest_selects_every_test_below_it(self):
         self.edit("tests/conftest.py", "MARK = 1", "MARK = 1\nMARK = 3")
         self.assertEqual(len(self.files()), 4)
