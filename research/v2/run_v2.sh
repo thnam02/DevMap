@@ -2,6 +2,7 @@
 # Proviso v2 evaluation, step by step (no API cost; each step resumable; results pushed as they finish).
 #   bash research/v2/run_v2.sh gate     # 1. safety gate: the main benchmark (650 changes) re-scored with v2, its
 #                                       #    dependency maps re-recorded by the v2 recorder (v1 maps kept as *.v1.json)
+#   bash research/v2/run_v2.sh rescore  # 1 without re-recording (selection rules changed, recorder did not)
 #   bash research/v2/run_v2.sh samemaps # 1b. selection logic alone: v2 vs v1 on the same (v1) dependency maps
 #   bash research/v2/run_v2.sh dev      # 2. NameRTS benchmark, development projects (loguru pylint pvlib) + verify
 #   bash research/v2/run_v2.sh test     # 3. NameRTS benchmark, test projects (sphinx seaborn xarray dask sympy)
@@ -16,6 +17,10 @@ step=${1:-}
 case $step in
   gate)
     PROVISO_RERECORD=1 bash research/v2/run_reproviso.sh ;;
+  rescore)
+    # the gate without re-recording: the current selection logic on the maps the last gate recorded (use when only
+    # selection rules changed, not the recorder)
+    bash research/v2/run_reproviso.sh ;;
   samemaps)
     # selection logic alone: the current Proviso on the v1 dependency maps, compared with v1 on the same maps.
     # Same interpreter as the gate (the evaluation venv): the import-time snapshot imports the package with it, and

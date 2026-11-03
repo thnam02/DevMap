@@ -648,17 +648,24 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             if only_file is not None:  # an import binding: read only by its own module's code
                 direct = {fl for fl in direct if fl[0] == only_file}
             # names bound at import from the value (aliases), and their aliases in turn: their users read it too
+            # (for an import binding, only within its own module: other modules have their own bindings, whose
+            # changes the snapshot reports under their own keys)
+            here = (lambda fl: fl[0] == only_file) if only_file is not None else (lambda fl: True)
             seen_alias, frontier = set(), {attr}
             for _ in range(3):
-                new = {n[7:] for name in frontier for fl in by_name.get(name, ()) for n in idx.get(fl, ())
+                new = {n[7:] for name in frontier for fl in by_name.get(name, ()) if here(fl) for n in idx.get(fl, ())
                        if n.startswith("assign:")} - seen_alias - {attr}
                 if not new:
                     break
                 seen_alias |= new
                 for t in new:
-                    direct |= by_name.get(t, set())
+                    direct |= {fl for fl in by_name.get(t, set()) if here(fl)}
                 frontier = new
-            calls = {"call:" + def_name[fl] for fl in direct if fl in def_name}
+            # (not for special methods: `__init__` is called through its class, and matching every
+            # `super().__init__()` call by that name would select nearly everything; coverage already credits a base
+            # __init__ to each test that runs it)
+            calls = {"call:" + def_name[fl] for fl in direct if fl in def_name
+                     and not (def_name[fl].startswith("__") and def_name[fl].endswith("__"))}
             callers = {fl for c in calls for fl in by_name.get(c, set())}
             return direct | callers
 

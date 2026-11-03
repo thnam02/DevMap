@@ -558,6 +558,30 @@ class ImportBindings(unittest.TestCase):
         sel, why = I.selection(root, cov, sys.executable)
         self.assertNotIn("t::b", sel or ["<all>"])
 
+    def test_import_binding_aliases_stay_in_its_module_and_init_callers_do_not_spread(self):
+        # pylint: `from typing import Callable` -> `from collections.abc import Callable` in pkg/typing_.py; another
+        # module merely holds the string "Callable" in a table read by an __init__ that every class's
+        # super().__init__() calls: none of that reads the changed binding
+        root = tempfile.mkdtemp(prefix="impact-alias-")
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, "pkg"))
+        open(os.path.join(root, "pkg", "__init__.py"), "w").write("")
+        t_src = "from typing import Callable\n\nHook = Callable[[int], None]\n"
+        open(os.path.join(root, "pkg", "typing_.py"), "w").write(t_src)
+        open(os.path.join(root, "pkg", "std.py"), "w").write(
+            "DEPRECATED = {'typing': ['Callable']}\n\n\nclass Base:\n    def __init__(self):\n"
+            "        self.d = DEPRECATED\n\n\nclass Child(Base):\n    def __init__(self):\n"
+            "        super().__init__()\n")
+        g = lambda *a: subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *a], cwd=root,
+                                      capture_output=True)
+        g("init", "-q"); g("add", "-A"); g("commit", "-qm", "b")
+        cov = {"t::child": {"funcs": [["pkg/std.py", 10]]}, "t::base": {"funcs": [["pkg/std.py", 5]]},
+               "t::typing": {"funcs": [["pkg/typing_.py", 1]]}}
+        open(os.path.join(root, "pkg", "typing_.py"), "w").write(t_src.replace("typing import", "collections.abc import"))
+        sel, why = I.selection(root, cov, sys.executable)
+        self.assertNotIn("t::child", sel or ["<all>"])
+        self.assertNotIn("t::base", sel or ["<all>"])
+
 
 if __name__ == "__main__":
     unittest.main()
