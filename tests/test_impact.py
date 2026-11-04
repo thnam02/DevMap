@@ -647,3 +647,45 @@ class DocstringOnlyEdits(unittest.TestCase):
     def test_code_edit_still_runs_its_tests(self):
         self.assertEqual(sorted(self.write('def f(x):\n    """Double x."""\n    return 3 * x\n')),
                          ["tests/test_a.py::test_f", "tests/test_doc.py::test_doc"])
+
+
+class AblationSwitches(unittest.TestCase):
+    """PROVISO_OFF / PROVISO_MODE turn one part off for the ablation; unset, nothing changes."""
+
+    def setUp(self):
+        self.sel_case = Selection("test_no_change_selects_nothing")
+        self.sel_case.setUp()
+        self.addCleanup(self.sel_case.tearDown)
+
+    def run_with(self, env, edit=None, new_file=None):
+        from unittest import mock
+        c = self.sel_case
+        if edit:
+            c.edit(*edit)
+        if new_file:
+            open(os.path.join(c.root, "pkg", new_file), "w").write("x = 1\n")
+        with mock.patch.dict(os.environ, env, clear=False):
+            return c.sel()
+
+    def test_traditional_mode_runs_everything_when_import_time_code_changes(self):
+        sel, why = self.run_with({"PROVISO_MODE": "traditional"}, edit=('MODE = "x"', 'MODE = "y"'))
+        self.assertIsNone(sel)
+        self.assertIn("traditional", why["reason"])
+
+    def test_default_is_unchanged(self):
+        sel, why = self.run_with({}, edit=('MODE = "x"', 'MODE = "y"'))
+        self.assertIsNotNone(sel)
+
+    def test_snapshot_off_selects_tests_that_ran_code_of_the_file(self):
+        sel, why = self.run_with({"PROVISO_OFF": "snapshot"}, edit=("UNUSED = 1", "UNUSED = 2"))
+        self.assertEqual(sorted(sel), ["t::area", "t::helper", "t::label", "t::sub_label"])
+
+    def test_newfiles_off_runs_everything_for_a_new_file(self):
+        sel, why = self.run_with({"PROVISO_OFF": "newfiles"}, new_file="new.py")
+        self.assertIsNone(sel)
+
+    def test_docs_off_counts_docstring_edits(self):
+        sel, _ = self.run_with({"PROVISO_OFF": "docs"}, edit=("def helper():", 'def helper():\n    """Doc."""'))
+        self.assertEqual(sel, ["t::helper"])
+        sel, _ = self.run_with({}, edit=('"""Doc."""', '"""Doc!"""'))
+        self.assertEqual(sel, [])

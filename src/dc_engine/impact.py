@@ -38,6 +38,22 @@ import xml.etree.ElementTree as ET
 from typing import Any
 
 STATE_DIR = ".dc-engine"
+
+
+# Ablation switches (evaluation only; unset = the normal behaviour). PROVISO_OFF is a comma-separated list of parts to
+# turn off: snapshot (no import-time comparison: a statement edit selects the tests that ran any code of its file),
+# docs (docstring/format-only function edits count as edits), hints (names in annotations count as reads), callers
+# (special methods seed the caller step), bindings (import bindings are read anywhere), newfiles (a new or deleted
+# source file runs the full suite), conftest (edits to shared test code select nothing beyond themselves, as in v1);
+# recorder parts (subprocess, mp, fixtures, setup) are read by covplugin at recording time. PROVISO_MODE=traditional:
+# a change to code that runs at import selects every test (all tests run it), and docstring edits count: the classic
+# "every test that executes changed code" rule.
+def _off(part: str) -> bool:
+    return part in {x.strip() for x in os.environ.get("PROVISO_OFF", "").split(",") if x.strip()}
+
+
+def _traditional() -> bool:
+    return os.environ.get("PROVISO_MODE", "") == "traditional"
 RIPPLE_MAX_ITEMS = 5
 
 # --------------------------------------------------------------------------- change -> code units
@@ -211,7 +227,7 @@ def _head_cached(root: str, kind: str, files: list[str], compute):
 
 
 def _name_index(root: str, files: list[str]) -> dict[tuple[str, int], set[str]]:
-    rows = _head_cached(root, "names_index3", files, lambda r, fs: [[f, ln, sorted(ns)] for (f, ln), ns in
+    rows = _head_cached(root, "names_index3" + ("-hints" if _off("hints") else ""), files, lambda r, fs: [[f, ln, sorted(ns)] for (f, ln), ns in
                                                                    _name_index_uncached(r, fs).items()])
     return {(f, ln): set(ns) for f, ln, ns in rows}
 
@@ -245,7 +261,8 @@ def _name_index_uncached(root: str, files: list[str]) -> dict[tuple[str, int], s
             continue
         # names inside type annotations are not read when the code runs (`x: Optional[int]`, `-> Union[A, B]`):
         # modernising them (Optional[X] -> X | None, dropping a typing import) changes no behaviour
-        in_annotation = {id(sub) for node in ast.walk(tree) for ann in _annotations(node) for sub in ast.walk(ann)}
+        in_annotation = set() if _off("hints") else \
+            {id(sub) for node in ast.walk(tree) for ann in _annotations(node) for sub in ast.walk(ann)}
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
                 start = min([d.lineno for d in getattr(node, "decorator_list", [])] + [node.lineno])
@@ -554,6 +571,8 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
                 and l.endswith(".py")]
     # a new source file changes existing code only through what importing it does (a registration, a patched
     # value), which the import-time comparison below sees; its own definitions are new, so nothing existing reads them
+    if (new_src or gone_src) and (_off("newfiles") or _traditional() or _off("snapshot")):
+        return None, {"reason": f"new or deleted source file {(new_src or gone_src)[0]}"}
     funcs: set[tuple[str, int]] = set()
     module_level: set[str] = set()
     class_names: set[str] = set()
@@ -580,7 +599,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             module_level.add(f)
     # an edit that leaves a function's code as it was (docstrings, comments, formatting) changes no behaviour; only its
     # __doc__ differs, so tests that read docstrings still run it (below)
-    doc_only, format_only = _docstring_only_edits(root, funcs)
+    doc_only, format_only = (set(), set()) if (_off("docs") or _traditional()) else _docstring_only_edits(root, funcs)
     funcs -= doc_only | format_only
     # the edited functions alone already reach nearly all of the test time: the selection can only grow from here
     # (import-time readers are added, never removed), so run the full suite and skip the import-time snapshot
@@ -604,6 +623,16 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     why: dict[str, Any] = {"functions": len(funcs), "files": sorted(module_level),
                            "changed_functions": sorted([f, ln] for f, ln in funcs)}
     read_names: set[str] = set()
+    if (hit_global or module_level) and _traditional():
+        # every test imports the package, so every test executes code that runs at import
+        return None, {**why, "reason": "code that runs at import changed (traditional mode)"}
+    if (hit_global or module_level) and _off("snapshot"):
+        # without the import-time comparison: the tests that ran any code of the files edited at module level
+        files_hit = module_level | {f for f, _ in hit_global}
+        funcs |= {tuple(x) for v in dep.tests.values() for x in v.get("funcs", []) if x[0] in files_hit} | \
+            {k for r in dep.fx.values() for k in r[0] if k[0] in files_hit}
+        hit_global, module_level = [], set()
+        why["snapshot_off_files"] = sorted(files_hit)
     if new_src:
         why["new_source_files"] = sorted(new_src)
     if hit_global or module_level or new_src:
@@ -665,7 +694,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             # `super().__init__()` call by that name would select nearly everything; coverage already credits a base
             # __init__ to each test that runs it)
             calls = {"call:" + def_name[fl] for fl in direct if fl in def_name
-                     and not (def_name[fl].startswith("__") and def_name[fl].endswith("__"))}
+                     and (_off("callers") or not (def_name[fl].startswith("__") and def_name[fl].endswith("__")))}
             callers = {fl for c in calls for fl in by_name.get(c, set())}
             return direct | callers
 
@@ -677,7 +706,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             attr = key.rsplit(":", 1)[1].rsplit(".", 1)[-1]
             if cls is None:
                 kf = _key_module_file(key, prefix, set(bindings))
-                if kf is not None and attr in bindings[kf]:
+                if kf is not None and attr in bindings[kf] and not _off("bindings"):
                     # an import binding: only its own module reads it (and the callers of that code)
                     readers_any |= readers_of(attr, only_file=kf)
                     continue
@@ -719,7 +748,8 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     extra = sorted({t for t in touched_tests if t.endswith(".py") or t in test_files})
     why["agent_tests"] = extra
     # shared test code: fixtures in conftest.py, other conftest code, helper modules in test directories
-    shared, shared_why = _shared_test_code_tests(root, covmap, touched_tests, test_files)
+    shared, shared_why = (set(), []) if _off("conftest") else \
+        _shared_test_code_tests(root, covmap, touched_tests, test_files)
     # test-support modules in the package: a changed constant or class is read by tests that run none of the
     # module's functions (`from pkg.testing import TIMEOUT`), so tests whose file names a changed value are added
     naming = _Naming(root)
