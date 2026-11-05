@@ -28,10 +28,14 @@ ROOT = os.getcwd()
 PKG = os.path.join(ROOT, os.environ.get("COVMAP_PKG", "sqlglot")) + os.sep
 SUBPROC = "subprocess.py"
 MPPROC = os.path.join("multiprocessing", "process.py")
+# ablation switches (evaluation only; see impact._off): subprocess, mp, fixtures, setup
+_OFF = {x.strip() for x in os.environ.get("PROVISO_OFF", "").split(",") if x.strip()}
 
 
 def _forked():
     """os.fork() (multiprocessing's fork context, or a test forking itself): the child may run package code."""
+    if "mp" in _OFF:
+        return
     try:
         _target().always = True
     except Exception:  # noqa: BLE001
@@ -200,14 +204,15 @@ def _start(code, offset):
         return DISABLE
     t = _target()
     if k == "process":
-        t.always = True
+        if "mp" not in _OFF:
+            t.always = True
         return DISABLE
     if k == "subprocess":
         try:
             popen_args = sys._getframe(1).f_locals.get("args")
         except Exception:  # noqa: BLE001
             popen_args = None
-        if popen_args is None or _runs_project_code(popen_args):
+        if popen_args is None or "subprocess" in _OFF or _runs_project_code(popen_args):
             t.always = True
         return DISABLE
     key, method = k
@@ -362,7 +367,7 @@ def pytest_sessionfinish(session, exitstatus):
     # a test collected here whose body never ran (its setup failed, or the run stopped before it) has no record of
     # what it depends on: it is always selected, so a recording glitch costs time, not safety (sqlalchemy lost 39
     # tests from one recording). Skipped tests stay out: in the same environment they are skipped again.
-    for nid in sorted(_setup_failed) + [n for n in _collected if n not in _reported]:
+    for nid in ([] if "setup" in _OFF else sorted(_setup_failed) + [n for n in _collected if n not in _reported]):
         if nid not in _map:
             _map[nid] = {"funcs": [], "classes": [], "always": True, "time": 0.0, "ok": False, "fx": [],
                          "unrecorded": True}
@@ -371,5 +376,9 @@ def pytest_sessionfinish(session, exitstatus):
                             for k, t in _fixtures.items() if k in used and (t.funcs or t.classes or t.always)}
     # every test keeps the keys of all the fixture instances it used, also those whose own record is empty (a fixture
     # that only patches the clock): an edit to such a fixture in conftest.py is traced to its users through them
+    if "fixtures" in _OFF:
+        for v in _map.values():
+            if "fx" in v:
+                v["fx"] = [k for k in v["fx"] if k in _map["__fixtures__"]]
     _map["__global__"] = {"funcs": sorted(GLOBAL.funcs)}
     json.dump(_map, open(os.environ["COVMAP_OUT"], "w"))

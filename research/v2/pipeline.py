@@ -26,6 +26,7 @@ import os
 import random
 import shutil
 import statistics as st
+st_mean = st.mean
 import subprocess
 import sys
 import time
@@ -127,6 +128,9 @@ def env(tree, extra=(), **kw):
     e = {"PATH": os.path.dirname(PY) + os.pathsep + os.environ.get("PATH", "/usr/bin:/bin"),
          "HOME": os.environ.get("HOME", "/tmp"), "PYTHONDONTWRITEBYTECODE": "1", "PROVISO_PY": PY,
          "PYTHONPATH": os.pathsep.join(paths)}
+    for k in ("PROVISO_OFF", "PROVISO_MODE"):   # ablation switches reach the recorder (covplugin)
+        if os.environ.get(k):
+            e[k] = os.environ[k]
     e.update(kw)
     return e
 
@@ -873,6 +877,81 @@ def samemaps_worker(i, n):
             reset(tree)
 
 
+def ablation_name():
+    """'off-docs-hints', 'traditional', ... from PROVISO_OFF / PROVISO_MODE; '' when no switch is set."""
+    parts = sorted(x.strip() for x in os.environ.get("PROVISO_OFF", "").split(",") if x.strip())
+    name = ("off-" + "-".join(parts)) if parts else ""
+    if os.environ.get("PROVISO_MODE"):
+        name = (name + "-" if name else "") + os.environ["PROVISO_MODE"]
+    return name
+
+
+def ablate_worker(i, n):
+    """Proviso's selection with the ablation switches in the environment, on the maps the last gate recorded (selection
+    switches only: recorder switches would need new recordings). Rows go to ablate-<name>.w*.jsonl."""
+    name = ablation_name()
+    stage = f"ablate-{name}"
+    done = {k for k, r in merged(stage).items() if r.get("format") == IS.FORMAT}
+    tr, base = merged("truth"), baseline()
+    jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in merged("realeval").values()]
+    jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
+    cov0, plain0 = covmap(), {k: t for k, (ok, t) in base.items()}
+    uni0 = universe_of(cov0, failing(base))
+    bug_by_id = {b["id"]: b for b in bugs()}
+    real = {r["id"]: r for r in merged("mine").values()}
+    tree = make_tree(f"w{i}", CFG["commit"])
+    for st, cid in jobs:
+        try:
+            if st == "select":
+                tree = make_tree(f"w{i}", CFG["commit"])
+                apply_bug(tree, bug_by_id[cid])
+                row = _proviso_row(tree, cov0, uni0, truth_failing(tr[cid], uni0), plain0)
+            else:
+                r, d = real[cid], os.path.join(WORK, "real", cid)
+                tree = make_tree(f"w{i}", r["commit"] + "^")
+                b0 = jload(os.path.join(d, "base_outcomes.json")) or {}
+                cov = jload(os.path.join(d, "covmap.json")) or {}
+                if not cov or not b0:
+                    raise RuntimeError("no coverage map or baseline recorded for this commit")
+                reset(tree)
+                apply_commit_src(tree, r)
+                row = _proviso_row(tree, cov, universe_of(cov, failing(b0)), r["failing"],
+                                   {k: t for k, (ok, t) in b0.items()})
+            append(stage, i, {"id": f"{st}:{cid}", "proviso": row, "format": IS.FORMAT, "variant": name})
+        except Exception as e:  # noqa: BLE001
+            print(st, cid, "ERROR", repr(e)[:300], flush=True)
+        finally:
+            reset(tree)
+
+
+def ablate():
+    """Run ablate_worker for the switches in the environment and compare with the current Proviso rows (same maps):
+    breaking changes with a missed failure, new misses, and the time share. -> results/<repo>/ablate-<name>.md"""
+    name = ablation_name()
+    if not name:
+        sys.exit("set PROVISO_OFF (e.g. docs,hints) or PROVISO_MODE=traditional")
+    require_importable()
+    jobs = list(merged("select").values()) + list(merged("realeval").values())
+    parallel("ablate", jobs)
+    new = {k: r for k, r in merged(f"ablate-{name}").items() if r.get("format") == IS.FORMAT}
+    lines = [f"# {REPO}: Proviso with {name} vs Proviso (snapshot format {IS.FORMAT}), same dependency maps", "",
+             "| change set | changes | Proviso misses | ablated misses | new misses | Proviso time share | ablated time share |",
+             "|---|---|---|---|---|---|---|"]
+    for st in ("select", "realeval"):
+        rows = [r for r in merged(st).values() if f"{st}:{r['id']}" in new]
+        brk = [r for r in rows if r["truth"]]
+        a = lambda r: new[f"{st}:{r['id']}"]["proviso"]
+        pm = [r for r in brk if r["selectors"]["proviso"]["missed"]]
+        am = [r for r in brk if a(r)["missed"]]
+        nm = [r for r in brk if set(a(r)["missed"]) - set(r["selectors"]["proviso"]["missed"])]
+        mean = lambda xs: 100 * st_mean(xs) if xs else 0
+        lines.append(f"| {'planted' if st == 'select' else 'real'} | {len(rows)} | {len(pm)} | {len(am)} | {len(nm)} | "
+                     f"{mean([r['selectors']['proviso']['time_share'] for r in rows]):.1f}% | "
+                     f"{mean([a(r)['time_share'] for r in rows]):.1f}% |")
+    open(os.path.join(RES, f"ablate-{name}.md"), "w").write("\n".join(lines) + "\n")
+    log("ablate:", name, "; ".join(l for l in lines[4:]))
+
+
 def samemaps():
     """Run samemaps_worker, then compare with v1 on the same maps: changes where the current logic misses a failing
     test that v1 caught, and the time share either way. Written to results/<repo>/samemaps.md."""
@@ -1144,9 +1223,9 @@ STAGES = {"prepare": prepare, "baseline": baseline, "covmap": covmap, "testmon":
                              parallel("select", bugs(), NR_WORKERS)),
           "mine": lambda: parallel("mine", commits()), "realeval": lambda: parallel("realeval", real_set(), NR_WORKERS),
           "deflake": deflake, "report": report, "retestmon": retestmon, "tdad": tdad, "rescore": lambda: rescore(), "reproviso": reproviso,
-          "samemaps": samemaps}
+          "samemaps": samemaps, "ablate": ablate}
 WORKER = {"truth": truth_worker, "select": select_worker, "mine": mine_worker, "realeval": realeval_worker,
-          "reproviso": reproviso_worker, "samemaps": samemaps_worker,
+          "reproviso": reproviso_worker, "samemaps": samemaps_worker, "ablate": ablate_worker,
           "deflake": deflake_worker}
 
 if __name__ == "__main__":
@@ -1160,6 +1239,7 @@ if __name__ == "__main__":
     if sys.argv[2] == "worker":
         WORKER[sys.argv[3]](int(sys.argv[4]), int(sys.argv[5]))
     else:
-        for s in ([k for k in STAGES if k not in ("retestmon", "tdad", "rescore", "reproviso")] if sys.argv[2] == "all" else sys.argv[2:]):
+        for s in ([k for k in STAGES if k not in ("retestmon", "tdad", "rescore", "reproviso", "samemaps", "ablate")]
+                  if sys.argv[2] == "all" else sys.argv[2:]):
             log("==", s)
             STAGES[s]()
