@@ -57,6 +57,22 @@ def merge(parts: list[dict]) -> dict:
     return out
 
 
+# PROVISO_RECORD_FILE_TIMEOUT (seconds; unset = no limit, the behaviour every v2 result was recorded with): a test file
+# whose recording runs longer, or crashes, is not left out of the map: its collected tests are recorded as always
+# selected (like a test whose setup failed), so a slow or crashing file costs time, not safety. Each such test is given
+# an equal share of the time the file was allowed.
+FILE_TIMEOUT = int(os.environ.get("PROVISO_RECORD_FILE_TIMEOUT", "0") or 0)
+
+
+def _unrecorded(root: str, python: str, f: str, env: dict, spent: int) -> dict:
+    r = subprocess.run([python, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider", "-p", "no:randomly", f],
+                       cwd=root, env=env, capture_output=True, text=True, timeout=600)
+    ids = [line.strip() for line in r.stdout.splitlines() if "::" in line and not line.startswith(" ")]
+    share = round(spent / len(ids), 4) if ids and spent else 0.0
+    return {nid: {"funcs": [], "classes": [], "always": True, "time": share, "ok": False, "fx": [], "unrecorded": True}
+            for nid in ids}
+
+
 def record(root: str, pkg: str, out: str, python: str | None = None, targets: list[str] | None = None,
            workers: int | None = None, before_test: str = "", extra_args: list[str] | None = None,
            env: dict | None = None) -> dict:
@@ -74,12 +90,18 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
         e = {**base_env, "COVMAP_OUT": part, "COVMAP_PKG": pkg}
         if before_test:
             e["COVMAP_BEFORE_TEST"] = before_test
-        subprocess.run([python, "-m", "pytest", "-p", "dc_engine.covplugin", "-p", "no:cacheprovider", "-q",
-                        "--tb=no", "-p", "no:randomly", *(extra_args or []), f], cwd=root, env=e, capture_output=True)
+        cmd = [python, "-m", "pytest", "-p", "dc_engine.covplugin", "-p", "no:cacheprovider", "-q", "--tb=no",
+               "-p", "no:randomly", *(extra_args or []), f]
+        try:
+            subprocess.run(cmd, cwd=root, env=e, capture_output=True, timeout=FILE_TIMEOUT or None)
+        except subprocess.TimeoutExpired:
+            return _unrecorded(root, python, f, base_env, FILE_TIMEOUT)
         try:
             return json.load(open(part))
         except (OSError, ValueError):
-            return {}
+            # the file's recording crashed before writing its part: with the safety setting on, its tests are kept and
+            # always selected instead of disappearing from the map
+            return _unrecorded(root, python, f, base_env, 0) if FILE_TIMEOUT else {}
 
     try:
         with ThreadPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:

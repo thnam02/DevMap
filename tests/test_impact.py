@@ -689,3 +689,24 @@ class AblationSwitches(unittest.TestCase):
         self.assertEqual(sel, ["t::helper"])
         sel, _ = self.run_with({}, edit=('"""Doc."""', '"""Doc!"""'))
         self.assertEqual(sel, [])
+
+
+class RecordFileTimeout(unittest.TestCase):
+    def test_slow_file_is_kept_as_always_selected(self):
+        from dc_engine import record as REC
+        root = tempfile.mkdtemp(prefix="impact-to-")
+        self.addCleanup(shutil.rmtree, root, True)
+        os.makedirs(os.path.join(root, "pkg"))
+        os.makedirs(os.path.join(root, "tests"))
+        open(os.path.join(root, "pkg", "__init__.py"), "w").write("def f():\n    return 1\n")
+        open(os.path.join(root, "tests", "test_fast.py"), "w").write("import pkg\n\ndef test_a():\n    assert pkg.f()\n")
+        open(os.path.join(root, "tests", "test_slow.py"), "w").write(
+            "import time\n\ndef test_b():\n    time.sleep(30)\n\ndef test_c():\n    pass\n")
+        old = REC.FILE_TIMEOUT
+        REC.FILE_TIMEOUT = 5
+        self.addCleanup(setattr, REC, "FILE_TIMEOUT", old)
+        cov = REC.record(root, "pkg", os.path.join(root, "cov.json"), sys.executable, ["tests"], 2, "", [],
+                         {**os.environ, "PYTHONPATH": root})
+        self.assertFalse(cov["tests/test_fast.py::test_a"]["always"])
+        self.assertTrue(cov["tests/test_slow.py::test_b"]["always"])
+        self.assertTrue(cov["tests/test_slow.py::test_c"]["unrecorded"])

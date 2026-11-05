@@ -37,6 +37,7 @@ from dc_engine import record as REC  # noqa: E402
 OUT = P.OUT
 WORK = P.WORK
 EVAL_FORMAT = 1
+# maps recorded with a per-file limit (see record_map); a map recorded without one is kept
 # the package Proviso records (relative to the tree) and the test directories of each repository
 LAYOUT = {"sympy__sympy": ("sympy", ["sympy"]), "sphinx-doc__sphinx": ("sphinx", ["tests"]),
           "pydata__xarray": ("xarray", ["xarray/tests"]), "pytest-dev__pytest": ("src", ["testing"]),
@@ -93,6 +94,9 @@ def record_map(instance: str, repo: str, tree: str, py: str, workers: int) -> tu
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([tree, *extra]), "PYTHONDONTWRITEBYTECODE": "1",
            "PATH": os.path.dirname(py) + os.pathsep + os.environ.get("PATH", "")}
     t = time.time()
+    # a test file whose recording exceeds the limit (some sympy files ran for over an hour) or crashes: its tests are
+    # always selected rather than missing from the map
+    REC.FILE_TIMEOUT = int(os.environ.get("PROVISO_RECORD_FILE_TIMEOUT", "900"))
     REC.record(tree, pkg, path, py, targets, workers, "", ["-p", "no:randomly"], env)
     secs = round(time.time() - t)
     json.dump({"format": IS.FORMAT, "record_s": secs}, open(meta, "w"))
