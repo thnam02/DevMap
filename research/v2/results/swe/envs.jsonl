@@ -1,0 +1,46 @@
+{"repo": "mwaskom__seaborn", "version": "0.12", "env": "mwaskom__seaborn__0.12", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "mwaskom__seaborn", "version": "0.13", "env": "mwaskom__seaborn__0.13", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pallets__flask", "version": "2.0", "env": "pallets__flask__2.0", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pallets__flask", "version": "2.2", "env": "pallets__flask__2.2", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pallets__flask", "version": "2.3", "env": "pallets__flask__2.3", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "psf__requests", "version": "2.27", "env": "psf__requests__2.27", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pydata__xarray", "version": "0.12", "env": "pydata__xarray__0.12", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pydata__xarray", "version": "0.18", "env": "pydata__xarray__0.18", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pydata__xarray", "version": "0.19", "env": "pydata__xarray__0.19", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pydata__xarray", "version": "2022.03", "env": "pydata__xarray__2022.03", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pydata__xarray", "version": "2022.06", "env": "pydata__xarray__2022.06", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pydata__xarray", "version": "2022.09", "env": "pydata__xarray__2022.09", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pylint-dev__pylint", "version": "2.10", "env": "pylint-dev__pylint__2.10", "ok": false, "cutoff": "2023-11-15", "error": "install: che/uv/sdists-v10/pypi/wrapt/1.13.3/K29AalOnyWlAdILH/src/src/wrapt/__init__.py\", line 10, in <module>\n             from .decorators import (adapter_factory, AdapterFactory, decorator,\n           File \"/home/nam/.cache/uv/sdists-v10/pypi/wrapt/1.13.3/K29AalOnyWlAdILH/src/src/wrapt/decorators.py\", line 34, in <module>\n             from inspect import ismethod, isclass, formatargspec\n         ImportError: cannot import name 'formatargspec' from 'inspect' (/home/nam/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/inspect.py). Did you mean: 'formatargvalues'?\n\nhint: `wrapt` (v1.13.3) was included because `pylint` (v2.10.3.dev0) depends on `astroid` (v2.8.6) which depends on `wrapt`\n\nhint: Build failures usually indicate a problem with the package or the build environment\n"}
+{"repo": "pylint-dev__pylint", "version": "2.11", "env": "pylint-dev__pylint__2.11", "ok": false, "cutoff": "2023-11-15", "error": "install: che/uv/sdists-v10/pypi/wrapt/1.13.3/K29AalOnyWlAdILH/src/src/wrapt/__init__.py\", line 10, in <module>\n             from .decorators import (adapter_factory, AdapterFactory, decorator,\n           File \"/home/nam/.cache/uv/sdists-v10/pypi/wrapt/1.13.3/K29AalOnyWlAdILH/src/src/wrapt/decorators.py\", line 34, in <module>\n             from inspect import ismethod, isclass, formatargspec\n         ImportError: cannot import name 'formatargspec' from 'inspect' (/home/nam/.local/share/uv/python/cpython-3.12.14-linux-x86_64-gnu/lib/python3.12/inspect.py). Did you mean: 'formatargvalues'?\n\nhint: `wrapt` (v1.13.3) was included because `pylint` (v2.11.2.dev0) depends on `astroid` (v2.9.3) which depends on `wrapt`\n\nhint: Build failures usually indicate a problem with the package or the build environment\n"}
+{"repo": "pylint-dev__pylint", "version": "2.13", "env": "pylint-dev__pylint__2.13", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pylint-dev__pylint", "version": "2.14", "env": "pylint-dev__pylint__2.14", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pylint-dev__pylint", "version": "2.15", "env": "pylint-dev__pylint__2.15", "ok": false, "cutoff": "2023-11-15", "error": "install: ne 8, in <module>\n           File \"/home/nam/.cache/uv/builds-v0/.tmpiIKAdL/lib/python3.12/site-packages/setuptools/__init__.py\", line 16, in <module>\n             import setuptools.version\n           File \"/home/nam/.cache/uv/builds-v0/.tmpiIKAdL/lib/python3.12/site-packages/setuptools/version.py\", line 1, in <module>\n             import pkg_resources\n           File \"/home/nam/.cache/uv/builds-v0/.tmpiIKAdL/lib/python3.12/site-packages/pkg_resources/__init__.py\", line 2191, in <module>\n             register_finder(pkgutil.ImpImporter, find_on_path)\n                             ^^^^^^^^^^^^^^^^^^^\n         AttributeError: module 'pkgutil' has no attribute 'ImpImporter'. Did you mean: 'zipimporter'?\n\nhint: Build failures usually indicate a problem with the package or the build environment\n"}
+{"repo": "pylint-dev__pylint", "version": "2.17", "env": "pylint-dev__pylint__2.17", "ok": false, "cutoff": "2023-11-15", "error": "install: ne 8, in <module>\n           File \"/home/nam/.cache/uv/builds-v0/.tmpfRH9us/lib/python3.12/site-packages/setuptools/__init__.py\", line 16, in <module>\n             import setuptools.version\n           File \"/home/nam/.cache/uv/builds-v0/.tmpfRH9us/lib/python3.12/site-packages/setuptools/version.py\", line 1, in <module>\n             import pkg_resources\n           File \"/home/nam/.cache/uv/builds-v0/.tmpfRH9us/lib/python3.12/site-packages/pkg_resources/__init__.py\", line 2191, in <module>\n             register_finder(pkgutil.ImpImporter, find_on_path)\n                             ^^^^^^^^^^^^^^^^^^^\n         AttributeError: module 'pkgutil' has no attribute 'ImpImporter'. Did you mean: 'zipimporter'?\n\nhint: Build failures usually indicate a problem with the package or the build environment\n"}
+{"repo": "pylint-dev__pylint", "version": "2.8", "env": "pylint-dev__pylint__2.8", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pylint-dev__pylint", "version": "2.9", "env": "pylint-dev__pylint__2.9", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pylint-dev__pylint", "version": "3.0", "env": "pylint-dev__pylint__3.0", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pytest-dev__pytest", "version": "6.3", "env": "pytest-dev__pytest__6.3", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pytest-dev__pytest", "version": "7.0", "env": "pytest-dev__pytest__7.0", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pytest-dev__pytest", "version": "7.1", "env": "pytest-dev__pytest__7.1", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pytest-dev__pytest", "version": "7.2", "env": "pytest-dev__pytest__7.2", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pytest-dev__pytest", "version": "7.4", "env": "pytest-dev__pytest__7.4", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "pytest-dev__pytest", "version": "8.0", "env": "pytest-dev__pytest__8.0", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "3.5", "env": "sphinx-doc__sphinx__3.5", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "4.0", "env": "sphinx-doc__sphinx__4.0", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "4.1", "env": "sphinx-doc__sphinx__4.1", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "4.2", "env": "sphinx-doc__sphinx__4.2", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "4.3", "env": "sphinx-doc__sphinx__4.3", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "4.4", "env": "sphinx-doc__sphinx__4.4", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "5.0", "env": "sphinx-doc__sphinx__5.0", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "5.1", "env": "sphinx-doc__sphinx__5.1", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "5.2", "env": "sphinx-doc__sphinx__5.2", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "5.3", "env": "sphinx-doc__sphinx__5.3", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "6.2", "env": "sphinx-doc__sphinx__6.2", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "7.1", "env": "sphinx-doc__sphinx__7.1", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sphinx-doc__sphinx", "version": "7.2", "env": "sphinx-doc__sphinx__7.2", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sympy__sympy", "version": "1.10", "env": "sympy__sympy__1.10", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sympy__sympy", "version": "1.11", "env": "sympy__sympy__1.11", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sympy__sympy", "version": "1.12", "env": "sympy__sympy__1.12", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sympy__sympy", "version": "1.13", "env": "sympy__sympy__1.13", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sympy__sympy", "version": "1.8", "env": "sympy__sympy__1.8", "ok": true, "cutoff": "2023-11-15"}
+{"repo": "sympy__sympy", "version": "1.9", "env": "sympy__sympy__1.9", "ok": true, "cutoff": "2023-11-15"}
