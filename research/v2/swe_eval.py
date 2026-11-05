@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import argparse
 import collections
+import fcntl
+import re
 import json
 import os
 import statistics
@@ -103,6 +105,20 @@ def record_map(instance: str, repo: str, tree: str, py: str, workers: int) -> tu
     return json.load(open(path)), secs
 
 
+def without_files(patch: str, drop: set[str]) -> tuple[str, list[str]]:
+    """The patch without its changes to `drop` (SWE-bench's evaluation resets the files of the reference test patch
+    before applying it, so an agent's edits to them never take part)."""
+    parts = re.split(r"(?m)^(?=diff --git )", patch)
+    keep, dropped = [], []
+    for part in parts:
+        m = re.match(r"diff --git a/(\S+) b/(\S+)", part)
+        if m and (m.group(1) in drop or m.group(2) in drop):
+            dropped.append(m.group(2))
+            continue
+        keep.append(part)
+    return "".join(keep), dropped
+
+
 def resolve(test: str, nodes: list[str], test_files: list[str]) -> list[str]:
     """The map's node ids for a SWE-bench test name: an exact node id, a node id truncated by SWE-bench at a space
     (prefix), or (sympy) a bare test function name, looked up in the files the reference tests touch."""
@@ -151,6 +167,12 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="at most N instances (in the sample's order)")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
+    os.makedirs(WORK, exist_ok=True)
+    lock = open(os.path.join(WORK, "swe_eval.lock"), "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)   # two runs would share the work trees
+    except OSError:
+        sys.exit("another swe_eval run is active (lock: " + lock.name + ")")
     sample = json.load(open(os.path.join(OUT, "sample.json")))["instances"]
     if a.core:
         sample = [x for x in sample if x["core"]]
@@ -162,7 +184,7 @@ def main():
     if os.path.exists(out_path):
         for line in open(out_path):
             r = json.loads(line)
-            if r.get("format") == EVAL_FORMAT and r.get("proviso_format") == IS.FORMAT:
+            if r.get("format") == EVAL_FORMAT and r.get("proviso_format") == IS.FORMAT and "error" not in r:
                 done.add((r["instance"], r["case"]))
     for x in sample:
         inst, repo = x["instance"], x["repo"]
@@ -194,6 +216,10 @@ def main():
                 patch = open(c["patch"]).read() if c.get("patch") and os.path.exists(c["patch"]) else None
                 if not patch:
                     raise RuntimeError("patch file missing")
+                ref_files = set(re.findall(r"(?m)^\+\+\+ b/(\S+)$", meta[inst].get("test_patch") or ""))
+                patch, row["dropped_files"] = without_files(patch, ref_files)
+                if not patch.strip():
+                    raise RuntimeError("the agent patch only edits files the reference tests replace")
                 ap_ = subprocess.run(["git", "-C", tree, "apply", "-"], input=patch, capture_output=True, text=True)
                 if ap_.returncode:
                     ap_ = subprocess.run(["git", "-C", tree, "apply", "--3way", "-"], input=patch, capture_output=True,
