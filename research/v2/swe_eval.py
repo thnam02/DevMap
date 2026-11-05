@@ -11,7 +11,8 @@ Resumable (rows keyed by instance and case, with a format number). No API cost.
 
 Usage (PC, after swe_probe.py):
   python3 research/v2/swe_eval.py [--core] [--limit N] [--workers W]
-Output: research/v2/results/swe/eval.jsonl (one row per case), eval.md (summary per repository).
+Output: research/v2/results/swe/eval.jsonl (one row per case), eval.md (summary per repository); with --tag T
+(a later Proviso version, e.g. v2.1) eval-T.jsonl / eval-T.md.
 Maps: $PROVISO_WORK/swe/maps/<instance>.json"""
 from __future__ import annotations
 
@@ -201,6 +202,8 @@ def main():
     ap.add_argument("--core", action="store_true", help="only the core sample (the first 80 instances)")
     ap.add_argument("--limit", type=int, default=0, help="at most N instances (in the sample's order)")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
+    ap.add_argument("--tag", default="", help="a later Proviso version: rows go to eval-TAG.jsonl / eval-TAG.md "
+                                               "(the dependency maps are shared: only the selection is redone)")
     a = ap.parse_args()
     os.makedirs(WORK, exist_ok=True)
     lock = open(os.path.join(WORK, "swe_eval.lock"), "w")
@@ -214,7 +217,7 @@ def main():
     if a.limit:
         sample = sample[:a.limit]
     meta = P.load_instances()
-    out_path = os.path.join(OUT, "eval.jsonl")
+    out_path = os.path.join(OUT, f"eval-{a.tag}.jsonl" if a.tag else "eval.jsonl")
     done = set()
     if os.path.exists(out_path):
         for line in open(out_path):
@@ -322,7 +325,7 @@ def summary(out_path):
     lines.append(f"| **all** | | {len(rows)} | | | {len(allr)} | {sum(1 for r in allr if r['missed'])} | "
                  f"{100 * statistics.mean(r['time_share'] for r in allr) if allr else 0:.1f}% | "
                  f"{sum(r['full_suite'] for r in allr)} |")
-    open(os.path.join(OUT, "eval.md"), "w").write("\n".join(lines) + "\n")
+    open(out_path[:-len(".jsonl")] + ".md", "w").write("\n".join(lines) + "\n")
     print("\n".join(lines))
 
 

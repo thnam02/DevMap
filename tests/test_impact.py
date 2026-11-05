@@ -107,6 +107,39 @@ class Selection(unittest.TestCase):
         self.edit("return w * h", "return w + h")
         self.assertEqual(self.sel()[0], ["t::area"])
 
+    # v2.1: edits that line numbers alone misplace (found on SWE-bench agent patches)
+    def test_lines_appended_after_a_blank_line_credit_the_method_above(self):
+        # git places the block after the blank line that ends area(): the lines next to the insertion point are
+        # that blank line and label's `def` (seaborn-3069)
+        self.edit("        return w * h\n\n", "        return w * h\n\n        w = h\n        h = w\n\n")
+        sel, why = self.sel()
+        self.assertIn("t::area", sel)
+
+    def test_second_definition_appended_to_a_class_replaces_the_method(self):
+        # a later `def area` in the class body replaces the original (flask-5014)
+        self.edit("\nclass Sub(Calc):", "    def area(self, w, h):\n        return 0\n\n\nclass Sub(Calc):")
+        self.assertIn("t::area", self.sel()[0])
+
+    def test_deleted_def_line_makes_its_body_part_of_the_method_above(self):
+        # deleting `def label(...)` leaves its body at the end of area() (pytest-11178)
+        self.edit("    def label(self, x):\n", "")
+        self.assertIn("t::area", self.sel()[0])
+
+    def test_pytest_configuration_change_runs_the_full_suite(self):
+        open(os.path.join(self.root, "pytest.ini"), "w").write("[pytest]\naddopts = --import-mode=prepend\n")
+        sel, why = self.sel()
+        self.assertIsNone(sel)
+        self.assertIn("pytest.ini", why["reason"])
+
+    def test_configuration_file_edit_outside_the_pytest_section_selects_nothing(self):
+        open(os.path.join(self.root, "setup.cfg"), "w").write("[metadata]\nname = pkg\n")
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "add", "."], cwd=self.root, check=True)
+        subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "c"], cwd=self.root)
+        open(os.path.join(self.root, "setup.cfg"), "w").write("[metadata]\nname = pkg2\n")
+        self.assertEqual(self.sel()[0], [])
+        open(os.path.join(self.root, "setup.cfg"), "w").write("[metadata]\nname = pkg\n[tool:pytest]\naddopts = -x\n")
+        self.assertIsNone(self.sel()[0])
+
     def test_class_attribute_selects_its_readers_among_users_of_the_class(self):
         self.edit('MODE = "x"', 'MODE = "y"')
         sel, why = self.sel()

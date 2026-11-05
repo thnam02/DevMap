@@ -44,7 +44,9 @@ STATE_DIR = ".dc-engine"
 # turn off: snapshot (no import-time comparison: a statement edit selects the tests that ran any code of its file),
 # docs (docstring/format-only function edits count as edits), hints (names in annotations count as reads), callers
 # (special methods seed the caller step), bindings (import bindings are read anywhere), newfiles (a new or deleted
-# source file runs the full suite), conftest (edits to shared test code select nothing beyond themselves, as in v1);
+# source file runs the full suite), conftest (edits to shared test code select nothing beyond themselves, as in v1),
+# byname (v2.1: changed functions found from changed line numbers only), config (v2.1: pytest configuration files
+# are not looked at);
 # recorder parts (subprocess, mp, fixtures, setup) are read by covplugin at recording time. PROVISO_MODE=traditional:
 # a change to code that runs at import selects every test (all tests run it), and docstring edits count: the classic
 # "every test that executes changed code" rule.
@@ -102,6 +104,84 @@ def _units(path: str, src: str) -> tuple[list[tuple[str, int, int, bool]], list[
                             walk(sub, prefix)
     walk(tree.body, "")
     return units, classes
+
+
+def _changed_by_name(path: str, old_src: str, new_src: str) -> set[tuple[str, int]]:
+    """(v2.1) Base functions whose code differs in the working tree, matched by qualified name. Line numbers alone
+    misplace some edits: git places an inserted block that starts with a blank line after the blank line that ends
+    a method, so the lines next to the insertion point are the blank line and the NEXT method's `def`; a deleted
+    `def` line turns its body into the end of the method above; a second definition of a method appended to a class
+    replaces the first. Comparing each function's code by name credits the function that actually changed. A name
+    defined a different number of times (a redefinition) credits every base definition of it."""
+    old_units, _ = _units(path, old_src)
+    new_units, _ = _units(path, new_src)
+    if not old_units or not new_units:
+        return set()
+    old_lines, new_lines = old_src.splitlines(), new_src.splitlines()
+
+    def by_name(units, lines):
+        out: dict[str, list[tuple[int, str]]] = {}
+        for name, start, end, is_func in units:
+            if is_func:
+                text = "\n".join(l.rstrip() for l in lines[start - 1:end])
+                out.setdefault(name, []).append((start, text))
+        return out
+    old, new = by_name(old_units, old_lines), by_name(new_units, new_lines)
+    hit: set[tuple[str, int]] = set()
+    for name, defs in old.items():
+        if name not in new:
+            continue   # deleted or renamed: the line-based mapping credits it (its old lines changed)
+        if len(defs) != len(new[name]):
+            hit |= {(path, start) for start, _ in defs}
+            continue
+        hit |= {(path, start) for (start, text), (_, ntext) in zip(defs, new[name]) if text != ntext}
+    return hit
+
+
+_PYTEST_CONFIGS = {"pytest.ini": None, ".pytest.ini": None, "tox.ini": ("ini", "pytest"),
+                   "setup.cfg": ("ini", "tool:pytest"), "pyproject.toml": ("toml", "tool.pytest.ini_options")}
+
+
+def _pytest_config_change(root: str) -> str | None:
+    """(v2.1) A pytest configuration file at the project root added, deleted or edited where pytest reads it (its
+    options apply to every test: an `addopts = --import-mode=prepend` changes how every test imports), as
+    `file` or None. pytest.ini counts whole; tox.ini, setup.cfg and pyproject.toml only their pytest section."""
+    status = _git(root, "status", "--porcelain", "-uall", "--", *_PYTEST_CONFIGS)
+    for line in status.splitlines():
+        name = line[3:].strip().strip('"')
+        kind = _PYTEST_CONFIGS.get(name)
+        if kind is None:
+            if name in _PYTEST_CONFIGS:
+                return name
+            continue
+        old = _git(root, "show", f"HEAD:{name}") if line[:2].strip() not in ("??", "A") else ""
+        path = os.path.join(root, name)
+        try:
+            new = open(path, encoding="utf-8").read() if os.path.isfile(path) else ""
+        except (OSError, UnicodeDecodeError):
+            return name
+        if _config_section(old, *kind) != _config_section(new, *kind):
+            return name
+    return None
+
+
+def _config_section(text: str, fmt: str, section: str):
+    """The pytest section of a configuration file's text (None when absent; the raw text when it does not parse)."""
+    if not text.strip():
+        return None
+    try:
+        if fmt == "toml":
+            import tomllib
+            node = tomllib.loads(text)
+            for part in section.split("."):
+                node = node.get(part) if isinstance(node, dict) else None
+            return node
+        import configparser
+        cp = configparser.RawConfigParser(strict=False, interpolation=None)
+        cp.read_string(text)
+        return dict(cp.items(section)) if cp.has_section(section) else None
+    except Exception:  # noqa: BLE001  (an unparsable file: any edit counts)
+        return text
 
 
 def _changed_old_lines(diff: str) -> dict[str, set[int]]:
@@ -573,6 +653,9 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     # value), which the import-time comparison below sees; its own definitions are new, so nothing existing reads them
     if (new_src or gone_src) and (_off("newfiles") or _traditional() or _off("snapshot")):
         return None, {"reason": f"new or deleted source file {(new_src or gone_src)[0]}"}
+    cfg = None if _off("config") else _pytest_config_change(root)
+    if cfg:
+        return None, {"reason": f"pytest's configuration changed ({cfg})"}
     funcs: set[tuple[str, int]] = set()
     module_level: set[str] = set()
     class_names: set[str] = set()
@@ -597,6 +680,13 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
             # statements in a class body or at module level run at import: their effect is read off the
             # import-time state below
             module_level.add(f)
+        if not _off("byname") and os.path.isfile(os.path.join(root, f)):
+            try:
+                cur = open(os.path.join(root, f), encoding="utf-8").read()
+            except (OSError, UnicodeDecodeError):
+                cur = None
+            if cur is not None:
+                funcs |= _changed_by_name(f, src, cur)
     # an edit that leaves a function's code as it was (docstrings, comments, formatting) changes no behaviour; only its
     # __doc__ differs, so tests that read docstrings still run it (below)
     doc_only, format_only = (set(), set()) if (_off("docs") or _traditional()) else _docstring_only_edits(root, funcs)
@@ -805,7 +895,12 @@ def _func_code(src: str) -> dict[str, tuple[int, str, str]]:
         for node in body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 start = min([d.lineno for d in node.decorator_list] + [node.lineno])
-                out.setdefault(prefix + node.name, (start, ast.dump(_strip_docstrings(node)), ast.dump(node)))
+                if prefix + node.name in out:
+                    # (v2.1) defined again in the same scope: the later definition is the one that counts, and the
+                    # pair is never a docstring/format-only edit
+                    out[prefix + node.name] = (out[prefix + node.name][0], "<redefined>", "<redefined>")
+                else:
+                    out[prefix + node.name] = (start, ast.dump(_strip_docstrings(node)), ast.dump(node))
             elif isinstance(node, ast.ClassDef):
                 walk(node.body, prefix + node.name + ".")
             else:
@@ -829,7 +924,7 @@ def _docstring_only_edits(root: str, funcs: set[tuple[str, int]]) -> tuple[set, 
         for g, ln in funcs:
             if g == f and ln in by_start:
                 name, (_, code, full) = by_start[ln]
-                if name in new and new[name][1] == code:
+                if name in new and new[name][1] == code and code != "<redefined>":
                     (fmt if new[name][2] == full else doc).add((g, ln))
     return doc, fmt
 
