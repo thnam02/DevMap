@@ -12,6 +12,20 @@
 | pallets__flask | 397 | 57 | 6 | 251 |
 | **all** | 42116 | 7081 | 748 | |
 
+After dropping broken tests that no other patch of the same instance left passing (possibly failing for reasons unrelated to the patch):
+
+| repository | genuine regressing patches | distinct instances | distinct (instance, broken-test set) | patches breaking 1 test | instances by year of the issue |
+|---|---|---|---|---|---|
+| sympy__sympy | 2639 | 296 | 1168 | 795 | 2016: 13, 2017: 61, 2018: 56, 2019: 63, 2020: 49, 2021: 33, 2022: 16, 2023: 5 |
+| sphinx-doc__sphinx | 1649 | 177 | 505 | 378 | 2020: 79, 2021: 61, 2022: 25, 2023: 12 |
+| pydata__xarray | 773 | 74 | 352 | 206 | 2019: 12, 2020: 21, 2021: 12, 2022: 29 |
+| pytest-dev__pytest | 755 | 92 | 311 | 271 | 2019: 26, 2020: 26, 2021: 15, 2022: 13, 2023: 12 |
+| psf__requests | 534 | 39 | 273 | 217 | 2012: 2, 2013: 12, 2014: 10, 2015: 8, 2016: 3, 2018: 1, 2019: 1, 2020: 1, 2022: 1 |
+| pylint-dev__pylint | 419 | 36 | 145 | 147 | 2021: 13, 2022: 15, 2023: 8 |
+| mwaskom__seaborn | 86 | 14 | 42 | 15 | 2020: 1, 2022: 10, 2023: 3 |
+| pallets__flask | 57 | 6 | 12 | 1 | 2021: 1, 2022: 2, 2023: 3 |
+| **all** | 6912 | 734 | 2808 | | |
+
 Submissions with no report.json for the usable repositories: 78
 
 - verified/20231010_rag_claude2 | 500 files under verified/20231010_rag_claude2/logs/ (kinds: {'20231010_rag_claude2.eval.log': 500}; e.g. verified/20231010_rag_claude2/logs/mwaskom__seaborn-3069.20231010_rag_claude2.eval.log)
