@@ -35,17 +35,33 @@ OUT = os.path.join(HERE, "results", "swe")
 WORK = os.path.join(os.environ.get("PROVISO_WORK", os.path.expanduser("~/proviso-work/v2")), "swe")
 TIMEOUT = int(os.environ.get("SWE_PROBE_TIMEOUT", "1200"))
 # what each project needs beyond its own declared dependencies to run its tests
+PROBE_FORMAT = 2   # rows of an older probe format are probed again
 INSTALL = {
     "sympy__sympy": {"extras": "", "pkgs": ["mpmath", "pytest", "hypothesis"], "import": "sympy"},
     "sphinx-doc__sphinx": {"extras": "test", "pkgs": ["pytest"], "import": "sphinx"},
-    "pydata__xarray": {"extras": "", "pkgs": ["pytest", "scipy", "hypothesis", "pytest-timeout"], "import": "xarray"},
+    # optional backends: without them most xarray tests are skipped
+    "pydata__xarray": {"extras": "", "pkgs": ["pytest", "scipy", "hypothesis", "pytest-timeout", "dask[array]",
+                                              "netCDF4", "cftime", "bottleneck", "zarr", "h5netcdf"],
+                       "import": "xarray"},
     "pytest-dev__pytest": {"extras": "testing", "pkgs": [], "import": "_pytest"},
     "psf__requests": {"extras": "", "pkgs": ["pytest", "pytest-httpbin", "pytest-mock", "trustme", "PySocks"],
                       "import": "requests"},
-    "pylint-dev__pylint": {"extras": "", "pkgs": ["pytest"], "reqs": "requirements_test_min.txt", "import": "pylint"},
+    # astroid 2.x pins wrapt/lazy-object-proxy versions that cannot build on Python 3.12
+    "pylint-dev__pylint": {"extras": "", "pkgs": ["pytest"], "reqs": "requirements_test_min.txt", "import": "pylint",
+                           "overrides": ["wrapt>=1.15", "lazy-object-proxy>=1.9"]},
     "mwaskom__seaborn": {"extras": "stats", "pkgs": ["pytest"], "import": "seaborn"},
-    "pallets__flask": {"extras": "", "pkgs": ["pytest", "asgiref", "python-dotenv", "blinker"], "import": "flask"},
+    # flask 2.x imports werkzeug.urls.url_quote, removed in werkzeug 3
+    "pallets__flask": {"extras": "", "pkgs": ["pytest", "asgiref", "python-dotenv", "blinker", "werkzeug<3"],
+                       "import": "flask"},
 }
+# every environment: setuptools (old projects import distutils, removed in Python 3.12, which setuptools provides) and
+# a modern setuptools for building old source packages (pkgutil.ImpImporter is gone in 3.12)
+COMMON = ["setuptools"]
+BUILD_CONSTRAINTS = ["setuptools>=68"]
+
+
+def spec_id(repo: str) -> str:
+    return json.dumps([INSTALL[repo], COMMON, BUILD_CONSTRAINTS], sort_keys=True)
 
 
 def run(cmd, cwd=None, timeout=1800, env=None):
@@ -92,7 +108,8 @@ def build_env(repo: str, version: str, setup_commit: str, dates: list[str], py: 
     name = f"{repo}__{version}"
     venv = os.path.join(WORK, "envs", name)
     pyexe = os.path.join(venv, "bin", "python")
-    if os.path.exists(os.path.join(venv, ".probe_ok")):
+    marker = os.path.join(venv, ".probe_ok")
+    if os.path.exists(marker) and open(marker).read().split("\n", 1)[-1] == spec_id(repo):
         return {"env": name, "python": pyexe, "ok": True, "cached": True}
     shutil.rmtree(venv, ignore_errors=True)
     spec = INSTALL[repo]
@@ -109,7 +126,14 @@ def build_env(repo: str, version: str, setup_commit: str, dates: list[str], py: 
             return {"env": name, "ok": False, "error": "venv: " + r.stderr[-300:]}
         when = cutoff(dates)
         target = wt + (f"[{spec['extras']}]" if spec["extras"] else "")
-        cmd = ["uv", "pip", "install", "-q", "--python", pyexe, "--exclude-newer", when, "-e", target, *spec["pkgs"]]
+        extra_files = []
+        for kind, items in (("--override", spec.get("overrides", [])), ("--build-constraint", BUILD_CONSTRAINTS)):
+            if items:
+                f = os.path.join(wt, f".probe{kind.replace('-', '_')}.txt")
+                open(f, "w").write("\n".join(items) + "\n")
+                extra_files += [kind, f]
+        cmd = ["uv", "pip", "install", "-q", "--python", pyexe, "--exclude-newer", when, *extra_files, "-e", target,
+               *spec["pkgs"], *COMMON]
         if spec.get("reqs") and os.path.exists(os.path.join(wt, spec["reqs"])):
             cmd += ["-r", os.path.join(wt, spec["reqs"])]
         r = run(cmd, timeout=3600)
@@ -120,7 +144,7 @@ def build_env(repo: str, version: str, setup_commit: str, dates: list[str], py: 
             log.append(r.stderr[-1500:])
         if r.returncode:
             return {"env": name, "ok": False, "cutoff": when, "error": "install: " + "\n".join(log)[-800:]}
-        open(os.path.join(venv, ".probe_ok"), "w").write(when)
+        open(marker, "w").write(when + "\n" + spec_id(repo))
         return {"env": name, "python": pyexe, "ok": True, "cutoff": when}
     finally:
         run(["git", "-C", src, "worktree", "remove", "-f", wt])
@@ -187,9 +211,17 @@ def probe_instance(inst: dict, broken: set[str], env: dict) -> dict:
     os.close(fd)
     t0 = time.time()
     try:
-        run([py, "-m", "pytest", "-p", "no:cacheprovider", "-q", "--tb=no", "-o", "addopts=", f"--junitxml={xml}",
-             *files], cwd=tree, timeout=TIMEOUT, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+        # the project's own pytest options first (pytest's own suite needs `-p pytester` from its addopts); without
+        # them if pytest rejects them (e.g. a coverage or xdist option whose plugin is not installed)
+        base_cmd = [py, "-m", "pytest", "-p", "no:cacheprovider", "-q", "--tb=no", f"--junitxml={xml}"]
+        env_ = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        r = run([*base_cmd, *files], cwd=tree, timeout=TIMEOUT, env=env_)
         res = junit_outcomes(xml, tree)
+        addopts = "kept"
+        if not res or r.returncode in (3, 4):
+            r = run([*base_cmd, "-o", "addopts=", *files], cwd=tree, timeout=TIMEOUT, env=env_)
+            res = junit_outcomes(xml, tree)
+            addopts = "dropped"
     except subprocess.TimeoutExpired:
         return {"ok": False, "stage": "tests", "error": f"timeout after {TIMEOUT} s"}
     finally:
@@ -206,7 +238,10 @@ def probe_instance(inst: dict, broken: set[str], env: dict) -> dict:
             got = "passed" if cands and all(c == "passed" for c in cands) else (cands[0] if cands else None)
         status[t] = got or "missing"
     c = collections.Counter(status.values())
-    return {"ok": c.get("passed", 0) == len(status), "stage": "tests", "broken": len(status),
+    # a broken test that does not pass at base here cannot count as a regression here: the instance is evaluated on
+    # the broken tests that do ("usable_tests"); "ok" keeps the strict reading (all of them pass)
+    return {"ok": c.get("passed", 0) == len(status), "stage": "tests", "broken": len(status), "addopts": addopts,
+            "usable_tests": sorted(t for t, v in status.items() if v == "passed"),
             "passed_at_base": c.get("passed", 0), "outcomes": dict(c), "tests_run": len(res),
             "not_passing": {t: s for t, s in status.items() if s != "passed"}, "secs": round(time.time() - t0)}
 
@@ -225,7 +260,8 @@ def main():
     print(f"{len(cands)} candidate instances (issue from {a.since}, genuine agent regression)", flush=True)
     os.makedirs(OUT, exist_ok=True)
     out_path, env_path = os.path.join(OUT, "probe.jsonl"), os.path.join(OUT, "envs.jsonl")
-    done = {json.loads(l)["instance"] for l in open(out_path)} if os.path.exists(out_path) else set()
+    done = {r["instance"] for r in map(json.loads, open(out_path)) if r.get("format") == PROBE_FORMAT} \
+        if os.path.exists(out_path) else set()
     by_env = collections.defaultdict(list)
     for i in cands:
         by_env[(meta[i]["repo"].replace("/", "__"), meta[i]["version"])].append(i)
@@ -250,7 +286,8 @@ def main():
                     row = probe_instance(meta[i], broken[i], e)
                 except Exception as ex:  # noqa: BLE001
                     row = {"ok": False, "stage": "probe", "error": repr(ex)[:300]}
-            row = {"instance": i, "repo": repo, "version": version, "created_at": meta[i]["created_at"], **row}
+            row = {"instance": i, "repo": repo, "version": version, "created_at": meta[i]["created_at"],
+                   "format": PROBE_FORMAT, **row}
             with open(out_path, "a") as fh:
                 fh.write(json.dumps(row) + "\n")
             print(f"  {i}: {'usable' if row['ok'] else 'not usable'} ({row.get('stage')}"
@@ -259,18 +296,22 @@ def main():
     rows = {}
     for line in open(out_path):
         r = json.loads(line)
-        rows[r["instance"]] = r
+        if r.get("format") == PROBE_FORMAT:
+            rows[r["instance"]] = r
     lines = ["# SWE-bench instances usable with Python " + a.python, "",
-             "| repository | candidates | environment ok | imports | all broken tests pass at base (usable) | "
-             "some pass |", "|---|---|---|---|---|---|"]
+             "| repository | candidates | environment ok | imports | all broken tests pass at base | "
+             "usable (some pass at base) | usable broken tests |", "|---|---|---|---|---|---|---|"]
     for repo in INSTALL:
         rs = [r for r in rows.values() if r["repo"] == repo]
         if not rs:
             continue
         lines.append(f"| {repo} | {len(rs)} | {sum(r['stage'] != 'env' for r in rs)} | "
                      f"{sum(r['stage'] in ('tests', 'files') for r in rs)} | {sum(r['ok'] for r in rs)} | "
-                     f"{sum(1 for r in rs if r.get('passed_at_base'))} |")
-    lines.append(f"| **all** | {len(rows)} | | | {sum(r['ok'] for r in rows.values())} | |")
+                     f"{sum(1 for r in rs if r.get('passed_at_base'))} | "
+                     f"{sum(len(r.get('usable_tests') or []) for r in rs)} |")
+    lines.append(f"| **all** | {len(rows)} | | | {sum(r['ok'] for r in rows.values())} | "
+                 f"{sum(1 for r in rows.values() if r.get('passed_at_base'))} | "
+                 f"{sum(len(r.get('usable_tests') or []) for r in rows.values())} |")
     open(os.path.join(OUT, "probe.md"), "w").write("\n".join(lines) + "\n")
     print("\n".join(lines))
 
