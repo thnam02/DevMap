@@ -55,11 +55,11 @@ def git(tree, *a, check=False, **kw):
     return r
 
 
-def prepare_tree(inst: dict, py: str) -> str:
+def prepare_tree(inst: dict, py: str, trees: str = "eval-trees") -> str:
     """Base commit + reference tests, committed; installed (editable, no dependencies) into the environment."""
     repo = inst["instance_id"].rsplit("-", 1)[0]
     src = P.repo_clone(repo)
-    tree = os.path.join(WORK, "eval-trees", repo)
+    tree = os.path.join(WORK, trees, repo)
     if not os.path.isdir(os.path.join(tree, ".git")):
         os.makedirs(os.path.dirname(tree), exist_ok=True)
         subprocess.run(["git", "clone", "-q", "--shared", src, tree], check=True)
