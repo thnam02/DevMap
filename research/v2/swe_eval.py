@@ -119,6 +119,41 @@ def without_files(patch: str, drop: set[str]) -> tuple[str, list[str]]:
     return "".join(keep), dropped
 
 
+def apply_patch(tree: str, patch: str) -> dict:
+    """Apply an agent patch as SWE-bench's harness does: `git apply`, then (our addition) a 3-way merge, then
+    `patch --batch --fuzz=5 -p1` (the harness's last fallback; tried dry first, so a failure leaves the tree as it was).
+    Binary files in the patch (a screenshot an agent saved) are left out: git cannot apply them without their
+    contents, and they take no part in the tests."""
+    parts = re.split(r"(?m)^(?=diff --git )", patch)
+    binary = [re.match(r"diff --git a/\S+ b/(\S+)", p_).group(1) for p_ in parts
+              if p_.startswith("diff --git ") and re.search(r"(?m)^(GIT binary patch|Binary files .* differ)$", p_)]
+    patch = "".join(p_ for p_ in parts if not (p_.startswith("diff --git ") and
+                                                re.search(r"(?m)^(GIT binary patch|Binary files .* differ)$", p_)))
+    info = {"binary_files_dropped": binary} if binary else {}
+    if not patch.strip():
+        raise RuntimeError("the agent patch only adds binary files")
+    if not patch.endswith("\n"):
+        patch += "\n"
+    errs = []
+    for how, cmd in (("git apply", ["git", "-C", tree, "apply", "-"]),
+                     ("git apply --3way", ["git", "-C", tree, "apply", "--3way", "-"])):
+        r = subprocess.run(cmd, input=patch, capture_output=True, text=True)
+        if not r.returncode:
+            return {**info, "applied_with": how} if how != "git apply" else info
+        errs.append(r.stderr.strip()[-150:])
+        git(tree, "checkout", "-q", "--", ".")
+        git(tree, "clean", "-q", "-fd", "-e", ".dc-engine", "-e", "*.egg-info")
+    dry = subprocess.run(["patch", "--batch", "--fuzz=5", "-p1", "--dry-run"], input=patch, cwd=tree,
+                         capture_output=True, text=True)
+    if not dry.returncode:
+        r = subprocess.run(["patch", "--batch", "--fuzz=5", "-p1", "--no-backup-if-mismatch"], input=patch, cwd=tree,
+                           capture_output=True, text=True)
+        if not r.returncode:
+            return {**info, "applied_with": "patch --fuzz=5"}
+    errs.append((dry.stdout + dry.stderr).strip()[-150:])
+    raise RuntimeError("agent patch does not apply: " + " | ".join(errs))
+
+
 def resolve(test: str, nodes: list[str], test_files: list[str]) -> list[str]:
     """The map's node ids for a SWE-bench test name: an exact node id, a node id truncated by SWE-bench at a space
     (prefix), or (sympy) a bare test function name, looked up in the files the reference tests touch."""
@@ -220,12 +255,7 @@ def main():
                 patch, row["dropped_files"] = without_files(patch, ref_files)
                 if not patch.strip():
                     raise RuntimeError("the agent patch only edits files the reference tests replace")
-                ap_ = subprocess.run(["git", "-C", tree, "apply", "-"], input=patch, capture_output=True, text=True)
-                if ap_.returncode:
-                    ap_ = subprocess.run(["git", "-C", tree, "apply", "--3way", "-"], input=patch, capture_output=True,
-                                         text=True)
-                if ap_.returncode:
-                    raise RuntimeError("agent patch does not apply: " + ap_.stderr[-200:])
+                row.update(apply_patch(tree, patch))
                 t = time.time()
                 sel, why = I.selection(tree, cov, env)
                 row["selection_s"] = round(time.time() - t, 2)

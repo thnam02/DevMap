@@ -107,7 +107,7 @@ def init(inst: str, repo: str, tree: str, py: str, workers: int) -> tuple[str, d
 
 
 def apply_patch(tree: str, meta: dict, case: dict) -> list[str]:
-    """The agent patch as swe_eval.py applies it (the reference tests' files left out; 3-way fallback)."""
+    """The agent patch as swe_eval.py applies it (the reference tests' files left out; same fallbacks)."""
     patch = open(case["patch"]).read() if case.get("patch") and os.path.exists(case["patch"]) else None
     if not patch:
         raise RuntimeError("patch file missing")
@@ -115,11 +115,7 @@ def apply_patch(tree: str, meta: dict, case: dict) -> list[str]:
     patch, dropped = E.without_files(patch, ref_files)
     if not patch.strip():
         raise RuntimeError("the agent patch only edits files the reference tests replace")
-    r = subprocess.run(["git", "-C", tree, "apply", "-"], input=patch, capture_output=True, text=True)
-    if r.returncode:
-        r = subprocess.run(["git", "-C", tree, "apply", "--3way", "-"], input=patch, capture_output=True, text=True)
-    if r.returncode:
-        raise RuntimeError("agent patch does not apply: " + r.stderr[-200:])
+    E.apply_patch(tree, patch)
     return dropped
 
 
