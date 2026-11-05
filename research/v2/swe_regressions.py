@@ -9,11 +9,13 @@ commit), then every agent's regressing patch for that instance.
 Note: SWE-bench runs only the test files its reference fix touches, so a regression elsewhere is not listed.
 
 Usage (PC, needs network; no credentials):
-  pip install boto3 pyyaml
+  pip install boto3 pyyaml datasets
   python3 research/v2/swe_regressions.py [--splits verified lite test]
 Output:
   research/v2/results/swe/regressions.jsonl   one row per (split, submission, instance) whose patch broke a P2P test
-  research/v2/results/swe/summary.md           counts per repository
+  research/v2/results/swe/summary.md           counts per repository, raw and after the flakiness filter
+  research/v2/results/swe/instance_stats.json  per instance: patches, resolved, passes of each broken test elsewhere
+  research/v2/results/swe/instances.jsonl      SWE-bench metadata of the usable instances (version, date, commits)
   $PROVISO_WORK/swe/patches/<split>/<submission>/<instance>.diff   the regressing patches (not committed)
 Resumable: report.json files are cached under $PROVISO_WORK/swe/reports."""
 from __future__ import annotations
@@ -158,6 +160,38 @@ def patch_s3(client, prefix: str, inst: str, dest: str) -> bool:
     return True
 
 
+def dataset_metadata() -> dict:
+    """SWE-bench task instances (full test split, which contains Lite and Verified): repository, version, issue date,
+    base commit, reference fix and test patch, FAIL_TO_PASS and PASS_TO_PASS. Saved to $PROVISO_WORK/swe/instances.jsonl
+    (with patches) and research/v2/results/swe/instances.jsonl (without patches). {} if the dataset cannot be loaded."""
+    full = os.path.join(WORK, "instances.jsonl")
+    if not os.path.exists(full):
+        try:
+            from datasets import load_dataset
+        except ImportError:
+            print("pip install datasets   (to fetch the SWE-bench task metadata)", flush=True)
+            return {}
+        try:
+            ds = load_dataset("princeton-nlp/SWE-bench", split="test")
+        except Exception as e:  # noqa: BLE001
+            print(f"could not load the SWE-bench dataset: {repr(e)[:200]}", flush=True)
+            return {}
+        os.makedirs(WORK, exist_ok=True)
+        with open(full, "w") as fh:
+            for x in ds:
+                if x["instance_id"].rsplit("-", 1)[0] in USABLE:
+                    fh.write(json.dumps(dict(x)) + "\n")
+    meta = {}
+    with open(full) as fh, open(os.path.join(OUT, "instances.jsonl"), "w") as out:
+        for line in fh:
+            x = json.loads(line)
+            slim = {k: x.get(k) for k in ("instance_id", "repo", "version", "created_at", "base_commit",
+                                          "environment_setup_commit", "FAIL_TO_PASS", "PASS_TO_PASS")}
+            meta[x["instance_id"]] = slim
+            out.write(json.dumps(slim) + "\n")
+    return meta
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--splits", nargs="*", default=["verified", "lite", "test"])
@@ -166,6 +200,10 @@ def main():
     client = s3()
     os.makedirs(OUT, exist_ok=True)
     rows, scanned, no_reports = [], collections.Counter(), []
+    # per instance: patches seen (one per submission), resolved patches, and how often each PASS_TO_PASS test passed
+    # (a broken test that no other patch of the instance left passing may fail for reasons unrelated to the patch)
+    inst_patches, inst_resolved = collections.Counter(), collections.Counter()
+    p2p_pass: dict = collections.defaultdict(collections.Counter)
     for split in a.splits:
         base = os.path.join(exp, "evaluation", split)
         if not os.path.isdir(base):
@@ -191,6 +229,11 @@ def main():
                     ts = v.get("tests_status") or {}
                     p2f = (ts.get("PASS_TO_PASS") or {}).get("failure") or []
                     scanned[inst.rsplit("-", 1)[0]] += 1
+                    if v.get("patch_successfully_applied", True) and ts:
+                        inst_patches[inst] += 1
+                        inst_resolved[inst] += bool(v.get("resolved"))
+                        for t in (ts.get("PASS_TO_PASS") or {}).get("success") or []:
+                            p2p_pass[inst][t] += 1
                     if not p2f or not v.get("patch_successfully_applied", True):
                         continue
                     dest = os.path.join(WORK, "patches", split, name, inst + ".diff")
@@ -214,9 +257,18 @@ def main():
                 no_reports.append(f"{split}/{name}{note}")
             print(f"[{split}/{name}] {len(reps)} reports in usable repositories, {n_reg} with a regression{note}",
                   flush=True)
+    # a broken test counts as a genuine regression only if another patch of the same instance left it passing
+    for r in rows:
+        r["p2p_failed_genuine"] = [t for t in r["p2p_failed"] if p2p_pass[r["instance"]][t] > 0]
     with open(os.path.join(OUT, "regressions.jsonl"), "w") as fh:
         for r in rows:
             fh.write(json.dumps(r) + "\n")
+    broken = {(r["instance"], t) for r in rows for t in r["p2p_failed"]}
+    stats = {i: {"patches": inst_patches[i], "resolved": inst_resolved[i],
+                 "p2p_pass_of_broken": {t: p2p_pass[i][t] for (j, t) in broken if j == i}}
+             for i in sorted(inst_patches)}
+    json.dump(stats, open(os.path.join(OUT, "instance_stats.json"), "w"))
+    meta = dataset_metadata()
     by_repo = collections.defaultdict(list)
     for r in rows:
         by_repo[r["repo"]].append(r)
@@ -228,6 +280,21 @@ def main():
         lines.append(f"| {repo} | {scanned[repo]} | {len(rs)} | {len({r['instance'] for r in rs})} | "
                      f"{len({(r['instance'], t) for r in rs for t in r['p2p_failed']})} |")
     lines.append(f"| **all** | {sum(scanned.values())} | {len(rows)} | {len({r['instance'] for r in rows})} | |")
+    gen = [r for r in rows if r["p2p_failed_genuine"]]
+    lines += ["", "After dropping broken tests that no other patch of the same instance left passing (possibly failing for "
+              "reasons unrelated to the patch):", "",
+              "| repository | genuine regressing patches | distinct instances | distinct (instance, broken-test set) | "
+              "patches breaking 1 test | instances by year of the issue |", "|---|---|---|---|---|---|"]
+    for repo in USABLE:
+        rs = [r for r in gen if r["repo"] == repo]
+        years = collections.Counter((meta.get(r["instance"], {}).get("created_at") or "????")[:4]
+                                    for r in {x["instance"]: x for x in rs}.values())
+        lines.append(f"| {repo} | {len(rs)} | {len({r['instance'] for r in rs})} | "
+                     f"{len({(r['instance'], frozenset(r['p2p_failed_genuine'])) for r in rs})} | "
+                     f"{sum(1 for r in rs if len(r['p2p_failed_genuine']) == 1)} | "
+                     f"{', '.join(f'{y}: {n}' for y, n in sorted(years.items()))} |")
+    lines.append(f"| **all** | {len(gen)} | {len({r['instance'] for r in gen})} | "
+                 f"{len({(r['instance'], frozenset(r['p2p_failed_genuine'])) for r in gen})} | | |")
     lines += ["", f"Submissions with no report.json for the usable repositories: {len(no_reports)}", ""]
     lines += [f"- {x}" for x in no_reports]
     open(os.path.join(OUT, "summary.md"), "w").write("\n".join(lines) + "\n")
