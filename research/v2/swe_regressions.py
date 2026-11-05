@@ -114,6 +114,38 @@ def reports_git(url: str, cache: str) -> tuple[dict[str, dict], str]:
     return out, d
 
 
+def report_body(rep: dict, inst: str) -> dict:
+    """The per-instance report: nested under the instance id ({"sympy__sympy-1": {...}}) or flat ({"resolved": ...,
+    "tests_status": ...}, e.g. 20250225_sweagent_claude-3-7-sonnet)."""
+    if not isinstance(rep, dict):
+        return {}
+    if isinstance(rep.get(inst), dict):
+        return rep[inst]
+    if "tests_status" in rep or "resolved" in rep:
+        return rep
+    for v in rep.values():
+        if isinstance(v, dict) and ("tests_status" in v or "resolved" in v):
+            return v
+    return {}
+
+
+def layout(client, prefix: str) -> str:
+    """What a logs prefix holds when it has no report.json for the usable repositories: file kinds and an example key
+    (pre-2024 submissions keep plain-text <instance>.<model>.eval.log files)."""
+    kinds, example, n = collections.Counter(), None, 0
+    for page in client.get_paginator("list_objects_v2").paginate(Bucket=BUCKET, Prefix=prefix + "/",
+                                                                  PaginationConfig={"MaxItems": 3000}):
+        for o in page.get("Contents", []):
+            key = o["Key"]
+            n += 1
+            kind = key.rsplit("/", 1)[-1]
+            kind = kind.split(".", 1)[1] if "." in kind else kind
+            kinds[kind] += 1
+            if example is None and any(r in key for r in USABLE):
+                example = key
+    return f"{n} files under {prefix}/ (kinds: {dict(kinds.most_common(5))}; e.g. {example})"
+
+
 def patch_s3(client, prefix: str, inst: str, dest: str) -> bool:
     if os.path.exists(dest):
         return True
@@ -133,7 +165,7 @@ def main():
     exp = experiments_clone()
     client = s3()
     os.makedirs(OUT, exist_ok=True)
-    rows, scanned = [], collections.Counter()
+    rows, scanned, no_reports = [], collections.Counter(), []
     for split in a.splits:
         base = os.path.join(exp, "evaluation", split)
         if not os.path.isdir(base):
@@ -153,24 +185,35 @@ def main():
                 print(f"[{split}/{name}] could not read logs: {repr(e)[:200]}", flush=True)
                 continue
             n_reg = 0
-            for inst, rep in reps.items():
-                v = rep.get(inst) or (next(iter(rep.values())) if rep else {})
-                ts = v.get("tests_status") or {}
-                p2f = (ts.get("PASS_TO_PASS") or {}).get("failure") or []
-                scanned[inst.rsplit("-", 1)[0]] += 1
-                if not p2f or not v.get("patch_successfully_applied", True):
-                    continue
-                dest = os.path.join(WORK, "patches", split, name, inst + ".diff")
-                ok = (patch_s3(client, where, inst, dest) if kind == "s3"
-                      else os.path.exists(os.path.join(repo_dir, "logs", inst, "patch.diff")))
-                if kind == "git" and ok and not os.path.exists(dest):
-                    os.makedirs(os.path.dirname(dest), exist_ok=True)
-                    open(dest, "wb").write(open(os.path.join(repo_dir, "logs", inst, "patch.diff"), "rb").read())
-                rows.append({"split": split, "submission": name, "instance": inst, "repo": inst.rsplit("-", 1)[0],
-                             "p2p_failed": p2f, "f2p_ok": bool((ts.get("FAIL_TO_PASS") or {}).get("success")),
-                             "resolved": bool(v.get("resolved")), "patch": dest if ok else None})
-                n_reg += 1
-            print(f"[{split}/{name}] {len(reps)} reports in usable repositories, {n_reg} with a regression", flush=True)
+            for inst, rep in sorted(reps.items()):
+                try:
+                    v = report_body(rep, inst)
+                    ts = v.get("tests_status") or {}
+                    p2f = (ts.get("PASS_TO_PASS") or {}).get("failure") or []
+                    scanned[inst.rsplit("-", 1)[0]] += 1
+                    if not p2f or not v.get("patch_successfully_applied", True):
+                        continue
+                    dest = os.path.join(WORK, "patches", split, name, inst + ".diff")
+                    ok = (patch_s3(client, where, inst, dest) if kind == "s3"
+                          else os.path.exists(os.path.join(repo_dir, "logs", inst, "patch.diff")))
+                    if kind == "git" and ok and not os.path.exists(dest):
+                        os.makedirs(os.path.dirname(dest), exist_ok=True)
+                        open(dest, "wb").write(open(os.path.join(repo_dir, "logs", inst, "patch.diff"), "rb").read())
+                    rows.append({"split": split, "submission": name, "instance": inst, "repo": inst.rsplit("-", 1)[0],
+                                 "p2p_failed": p2f, "f2p_ok": bool((ts.get("FAIL_TO_PASS") or {}).get("success")),
+                                 "resolved": bool(v.get("resolved")), "patch": dest if ok else None})
+                    n_reg += 1
+                except Exception as e:  # noqa: BLE001  one odd report must not stop the run
+                    print(f"[{split}/{name}] {inst}: skipped ({repr(e)[:120]})", flush=True)
+            note = ""
+            if not reps and kind == "s3":
+                try:
+                    note = " | " + layout(client, where)
+                except Exception as e:  # noqa: BLE001
+                    note = f" | could not list: {repr(e)[:120]}"
+                no_reports.append(f"{split}/{name}{note}")
+            print(f"[{split}/{name}] {len(reps)} reports in usable repositories, {n_reg} with a regression{note}",
+                  flush=True)
     with open(os.path.join(OUT, "regressions.jsonl"), "w") as fh:
         for r in rows:
             fh.write(json.dumps(r) + "\n")
@@ -185,6 +228,8 @@ def main():
         lines.append(f"| {repo} | {scanned[repo]} | {len(rs)} | {len({r['instance'] for r in rs})} | "
                      f"{len({(r['instance'], t) for r in rs for t in r['p2p_failed']})} |")
     lines.append(f"| **all** | {sum(scanned.values())} | {len(rows)} | {len({r['instance'] for r in rows})} | |")
+    lines += ["", f"Submissions with no report.json for the usable repositories: {len(no_reports)}", ""]
+    lines += [f"- {x}" for x in no_reports]
     open(os.path.join(OUT, "summary.md"), "w").write("\n".join(lines) + "\n")
     print("\n".join(lines))
 
