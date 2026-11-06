@@ -159,7 +159,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--core", action="store_true")
     ap.add_argument("--limit", type=int, default=0, help="at most N instances (in the sample's order)")
-    ap.add_argument("--repo", default="", help="only this repository (e.g. pallets__flask), for a quick check")
+    ap.add_argument("--repo", default="", help="only these repositories (comma-separated, e.g. pallets__flask)")
+    ap.add_argument("--skip-repo", default="", help="leave these repositories out (comma-separated)")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     lock = open(os.path.join(WORK, "swe_eval.lock"), "w")
@@ -172,7 +173,9 @@ def main():
         sys.exit(f"NameRTS not found at {base} (set NAMERTS_HOME)")
     prov = proviso_rows()
     sample = json.load(open(os.path.join(OUT, "sample.json")))["instances"]
-    sample = [x for x in sample if (not a.core or x["core"]) and (not a.repo or x["repo"] == a.repo)
+    only, skip = set(filter(None, a.repo.split(","))), set(filter(None, a.skip_repo.split(",")))
+    sample = [x for x in sample if (not a.core or x["core"]) and (not only or x["repo"] in only)
+              and x["repo"] not in skip
               and any((x["instance"], k) in prov for k in range(len(x["cases"])))]
     if a.limit:
         sample = sample[:a.limit]
