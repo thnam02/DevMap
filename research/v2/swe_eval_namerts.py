@@ -42,7 +42,7 @@ EXECNET = "execnet==2.1.1"   # NameRTS's pinned version (environment_313.yml); i
 
 def nr_env(repo: str, tree: str, py: str, workers: int) -> dict:
     base = os.environ.get("PROVISO_WORK", os.path.expanduser("~/proviso-work/v2"))
-    extra = [os.path.join(tree, "src")] if os.path.isdir(os.path.join(tree, "src")) else []
+    extra = ([os.path.join(tree, "src")] if os.path.isdir(os.path.join(tree, "src")) else []) + [os.path.join(HERE, "plug")]
     return {**os.environ,
             "NAMERTS_HOME": os.environ.get("NAMERTS_HOME", os.path.join(base, "NameRTS")),
             "NAMERTS_BIN": os.path.join(HERE, "nrts-bin"), "NAMERTS_DEPS": os.environ.get("NAMERTS_DEPS", ""),
@@ -50,7 +50,28 @@ def nr_env(repo: str, tree: str, py: str, workers: int) -> dict:
             "NAMERTS_WORKERS": str(workers), "NAMERTS_TEST_DIRS": "",
             "NAMERTS_EXTRA_PATH": os.pathsep.join(extra),
             "PROVISO_PY": py,   # nrts-bin/pytest runs `$PROVISO_PY -m pytest`: the tests run in the instance's env
+            # end each finished per-file worker at once (NameRTS's isolation mode keeps them all until the run ends:
+            # hundreds of idle processes on sympy, out of memory); outcomes and NameRTS's records are unchanged
+            "NRTS_PYTEST_ARGS": "" if os.environ.get("NAMERTS_NO_REAP") else "-p nrts_reap",
             "PATH": os.path.dirname(py) + os.pathsep + os.environ.get("PATH", "")}
+
+
+def kill_strays(tree: str) -> int:
+    """SIGKILL leftover execnet worker processes (pytest-xdist's `python -c "import sys;exec(eval(...))"` gateways)
+    running in this tree: after a timeout or crash they can outlive NameRTS's process group."""
+    n = 0
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        try:
+            cmd = open(f"/proc/{pid}/cmdline", "rb").read()
+            if b"exec(eval(sys.stdin.readline()))" in cmd and \
+                    os.path.realpath(os.readlink(f"/proc/{pid}/cwd")).startswith(os.path.realpath(tree)):
+                os.kill(int(pid), signal.SIGKILL)
+                n += 1
+        except (OSError, ValueError):
+            continue
+    return n
 
 
 def driver(action: str, repo: str, tree: str, cache: str, py: str, workers: int, log: str) -> str:
@@ -68,6 +89,10 @@ def driver(action: str, repo: str, tree: str, cache: str, py: str, workers: int,
             p.communicate()
             raise RuntimeError(f"NameRTS {action} exceeded "
                                f"{INIT_TIMEOUT if action == 'init' else SELECT_TIMEOUT} s")
+        finally:
+            strays = kill_strays(tree)
+            if strays:
+                fh.write(f"\n[swe_eval_namerts] killed {strays} leftover worker processes\n")
         fh.write("\n--- stdout ---\n" + out)
     if p.returncode:
         raise RuntimeError(f"NameRTS {action} exit {p.returncode}: " + open(log).read()[-400:])
