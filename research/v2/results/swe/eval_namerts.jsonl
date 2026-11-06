@@ -1,0 +1,1 @@
+{"instance": "pallets__flask-4575", "repo": "pallets__flask", "case": 0, "submission": "20250227_sweagent-claude-3-7-20250219", "reproduced": [], "init_s": 18, "init_test_s": 16.61533761024475, "proviso_record_s": 2, "dropped_files": [], "selection_s": 0.6, "selected_files": 0, "selected": 0, "time_share": 0.0, "missed": [], "caught": false, "format": 1}
