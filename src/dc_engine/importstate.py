@@ -409,14 +409,21 @@ def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> 
         snap = snapshot(tmps[0], files, python)
         if snap is not None:
             from concurrent.futures import ThreadPoolExecutor
-            workers = max(1, min(len(UNSTABLE_SAMPLES), (os.cpu_count() or 2) // 2))
+            # at most 4 at a time: each imports the whole package (about 1 GB for sympy)
+            workers = max(1, min(4, (os.cpu_count() or 2) // 2))
             with ThreadPoolExecutor(workers) as ex:
                 others = list(ex.map(lambda s: snapshot(tmps[s[0]], files, python, heap_pad=s[1]), UNSTABLE_SAMPLES))
-            if any(o is None for o in others):
+            # a sample that failed (a timeout under load) is taken again on its own; if it fails again it is left
+            # out, unless every extra sample failed (then the import itself is unreliable: no base)
+            others = [o if o is not None else snapshot(tmps[s[0]], files, python, heap_pad=s[1])
+                      for o, s in zip(others, UNSTABLE_SAMPLES)]
+            others = [o for o in others if o is not None]
+            if not others:
                 snap = None
             else:
                 unstable = {k for o in others for k, v in snap["state"].items() if o["state"].get(k) != v}
                 snap["unstable"] = sorted(unstable)
+                snap["unstable_samples"] = len(others)
     finally:
         for t in tmps:
             shutil.rmtree(t, ignore_errors=True)

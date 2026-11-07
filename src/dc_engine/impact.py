@@ -138,30 +138,50 @@ def _changed_by_name(path: str, old_src: str, new_src: str) -> set[tuple[str, in
     return hit
 
 
-_PYTEST_CONFIGS = {"pytest.ini": None, ".pytest.ini": None, "tox.ini": ("ini", "pytest"),
-                   "setup.cfg": ("ini", "tool:pytest"), "pyproject.toml": ("toml", "tool.pytest.ini_options")}
+_PYTEST_CONFIGS = {"pytest.ini": None, ".pytest.ini": None, "pytest.toml": None, ".pytest.toml": None,
+                   "tox.ini": ("ini", "pytest"), "setup.cfg": ("ini", "tool:pytest"),
+                   "pyproject.toml": ("toml", "tool.pytest")}
 
 
 def _pytest_config_change(root: str) -> str | None:
-    """(v2.1) A pytest configuration file at the project root added, deleted or edited where pytest reads it (its
-    options apply to every test: an `addopts = --import-mode=prepend` changes how every test imports), as
-    `file` or None. pytest.ini counts whole; tox.ini, setup.cfg and pyproject.toml only their pytest section."""
-    status = _git(root, "status", "--porcelain", "-uall", "--", *_PYTEST_CONFIGS)
-    for line in status.splitlines():
-        name = line[3:].strip().strip('"')
-        kind = _PYTEST_CONFIGS.get(name)
-        if kind is None:
-            if name in _PYTEST_CONFIGS:
-                return name
+    """(v2.1) A pytest configuration file added, deleted, renamed or edited where pytest reads it (its options apply
+    to every test: an `addopts = --import-mode=prepend` changes how every test imports), as its path, or None.
+    pytest.ini, .pytest.ini, pytest.toml and .pytest.toml count whole; tox.ini, setup.cfg and pyproject.toml only
+    their pytest section ([pytest], [tool:pytest], [tool.pytest] including ini_options). Any directory counts:
+    pytest takes the first configuration file above the tests it runs."""
+    specs = [f":(glob)**/{n}" for n in _PYTEST_CONFIGS]
+    out = subprocess.run(["git", "status", "--porcelain", "-z", "-uall", "--", *specs], cwd=root,
+                         capture_output=True, text=True)
+    if out.returncode != 0:
+        return None
+    prefix = _git(root, "rev-parse", "--show-prefix").strip()   # git prints paths from the repository's top
+    fields = out.stdout.split("\0")
+    i = 0
+    while i < len(fields):
+        entry = fields[i]
+        i += 1
+        if len(entry) < 4:
             continue
-        old = _git(root, "show", f"HEAD:{name}") if line[:2].strip() not in ("??", "A") else ""
-        path = os.path.join(root, name)
-        try:
-            new = open(path, encoding="utf-8").read() if os.path.isfile(path) else ""
-        except (OSError, UnicodeDecodeError):
-            return name
-        if _config_section(old, *kind) != _config_section(new, *kind):
-            return name
+        code, paths = entry[:2], [entry[3:]]
+        if code[0] in "RC" and i < len(fields):   # -z: a rename/copy is followed by its old path
+            paths.append(fields[i])
+            i += 1
+        for top_rel in paths:
+            name = os.path.basename(top_rel)
+            if name not in _PYTEST_CONFIGS:
+                continue
+            rel = top_rel[len(prefix):] if prefix and top_rel.startswith(prefix) else top_rel
+            kind = _PYTEST_CONFIGS[name]
+            if kind is None or code[0] in "RC":
+                return rel
+            old = "" if code in ("??", "A ", "AM") else _git(root, "show", f"HEAD:{top_rel}")
+            path = os.path.join(root, rel)
+            try:
+                new = open(path, encoding="utf-8").read() if os.path.isfile(path) else ""
+            except (OSError, UnicodeDecodeError):
+                return rel
+            if _config_section(old, *kind) != _config_section(new, *kind):
+                return rel
     return None
 
 
@@ -882,25 +902,25 @@ def _strip_docstrings(node):
     return node
 
 
-def _func_code(src: str) -> dict[str, tuple[int, str, str]]:
-    """{qualified function name: (first line incl. decorators, code without docstrings, code with them)}; comments
-    and formatting are not part of the syntax tree, so they never count."""
+def _func_code(src: str) -> dict[tuple[str, int], tuple[int, str, str]]:
+    """{(qualified function name, n-th definition of that name): (first line incl. decorators, code without
+    docstrings, code with them)}; comments and formatting are not part of the syntax tree, so they never count. (v2.1)
+    A name defined more than once in a scope (property getter and setter, overloads, if/else branches, a method
+    defined again) keeps every definition."""
     try:
         tree = ast.parse(src)
     except SyntaxError:
         return {}
-    out: dict[str, tuple[int, str, str]] = {}
+    out: dict[tuple[str, int], tuple[int, str, str]] = {}
+    seen: collections.Counter = collections.Counter()
 
     def walk(body, prefix):
         for node in body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 start = min([d.lineno for d in node.decorator_list] + [node.lineno])
-                if prefix + node.name in out:
-                    # (v2.1) defined again in the same scope: the later definition is the one that counts, and the
-                    # pair is never a docstring/format-only edit
-                    out[prefix + node.name] = (out[prefix + node.name][0], "<redefined>", "<redefined>")
-                else:
-                    out[prefix + node.name] = (start, ast.dump(_strip_docstrings(node)), ast.dump(node))
+                seen[prefix + node.name] += 1
+                out[(prefix + node.name, seen[prefix + node.name])] = (start, ast.dump(_strip_docstrings(node)),
+                                                                       ast.dump(node))
             elif isinstance(node, ast.ClassDef):
                 walk(node.body, prefix + node.name + ".")
             else:
@@ -920,12 +940,16 @@ def _docstring_only_edits(root: str, funcs: set[tuple[str, int]]) -> tuple[set, 
     doc, fmt = set(), set()
     for f in {f for f, _ in funcs}:
         old, new = _func_code(_git(root, "show", f"HEAD:{f}")), _func_code(_read(root, f))
-        by_start = {v[0]: (name, v) for name, v in old.items()}
+        by_start = {v[0]: (key, v) for key, v in old.items()}
+        n_old = collections.Counter(q for q, _ in old)
+        n_new = collections.Counter(q for q, _ in new)
         for g, ln in funcs:
             if g == f and ln in by_start:
-                name, (_, code, full) = by_start[ln]
-                if name in new and new[name][1] == code and code != "<redefined>":
-                    (fmt if new[name][2] == full else doc).add((g, ln))
+                key, (_, code, full) = by_start[ln]
+                # a name defined a different number of times (a definition added or removed: the later one wins) is
+                # never a docstring/format-only edit; otherwise each definition is compared with its counterpart
+                if n_old[key[0]] == n_new[key[0]] and key in new and new[key][1] == code:
+                    (fmt if new[key][2] == full else doc).add((g, ln))
     return doc, fmt
 
 
