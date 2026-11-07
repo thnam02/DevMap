@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import ast
 import collections
+import contextlib
 import copy
 import types
 import functools
@@ -46,7 +47,7 @@ STATE_DIR = ".dc-engine"
 # (special methods seed the caller step), bindings (import bindings are read anywhere), newfiles (a new or deleted
 # source file runs the full suite), conftest (edits to shared test code select nothing beyond themselves, as in v1),
 # byname (v2.1: changed functions found from changed line numbers only), config (v2.1: pytest configuration files
-# are not looked at);
+# are not looked at), data (v2.2: changed non-Python files are not looked at);
 # recorder parts (subprocess, mp, fixtures, setup) are read by covplugin at recording time. PROVISO_MODE=traditional:
 # a change to code that runs at import selects every test (all tests run it), and docstring edits count: the classic
 # "every test that executes changed code" rule.
@@ -150,31 +151,36 @@ def _pytest_config_change(root: str) -> str | None:
     their pytest section ([pytest], [tool:pytest], [tool.pytest] including ini_options). Any directory counts:
     pytest takes the first configuration file above the tests it runs."""
     specs = [f":(glob)**/{n}" for n in _PYTEST_CONFIGS]
-    out = subprocess.run(["git", "status", "--porcelain", "-z", "-uall", "--", *specs], cwd=root,
-                         capture_output=True, text=True)
-    if out.returncode != 0:
-        return None
     prefix = _git(root, "rev-parse", "--show-prefix").strip()   # git prints paths from the repository's top
-    fields = out.stdout.split("\0")
+    entries: list[tuple[str, list[str]]] = []   # (status letter, [path(s) from the top])
+    # against the base commit (committed edits count too: v2.2), renames detected; then untracked files
+    d = subprocess.run(["git", "diff", "--name-status", "-z", "-M", _BASE, "--", *specs], cwd=root,
+                       capture_output=True, text=True)
+    if d.returncode != 0:
+        return None
+    fields = d.stdout.split("\0")
     i = 0
     while i < len(fields):
-        entry = fields[i]
+        code = fields[i]
         i += 1
-        if len(entry) < 4:
+        if not code:
             continue
-        code, paths = entry[:2], [entry[3:]]
-        if code[0] in "RC" and i < len(fields):   # -z: a rename/copy is followed by its old path
-            paths.append(fields[i])
-            i += 1
+        n = 2 if code[0] in "RC" else 1
+        entries.append((code[0], fields[i:i + n][::-1]))   # a rename/copy lists old then new: report the new path
+        i += n
+    st = subprocess.run(["git", "status", "--porcelain", "-z", "-uall", "--", *specs], cwd=root,
+                        capture_output=True, text=True)
+    entries += [("?", [e[3:]]) for e in st.stdout.split("\0") if e.startswith("??")]
+    for code, paths in entries:
         for top_rel in paths:
             name = os.path.basename(top_rel)
             if name not in _PYTEST_CONFIGS:
                 continue
             rel = top_rel[len(prefix):] if prefix and top_rel.startswith(prefix) else top_rel
             kind = _PYTEST_CONFIGS[name]
-            if kind is None or code[0] in "RC":
+            if kind is None or code in "RC":
                 return rel
-            old = "" if code in ("??", "A ", "AM") else _git(root, "show", f"HEAD:{top_rel}")
+            old = "" if code in "?A" else _git(root, "show", f"{_BASE}:{top_rel}")
             path = os.path.join(root, rel)
             try:
                 new = open(path, encoding="utf-8").read() if os.path.isfile(path) else ""
@@ -308,7 +314,7 @@ EARLY_FULL_SHARE = 0.9  # run everything without a snapshot when edited function
 def _head_cached(root: str, kind: str, files: list[str], compute):
     """compute(root, files), cached in STATE_DIR per base commit (both analyses below read only HEAD's sources, so
     their result is fixed for an agent session; without the cache every selection re-parses the whole package)."""
-    head = _git(root, "rev-parse", "HEAD").strip()
+    head = _git(root, "rev-parse", _BASE).strip()
     key = hashlib.sha1(json.dumps([head, sorted(files)]).encode()).hexdigest()
     path = os.path.join(root, STATE_DIR, f"{kind}.json")
     try:
@@ -356,7 +362,7 @@ def _name_index_uncached(root: str, files: list[str]) -> dict[tuple[str, int], s
     idx: dict[tuple[str, int], set[str]] = {}
     for f in files:
         try:
-            tree = ast.parse(_git(root, "show", f"HEAD:{f}"))
+            tree = ast.parse(_git(root, "show", f"{_BASE}:{f}"))
         except SyntaxError:
             continue
         # names inside type annotations are not read when the code runs (`x: Optional[int]`, `-> Union[A, B]`):
@@ -496,7 +502,7 @@ def _new_top_level_defs(root: str, files: set[str]) -> set[str]:
         return defs, other
     out: set[str] = set()
     for f in files:
-        old_defs, old_other = bound(_git(root, "show", f"HEAD:{f}"))
+        old_defs, old_other = bound(_git(root, "show", f"{_BASE}:{f}"))
         try:
             new_defs, _ = bound(open(os.path.join(root, f), encoding="utf-8").read())
         except OSError:
@@ -522,7 +528,7 @@ def _import_bindings(root: str, files: set[str]) -> dict[str, set[str]]:
         return out
     res: dict[str, set[str]] = {}
     for f in files:
-        names = bound(_git(root, "show", f"HEAD:{f}"))
+        names = bound(_git(root, "show", f"{_BASE}:{f}"))
         try:
             names |= bound(open(os.path.join(root, f), encoding="utf-8").read())
         except OSError:
@@ -552,7 +558,7 @@ def _computed_lookup_patterns_uncached(root: str, files: list[str]) -> set[tuple
     pats: set[tuple[str, str]] = set()
     for f in files:
         try:
-            tree = ast.parse(_git(root, "show", f"HEAD:{f}"))
+            tree = ast.parse(_git(root, "show", f"{_BASE}:{f}"))
         except SyntaxError:
             continue
         for node in ast.walk(tree):
@@ -614,7 +620,8 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     by computed name, or their bases changed)."""
     from . import importstate
     files = _snapshot_files(covmap)
-    base = importstate.base_snapshot(root, files, python, os.path.join(root, STATE_DIR, "importstate_base.json"))
+    base = importstate.base_snapshot(root, files, python, os.path.join(root, STATE_DIR, "importstate_base.json"),
+                                     rev=_BASE)
     cur = importstate.snapshot(root, files, python) if base is not None else None
     if base is None or cur is None:
         return None, set(), {"reason": "could not compare import-time state"}
@@ -646,7 +653,85 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     return names, gained, {"import_state_changed": d["changed"][:200], "import_state_n": len(d["changed"])}
 
 
+# (v2.2) the commit the change is measured from: the one the coverage map was recorded at (its "__base__" entry),
+# not whatever HEAD is now. An agent that commits its work (or a tool that does it for it) moves HEAD; measured from
+# HEAD, the committed edits would vanish and nothing would be selected. Maps without the entry (older ones) use HEAD.
+_BASE = "HEAD"
+
+
+def map_base(root: str, covmap: dict) -> tuple[str | None, str]:
+    """(revision to compare with, why): the map's recorded commit when it is HEAD or an ancestor of HEAD; None when
+    the map was recorded on a commit outside the current history (a rebase, another branch): its line numbers and
+    records no longer describe this code."""
+    commit = ((covmap.get("__base__") or {}).get("commit") or "").strip()
+    if not commit:
+        return "HEAD", "the map records no commit: compared with HEAD"
+    if subprocess.run(["git", "-C", root, "cat-file", "-e", f"{commit}^{{commit}}"], capture_output=True).returncode:
+        return None, f"the dependency map was recorded at commit {commit[:10]}, which this repository does not have"
+    if subprocess.run(["git", "-C", root, "merge-base", "--is-ancestor", commit, "HEAD"],
+                      capture_output=True).returncode:
+        # the same code under another commit (re-created, amended without changes, rebased onto itself): HEAD
+        if _git(root, "rev-parse", f"{commit}^{{tree}}").strip() == _git(root, "rev-parse", "HEAD^{tree}").strip():
+            return "HEAD", "the map's commit has the same code as HEAD"
+        return None, f"the dependency map was recorded at commit {commit[:10]}, which is not in the current history"
+    return commit, ""
+
+
+@contextlib.contextmanager
+def _measured_from(base: str):
+    """Within the block, every read of the original code (git show / diff / archive) uses base."""
+    global _BASE
+    prev, _BASE = _BASE, base
+    try:
+        yield
+    finally:
+        _BASE = prev
+
+
 def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[str] | None, dict]:
+    """Test node ids to run for the change since the map's commit, or None for the full suite (see _selection)."""
+    base, why = map_base(root, covmap)
+    if base is None:
+        return None, {"reason": why}
+    with _measured_from(base):
+        return _selection(root, covmap, python)
+
+
+def _changed_paths(root: str, paths: list[str]) -> list[tuple[str, str]]:
+    """(status letter, path) of every file that differs from the base commit under paths: committed or not, staged
+    or not (git diff against the base, renames as a deletion and an addition), and untracked files ('?')."""
+    out = []
+    for line in _git(root, "diff", "--name-status", "--no-renames", _BASE, "--", *paths).splitlines():
+        code, _, path = line.partition("\t")
+        if path:
+            out.append((code[:1], path))
+    seen = {p for _, p in out}
+    for line in _git(root, "status", "--porcelain", "-uall", "--", *paths).splitlines():
+        if line.startswith("??") and line[3:] not in seen:
+            out.append(("?", line[3:]))
+    return out
+
+
+# (v2.2) files in the package that are not Python (JSON, YAML, templates, data): code reads them while it runs, and
+# nothing records which test reads which file, so a change to one runs the full suite. Byte-code and editor files
+# do not count.
+_NOT_DATA = (".pyc", ".pyo", ".pyd", ".so", ".dll", ".dylib", ".pyi", ".swp", ".orig", ".rej", ".bak", ".tmp", ".log", "~")
+
+
+def _data_file_change(changed: list[tuple[str, str]], test_files: set[str]) -> str | None:
+    """The first changed file that code or tests may read while they run: not Python, not a stub, not byte-code or
+    an editor/patch leftover, not a hidden file, and not itself a test (data files that are tests run themselves).
+    Test data (fixtures, golden files, sphinx test roots) counts: tests read it."""
+    for _, path in changed:
+        base = os.path.basename(path)
+        if path.endswith(".py") or path in test_files or path.endswith(_NOT_DATA) or "/__pycache__/" in f"/{path}" \
+                or base.startswith(".") or ".egg-info" in path:
+            continue
+        return path
+    return None
+
+
+def _selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[str] | None, dict]:
     """Test node ids to run for the current change, or None for the full suite. Second value: why.
 
     function edits    tests whose base coverage reaches the function
@@ -660,15 +745,19 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     dep = _DepView(covmap)
     if not pk:
         return None, {"reason": "empty coverage map"}
-    diff = _git(root, "diff", "-U0", "HEAD", "--", *pk)
+    diff = _git(root, "diff", "-U0", _BASE, "--", *pk)
     extra_dirs = ["tests"] if os.path.isdir(os.path.join(root, "tests")) else []
     if os.path.isfile(os.path.join(root, "conftest.py")) or "conftest.py" in _git(root, "ls-files", "conftest.py"):
         extra_dirs.append("conftest.py")  # a root conftest's fixtures are shared by every test
-    status = _git(root, "status", "--porcelain", "-uall", "--", *pk, *extra_dirs)
-    new_src = [l[3:] for l in status.splitlines() if l.startswith("??") and not _is_test_path(l[3:])
-               and l.endswith(".py")]
-    gone_src = [l[3:] for l in status.splitlines() if l[:2].strip() == "D" and not _is_test_path(l[3:])
-                and l.endswith(".py")]
+    changed = _changed_paths(root, [*pk, *extra_dirs])
+    # porcelain-like lines ("XY path") for the code below: "?? path" untracked, "A  path" added since the base, ...
+    status = "\n".join(("?? " if c == "?" else f"{c}  ") + p for c, p in changed)
+    new_src = [p for c, p in changed if c in "?A" and not _is_test_path(p) and p.endswith(".py")]
+    gone_src = [p for c, p in changed if c == "D" and not _is_test_path(p) and p.endswith(".py")]
+    test_files = {n.split("::", 1)[0] for n in tests_of(covmap)}
+    data = None if (_off("data") or _traditional()) else _data_file_change(changed, test_files)
+    if data:
+        return None, {"reason": f"a file the code may read changed ({data}): not tracked per test"}
     # a new source file changes existing code only through what importing it does (a registration, a patched
     # value), which the import-time comparison below sees; its own definitions are new, so nothing existing reads them
     if (new_src or gone_src) and (_off("newfiles") or _traditional() or _off("snapshot")):
@@ -683,7 +772,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
     for f, lines in _changed_old_lines(diff).items():
         if _is_test_path(f):
             continue  # edited tests run themselves (below)
-        src = _git(root, "show", f"HEAD:{f}")
+        src = _git(root, "show", f"{_BASE}:{f}")
         units, cls = _units(f, src)
         for ln in lines:
             inner = [u for u in units if u[1] <= ln <= u[2]]
@@ -727,7 +816,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
         # (an import-only pass: no fingerprints, so plain function edits do not pay for a full snapshot)
         from . import importstate
         imp = importstate.import_funcs_of(root, _snapshot_files(covmap), python,
-                                          os.path.join(root, STATE_DIR, "import_funcs.json"))
+                                          os.path.join(root, STATE_DIR, "import_funcs.json"), rev=_BASE)
         glob_funcs |= {tuple(x) for x in (imp or [])}
     hit_global = sorted(funcs & glob_funcs)
     why: dict[str, Any] = {"functions": len(funcs), "files": sorted(module_level),
@@ -877,7 +966,7 @@ def selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[
         shared_why.append(f"{len(doc_only)} function(s) with docstring/format-only edits: "
                           f"{len(doc_readers)} test(s) that read docstrings")
     for f in sorted(support_edits):
-        names, unnamed = _changed_top_names(_git(root, "show", f"HEAD:{f}"), _read(root, f))
+        names, unnamed = _changed_top_names(_git(root, "show", f"{_BASE}:{f}"), _read(root, f))
         stem = f.rsplit("/", 1)[-1][:-3]
         if names is None or unnamed:   # unparsable, or a changed statement that binds no name: the module itself
             names = (names or set()) | {stem if stem != "__init__" else f.rsplit("/", 2)[-2]}
@@ -939,7 +1028,7 @@ def _docstring_only_edits(root: str, funcs: set[tuple[str, int]]) -> tuple[set, 
     docstrings changed, those where only comments or formatting did)."""
     doc, fmt = set(), set()
     for f in {f for f, _ in funcs}:
-        old, new = _func_code(_git(root, "show", f"HEAD:{f}")), _func_code(_read(root, f))
+        old, new = _func_code(_git(root, "show", f"{_BASE}:{f}")), _func_code(_read(root, f))
         by_start = {v[0]: (key, v) for key, v in old.items()}
         n_old = collections.Counter(q for q, _ in old)
         n_new = collections.Counter(q for q, _ in new)
@@ -1157,7 +1246,7 @@ def _test_code_changes(root: str, path: str) -> tuple[set[str], set[str], bool, 
                 other.append((ast.dump(node), [node]))   # module-level statements (docstrings aside)
         names = {n for node in stmts for n in _bound_names(node)}
         return defs, other, imports, names
-    old_src = _git(root, "show", f"HEAD:{path}")
+    old_src = _git(root, "show", f"{_BASE}:{path}")
     new_src = _read(root, path)
     old, new = parse(old_src) if old_src else None, parse(new_src) if new_src else None
     if old is None or new is None:   # a new, deleted or unparsable file: assume it affects everything below it
@@ -1437,7 +1526,7 @@ def _subclasses(root: str, files: list[str]) -> dict[str, set[str]]:
     bases: dict[str, set[str]] = {}
     for f in files:
         try:
-            tree = ast.parse(_git(root, "show", f"HEAD:{f}"))
+            tree = ast.parse(_git(root, "show", f"{_BASE}:{f}"))
         except SyntaxError:
             continue
         for node in ast.walk(tree):
@@ -1462,12 +1551,18 @@ def _subclasses(root: str, files: list[str]) -> dict[str, set[str]]:
 def impact_report(root: str, covmap: dict, why: dict, selected: list[str] | None, max_items: int = 6) -> list[str]:
     """What the change affects, for the agent: edited functions, import-time values that changed (and the classes
     that inherit a changed class attribute), and which tests depend on it. Empty if there is nothing to say."""
+    base, _ = map_base(root, covmap)
+    with _measured_from(base or "HEAD"):
+        return _impact_report(root, covmap, why, selected, max_items)
+
+
+def _impact_report(root: str, covmap: dict, why: dict, selected: list[str] | None, max_items: int = 6) -> list[str]:
     lines: list[str] = []
     funcs = [tuple(x) for x in why.get("changed_functions", [])]
     if funcs:
         names = []
         for f, ln in funcs[:max_items]:
-            units, _ = _units(f, _git(root, "show", f"HEAD:{f}"))
+            units, _ = _units(f, _git(root, "show", f"{_BASE}:{f}"))
             nm = next((u[0] for u in units if u[1] == ln), f"{f}:{ln}")
             names.append(f"{nm} ({f})")
         more = f" and {len(funcs) - max_items} more" if len(funcs) > max_items else ""

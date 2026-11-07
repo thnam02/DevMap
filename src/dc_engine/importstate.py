@@ -369,10 +369,10 @@ def snapshot(tree: str, files: list[str], python: str, heap_pad: int = 0, import
                 os.remove(p)
 
 
-def cache_key(root: str, tops: list[str], python: str, files: list[str] | None = None) -> str:
+def cache_key(root: str, tops: list[str], python: str, files: list[str] | None = None, rev: str = "HEAD") -> str:
     """Content of the base commit's package directories (git tree hashes, so a copy of the same code in another
     repository matches) and the interpreter (bytecode differs between versions)."""
-    trees = [subprocess.run(["git", "-C", root, "rev-parse", f"HEAD:{t}"], capture_output=True, text=True).stdout.strip()
+    trees = [subprocess.run(["git", "-C", root, "rev-parse", f"{rev}:{t}"], capture_output=True, text=True).stdout.strip()
              for t in tops]
     ver = subprocess.run([python, "-c", "import sys; print(sys.version)"], capture_output=True, text=True).stdout.strip()
     return hashlib.sha1(json.dumps([trees, ver, sorted(files or [])]).encode()).hexdigest()
@@ -386,19 +386,19 @@ BASE_FORMAT = f"{FORMAT}.b2"
 UNSTABLE_SAMPLES = [(0, 5003), (0, 20011), (1, 0), (1, 5003), (1, 20011), (2, 0), (2, 7919), (2, 30011)]
 
 
-def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> dict | None:
-    """Snapshot of the HEAD commit (exported to a temporary directory), cached per commit. Keys whose fingerprint
+def base_snapshot(root: str, files: list[str], python: str, cache_path: str, rev: str = "HEAD") -> dict | None:
+    """Snapshot of the base commit (rev, HEAD by default; exported to a temporary directory), cached per commit. Keys whose fingerprint
     differs between the first snapshot and any of the extra samples (other heap shifts, other export locations, run
     in parallel) are recorded as order-unstable: diff() compares them without order."""
     tops = sorted({f.split("/", 1)[0] for f in files})
-    head = cache_key(root, tops, python, files)
+    head = cache_key(root, tops, python, files, rev)
     try:
         cached = json.load(open(cache_path))
         if cached.get("head") == head and cached.get("format") == BASE_FORMAT:
             return cached["snapshot"]
     except (OSError, ValueError, KeyError):
         pass
-    arch = subprocess.run(["git", "-C", root, "archive", "HEAD", *tops], capture_output=True)
+    arch = subprocess.run(["git", "-C", root, "archive", rev, *tops], capture_output=True)
     if arch.returncode != 0:
         return None
     # three export locations with different path lengths (the location shapes what is allocated at import)
@@ -436,11 +436,11 @@ def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> 
     return snap
 
 
-def import_funcs_of(root: str, files: list[str], python: str, cache_path: str) -> list | None:
+def import_funcs_of(root: str, files: list[str], python: str, cache_path: str, rev: str = "HEAD") -> list | None:
     """Functions of the HEAD commit that run while its package is imported (an import-only pass: no fingerprints),
     cached per commit. Used when only function bodies changed, to tell whether an edited function runs at import."""
     tops = sorted({f.split("/", 1)[0] for f in files})
-    head = cache_key(root, tops, python, files)
+    head = cache_key(root, tops, python, files, rev)
     try:
         cached = json.load(open(cache_path))
         if cached.get("head") == head and cached.get("format") == FORMAT:
@@ -449,7 +449,7 @@ def import_funcs_of(root: str, files: list[str], python: str, cache_path: str) -
         pass
     tmp = tempfile.mkdtemp(prefix="dc-base-")
     try:
-        arch = subprocess.run(["git", "-C", root, "archive", "HEAD", *tops], capture_output=True)
+        arch = subprocess.run(["git", "-C", root, "archive", rev, *tops], capture_output=True)
         if arch.returncode != 0:
             return None
         subprocess.run(["tar", "-x", "-C", tmp], input=arch.stdout, capture_output=True)

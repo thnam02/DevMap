@@ -77,6 +77,9 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
            workers: int | None = None, before_test: str = "", extra_args: list[str] | None = None,
            env: dict | None = None) -> dict:
     python = python or sys.executable
+    base_commit = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    base_dirty = bool(subprocess.run(["git", "-C", root, "status", "--porcelain", "--untracked-files=no"],
+                                     capture_output=True, text=True).stdout.strip())
     root = os.path.abspath(root)
     base_env = dict(env or os.environ)
     base_env["PYTHONPATH"] = os.pathsep.join([SRC, *[p for p in base_env.get("PYTHONPATH", "").split(os.pathsep) if p]])
@@ -109,6 +112,9 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
     finally:
         shutil.rmtree(tmp, ignore_errors=True)  # one folder of per-file parts per recording (19 GB over a benchmark)
     m = merge(parts)
+    # (v2.2) the commit the map describes: selection measures changes from it, so commits made after recording
+    # still count as changes (and a map from a commit outside the current history is not used)
+    m["__base__"] = {"commit": base_commit, "dirty": base_dirty}
     json.dump(m, open(out, "w"))
     return m
 
