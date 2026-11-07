@@ -47,7 +47,8 @@ STATE_DIR = ".dc-engine"
 # (special methods seed the caller step), bindings (import bindings are read anywhere), newfiles (a new or deleted
 # source file runs the full suite), conftest (edits to shared test code select nothing beyond themselves, as in v1),
 # byname (v2.1: changed functions found from changed line numbers only), config (v2.1: pytest configuration files
-# are not looked at), data (v2.2: changed non-Python files are not looked at);
+# are not looked at), data (v2.2: changed non-Python files are not looked at), syntax (v2.2.1: a changed file that no
+# longer parses is not looked at);
 # recorder parts (subprocess, mp, fixtures, setup) are read by covplugin at recording time. PROVISO_MODE=traditional:
 # a change to code that runs at import selects every test (all tests run it), and docstring edits count: the classic
 # "every test that executes changed code" rule.
@@ -309,7 +310,7 @@ def packages(covmap: dict) -> list[str]:
 
 # The Proviso version these selection rules belong to (evaluation rows record it; the dependency maps' format is
 # importstate.FORMAT, which a selection-only change leaves as it is).
-VERSION = "2.2"
+VERSION = "2.2.1"
 
 IMPORT_STATE_MAX_NAMES = 200
 EARLY_FULL_SHARE = 0.9  # run everything without a snapshot when edited functions reach this share of test time
@@ -716,6 +717,41 @@ def _changed_paths(root: str, paths: list[str]) -> list[tuple[str, str]]:
     return out
 
 
+def _unparsable_change(root: str, changed: list[tuple[str, str]], test_files: set[str]) -> str | None:
+    """(v2.2.1) The first changed Python file (package code, conftest, test helpers) that parsed at the base commit and
+    no longer parses, or a new one that does not parse: every test that imports it fails, whatever it ran, and an
+    edit inside a function body never reaches the import-time comparison (it runs only when import-time code
+    changed). Test files themselves are left out: an edited test file runs anyway. A file the analysing interpreter
+    could not parse at the base either (newer syntax) is not a change."""
+    import warnings
+    for code, path in changed:
+        base = os.path.basename(path)
+        if not path.endswith(".py") or code == "D" or path in test_files or base.startswith("test_") \
+                or base.endswith("_test.py"):
+            continue
+        try:
+            new = open(os.path.join(root, path), "rb").read()
+        except OSError:
+            continue
+
+        def parses(src) -> bool:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    ast.parse(src, filename=path)
+                    return True
+                except (SyntaxError, ValueError):
+                    return False
+        if parses(new):
+            continue
+        if code in "?A":
+            return path
+        old = subprocess.run(["git", "-C", root, "show", f"{_BASE}:{path}"], capture_output=True).stdout
+        if parses(old):
+            return path
+    return None
+
+
 # (v2.2) files in the package that are not Python (JSON, YAML, templates, data): code reads them while it runs, and
 # nothing records which test reads which file, so a change to one runs the full suite. Byte-code and editor files
 # do not count.
@@ -759,6 +795,9 @@ def _selection(root: str, covmap: dict, python: str | None = None) -> tuple[list
     new_src = [p for c, p in changed if c in "?A" and not _is_test_path(p) and p.endswith(".py")]
     gone_src = [p for c, p in changed if c == "D" and not _is_test_path(p) and p.endswith(".py")]
     test_files = {n.split("::", 1)[0] for n in tests_of(covmap)}
+    broken = None if _off("syntax") else _unparsable_change(root, changed, test_files)
+    if broken:
+        return None, {"reason": f"{broken} no longer parses: every test that imports it fails"}
     data = None if (_off("data") or _traditional()) else _data_file_change(changed, test_files)
     if data:
         return None, {"reason": f"a file the code may read changed ({data}): not tracked per test"}

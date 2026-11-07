@@ -155,3 +155,52 @@ class AgentBehaviour(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BrokenSyntax(AgentBehaviour):
+    """(v2.2.1) A changed file that no longer parses runs the full suite (every test importing it fails), also when
+    the edit is inside a function body, which never reaches the import-time comparison."""
+
+    def test_syntax_broken_inside_a_function_body(self):
+        self.edit("pkg/core.py", "    return 2 * x", "    return 2 * x\n          y = (")
+        sel, why = self.sel()
+        self.assertIsNone(sel)
+        self.assertIn("no longer parses", why["reason"])
+
+    def test_indentation_broken_inside_a_method(self):
+        self.edit("pkg/core.py", "def double(x):\n    return 2 * x", "def double(x):\n    y = 1\n        return 2 * x")
+        self.assertIsNone(self.sel()[0])
+
+    def test_new_package_file_that_does_not_parse(self):
+        open(os.path.join(self.root, "pkg", "extra.py"), "w").write("def f(:\n")
+        self.assertIsNone(self.sel()[0])
+
+    def test_broken_test_file_only_runs_itself(self):
+        p = os.path.join(self.root, "tests", "test_core.py")
+        open(p, "a").write("\ndef test_broken(:\n")
+        sel, why = self.sel()
+        self.assertIsNotNone(sel)
+        self.assertNotIn("no longer parses", why.get("reason") or "")
+
+    def test_broken_conftest_runs_the_full_suite(self):
+        open(os.path.join(self.root, "tests", "conftest.py"), "w").write("import pytest\ndef f(:\n")
+        self.assertIsNone(self.sel()[0])
+
+    def test_valid_edit_is_unaffected(self):
+        self.edit("pkg/core.py", "2 * x", "3 * x")
+        self.assertEqual(self.sel()[0], ["test_double"])
+
+    def test_switch_off_restores_v22(self):
+        self.edit("pkg/core.py", "    return 2 * x", "    return 2 * x\n          y = (")
+        old = os.environ.get("PROVISO_OFF")
+        os.environ["PROVISO_OFF"] = "syntax"
+        try:
+            sel, why = self.sel()
+            self.assertNotIn("no longer parses", why.get("reason") or "")
+        finally:
+            if old is None:
+                os.environ.pop("PROVISO_OFF")
+            else:
+                os.environ["PROVISO_OFF"] = old
+
+    # inherited tests run again for this class too; keep them, they are cheap
