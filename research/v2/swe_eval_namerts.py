@@ -155,9 +155,12 @@ def apply_patch(tree: str, meta: dict, case: dict) -> list[str]:
     return dropped
 
 
+PROVISO_TAG = ""   # --proviso-tag: compare with the rows of a later Proviso version (eval-TAG.jsonl)
+
+
 def proviso_rows() -> dict:
     rows = {}
-    path = os.path.join(OUT, "eval.jsonl")
+    path = os.path.join(OUT, f"eval-{PROVISO_TAG}.jsonl" if PROVISO_TAG else "eval.jsonl")
     if os.path.exists(path):
         for line in open(path):
             r = json.loads(line)
@@ -169,11 +172,15 @@ def proviso_rows() -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--core", action="store_true")
+    ap.add_argument("--held-out", action="store_true", help="only the instances after the core sample")
+    ap.add_argument("--proviso-tag", default="", help="compare with eval-TAG.jsonl (e.g. v2.1) instead of eval.jsonl")
     ap.add_argument("--limit", type=int, default=0, help="at most N instances (in the sample's order)")
     ap.add_argument("--repo", default="", help="only these repositories (comma-separated, e.g. pallets__flask)")
     ap.add_argument("--skip-repo", default="", help="leave these repositories out (comma-separated)")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
+    global PROVISO_TAG
+    PROVISO_TAG = a.proviso_tag
     lock = open(os.path.join(WORK, "swe_eval.lock"), "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -185,7 +192,8 @@ def main():
     prov = proviso_rows()
     sample = json.load(open(os.path.join(OUT, "sample.json")))["instances"]
     only, skip = set(filter(None, a.repo.split(","))), set(filter(None, a.skip_repo.split(",")))
-    sample = [x for x in sample if (not a.core or x["core"]) and (not only or x["repo"] in only)
+    sample = [x for x in sample if (not a.core or x["core"]) and (not a.held_out or not x["core"])
+              and (not only or x["repo"] in only)
               and x["repo"] not in skip
               and any((x["instance"], k) in prov for k in range(len(x["cases"])))]
     if a.limit:
@@ -277,32 +285,44 @@ def summary():
     for line in open(os.path.join(OUT, "eval_namerts.jsonl")):
         r = json.loads(line)
         nr[(r["instance"], r["case"])] = r
-    lines = ["# Proviso and NameRTS on the same real agent regressions (SWE-bench)", "",
+    core = {x["instance"] for x in json.load(open(os.path.join(OUT, "sample.json")))["instances"] if x["core"]}
+    version = PROVISO_TAG or "v2"
+    lines = [f"# Proviso ({version}) and NameRTS on the same real agent regressions (SWE-bench)", "",
              "Cases where the regression reproduced here and both tools ran. Time share: test time of the selection "
-             "over the whole suite (Proviso's per-test times; NameRTS selects whole files).", "",
-             "| repository | instances | regressions | Proviso missed | NameRTS missed | Proviso time (mean) | "
-             "NameRTS time (mean) | NameRTS errors | map / init time (median s) |", "|---|---|---|---|---|---|---|---|---|"]
-    allp = []
-    for repo in E.LAYOUT:
-        keys = [k for k, r in nr.items() if r["repo"] == repo]
-        if not keys:
+             "over the whole suite (Proviso's per-test times; NameRTS selects whole files). Missed: a case with a "
+             "broken test not selected; undetected: no broken test selected.", ""]
+    for label, part in (("core sample (development of v2.1)", True), ("held-out instances", False)):
+        keys_all = [k for k in nr if (k[0] in core) == part]
+        if not keys_all:
             continue
-        errs = sum(1 for k in keys if "error" in nr[k])
-        both = [(prov[k], nr[k]) for k in keys if "error" not in nr[k] and k in prov and prov[k].get("reproduced")]
-        allp += both
-        lines.append(_line(repo, both, errs))
-    lines.append(_line("**all**", allp, sum(1 for r in nr.values() if "error" in r)))
-    open(os.path.join(OUT, "eval_compare.md"), "w").write("\n".join(lines) + "\n")
+        lines += [f"## {label}", "",
+                  "| repository | instances | regressions | Proviso missed | NameRTS missed | Proviso undetected | "
+                  "NameRTS undetected | Proviso time (mean) | NameRTS time (mean) | NameRTS errors | "
+                  "map / init time (median s) |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+        allp = []
+        for repo in E.LAYOUT:
+            keys = [k for k in keys_all if nr[k]["repo"] == repo]
+            if not keys:
+                continue
+            errs = sum(1 for k in keys if "error" in nr[k])
+            both = [(prov[k], nr[k]) for k in keys if "error" not in nr[k] and k in prov and prov[k].get("reproduced")]
+            allp += both
+            lines.append(_line(repo, both, errs))
+        lines += [_line("**all**", allp, sum(1 for k in keys_all if "error" in nr[k])), ""]
+    open(os.path.join(OUT, f"eval_compare-{PROVISO_TAG}.md" if PROVISO_TAG else "eval_compare.md"), "w").write(
+        "\n".join(lines) + "\n")
     print("\n".join(lines))
 
 
 def _line(label, both, errs):
     if not both:
-        return f"| {label} | 0 | 0 | | | | | {errs} | |"
+        return f"| {label} | 0 | 0 | | | | | | | {errs} | |"
+    undet = lambda r: bool(r["missed"]) and len(r["missed"]) >= len(r["reproduced"])  # noqa: E731
     rec = [p.get("record_s") or 0 for p, _ in both]
     ini = [n.get("init_s") or 0 for _, n in both]
     return (f"| {label} | {len({p['instance'] for p, _ in both})} | {len(both)} | "
             f"{sum(1 for p, _ in both if p['missed'])} | {sum(1 for _, n in both if n['missed'])} | "
+            f"{sum(1 for p, _ in both if undet(p))} | {sum(1 for _, n in both if undet(n))} | "
             f"{100 * statistics.mean(p['time_share'] for p, _ in both):.1f}% | "
             f"{100 * statistics.mean(n['time_share'] for _, n in both):.1f}% | {errs} | "
             f"{statistics.median(rec):.0f} / {statistics.median(ini):.0f} |")
