@@ -307,6 +307,10 @@ def packages(covmap: dict) -> list[str]:
     return sorted({f.split("/", 1)[0] for f in map_files(covmap)})
 
 
+# The Proviso version these selection rules belong to (evaluation rows record it; the dependency maps' format is
+# importstate.FORMAT, which a selection-only change leaves as it is).
+VERSION = "2.2"
+
 IMPORT_STATE_MAX_NAMES = 200
 EARLY_FULL_SHARE = 0.9  # run everything without a snapshot when edited functions reach this share of test time
 

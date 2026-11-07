@@ -180,7 +180,7 @@ def main():
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     global PROVISO_TAG
-    PROVISO_TAG = a.proviso_tag
+    PROVISO_TAG = a.proviso_tag or ("" if E.I.VERSION == "2" else f"v{E.I.VERSION}")
     lock = open(os.path.join(WORK, "swe_eval.lock"), "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

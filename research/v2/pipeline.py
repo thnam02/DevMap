@@ -38,6 +38,10 @@ sys.path.insert(0, HERE)   # rts.py (selectors), mutants.py (planted bugs), name
 from dc_engine import impact as I  # noqa: E402
 from dc_engine import importstate as IS  # noqa: E402
 from dc_engine import record as REC  # noqa: E402
+
+# a results row counts as current only for the maps' format AND the Proviso version that computed it: a selection-only
+# change (v2 -> v2.2) keeps the maps (IS.FORMAT) but must recompute every row
+ROW_FORMAT = f"{IS.FORMAT}/{I.VERSION}"
 import mutants as M  # noqa: E402
 import rts as SEL  # noqa: E402
 
@@ -789,7 +793,7 @@ def reproviso_worker(i, n):
     """Recompute Proviso's rows (planted and real) with the current dc_engine; rows go to reproviso.w*.jsonl as
     {"id": "<stage>:<change id>", "proviso": row}. Other selectors do not use the import-time snapshot."""
     # a row counts as done only if it was computed with the current snapshot format (a later fix re-scores again)
-    done = {k for k, r in merged("reproviso").items() if r.get("format") == IS.FORMAT}
+    done = {k for k, r in merged("reproviso").items() if r.get("format") == ROW_FORMAT}
     tr, base = merged("truth"), baseline()
     jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in merged("realeval").values()]
     jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
@@ -817,7 +821,7 @@ def reproviso_worker(i, n):
                 apply_commit_src(tree, r)
                 row = _proviso_row(tree, cov, universe_of(cov, failing(b0)), r["failing"],
                                    {k: t for k, (ok, t) in b0.items()})
-            append("reproviso", i, {"id": f"{stage}:{cid}", "proviso": row, "format": IS.FORMAT})
+            append("reproviso", i, {"id": f"{stage}:{cid}", "proviso": row, "format": ROW_FORMAT})
         except Exception as e:  # noqa: BLE001
             print(stage, cid, "ERROR", repr(e)[:300], flush=True)
         finally:
@@ -841,7 +845,7 @@ def samemaps_worker(i, n):
     """The current Proviso's selection on the v1 dependency maps (covmap.v1.json), to compare selection logic alone
     with v1's on identical maps: re-recording mixes logic changes with run-to-run differences in what the recorder
     captures (caches, test order). Rows go to samemaps.w*.jsonl."""
-    done = {k for k, r in merged("samemaps").items() if r.get("format") == IS.FORMAT}
+    done = {k for k, r in merged("samemaps").items() if r.get("format") == ROW_FORMAT}
     tr, base = merged("truth"), baseline()
     jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in merged("realeval").values()]
     jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
@@ -870,7 +874,7 @@ def samemaps_worker(i, n):
                 apply_commit_src(tree, r)
                 row = _proviso_row(tree, cov, universe_of(cov, failing(b0)), r["failing"],
                                    {k: t for k, (ok, t) in b0.items()})
-            append("samemaps", i, {"id": f"{stage}:{cid}", "proviso": row, "format": IS.FORMAT})
+            append("samemaps", i, {"id": f"{stage}:{cid}", "proviso": row, "format": ROW_FORMAT})
         except Exception as e:  # noqa: BLE001
             print(stage, cid, "ERROR", repr(e)[:300], flush=True)
         finally:
@@ -891,7 +895,7 @@ def ablate_worker(i, n):
     switches only: recorder switches would need new recordings). Rows go to ablate-<name>.w*.jsonl."""
     name = ablation_name()
     stage = f"ablate-{name}"
-    done = {k for k, r in merged(stage).items() if r.get("format") == IS.FORMAT}
+    done = {k for k, r in merged(stage).items() if r.get("format") == ROW_FORMAT}
     tr, base = merged("truth"), baseline()
     jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in merged("realeval").values()]
     jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
@@ -917,7 +921,7 @@ def ablate_worker(i, n):
                 apply_commit_src(tree, r)
                 row = _proviso_row(tree, cov, universe_of(cov, failing(b0)), r["failing"],
                                    {k: t for k, (ok, t) in b0.items()})
-            append(stage, i, {"id": f"{st}:{cid}", "proviso": row, "format": IS.FORMAT, "variant": name})
+            append(stage, i, {"id": f"{st}:{cid}", "proviso": row, "format": ROW_FORMAT, "variant": name})
         except Exception as e:  # noqa: BLE001
             print(st, cid, "ERROR", repr(e)[:300], flush=True)
         finally:
@@ -933,8 +937,8 @@ def ablate():
     require_importable()
     jobs = list(merged("select").values()) + list(merged("realeval").values())
     parallel("ablate", jobs)
-    new = {k: r for k, r in merged(f"ablate-{name}").items() if r.get("format") == IS.FORMAT}
-    lines = [f"# {REPO}: Proviso with {name} vs Proviso (snapshot format {IS.FORMAT}), same dependency maps", "",
+    new = {k: r for k, r in merged(f"ablate-{name}").items() if r.get("format") == ROW_FORMAT}
+    lines = [f"# {REPO}: Proviso {I.VERSION} with {name} vs Proviso {I.VERSION} (maps format {IS.FORMAT}), same dependency maps", "",
              "| change set | changes | Proviso misses | ablated misses | new misses | Proviso time share | ablated time share |",
              "|---|---|---|---|---|---|---|"]
     for st in ("select", "realeval"):
@@ -958,8 +962,8 @@ def samemaps():
     jobs = list(merged("select").values()) + list(merged("realeval").values())
     require_importable()
     parallel("samemaps", jobs)
-    new = {r["id"]: r for r in merged("samemaps").values() if r.get("format") == IS.FORMAT}
-    lines = [f"# {REPO}: current Proviso (snapshot format {IS.FORMAT}) vs v1, both on the v1 dependency maps", "",
+    new = {r["id"]: r for r in merged("samemaps").values() if r.get("format") == ROW_FORMAT}
+    lines = [f"# {REPO}: Proviso {I.VERSION} (maps format {IS.FORMAT}) vs v1, both on the v1 dependency maps", "",
              "| change set | changes | v1 misses | current misses | new misses (v1 caught) | v1 time share | current time share |",
              "|---|---|---|---|---|---|---|"]
     for stage in ("select", "realeval"):
@@ -1006,7 +1010,7 @@ def reproviso():
                 r = json.loads(line)
             except ValueError:
                 continue
-            if r["id"] not in new or r.get("format") == IS.FORMAT:
+            if r["id"] not in new or r.get("format") == ROW_FORMAT:
                 new[r["id"]] = r
     changed = 0
     for stage in ("select", "realeval"):
@@ -1022,6 +1026,9 @@ def reproviso():
                 # the v1 result (snapshot format 13, the version evaluated before v2) is kept next to the current one
                 if "proviso_v1" not in sel and "proviso" in sel and IS.FORMAT > 13:
                     sel["proviso_v1"] = sel["proviso"]
+                # the frozen v2 result is kept too when a later version re-scores (v2.2: same maps, new rules)
+                if I.VERSION != "2" and "proviso_v2" not in sel and "proviso" in sel:
+                    sel["proviso_v2"] = sel["proviso"]
                 changed += sel.get("proviso", {}).get("selected") != nr["proviso"]["selected"]
                 sel["proviso"] = nr["proviso"]
             jdump_lines(rows, p)

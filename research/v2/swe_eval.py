@@ -223,12 +223,15 @@ def main():
     if a.limit:
         sample = sample[:a.limit]
     meta = P.load_instances()
-    out_path = os.path.join(OUT, f"eval-{a.tag}.jsonl" if a.tag else "eval.jsonl")
+    # rows of a later Proviso version never go into v2's eval.jsonl: without --tag they go to eval-v<VERSION>.jsonl
+    tag = a.tag or ("" if I.VERSION == "2" else f"v{I.VERSION}")
+    out_path = os.path.join(OUT, f"eval-{tag}.jsonl" if tag else "eval.jsonl")
     done = set()
     if os.path.exists(out_path):
         for line in open(out_path):
             r = json.loads(line)
-            if r.get("format") == EVAL_FORMAT and r.get("proviso_format") == IS.FORMAT and "error" not in r:
+            if r.get("format") == EVAL_FORMAT and r.get("proviso_format") == IS.FORMAT and "error" not in r \
+                    and r.get("proviso_version", "2") == I.VERSION:
                 done.add((r["instance"], r["case"]))
     for x in sample:
         inst, repo = x["instance"], x["repo"]
@@ -290,7 +293,7 @@ def main():
                 row["error"] = repr(e)[:400]
             finally:
                 reset_tree(tree)
-            row.update(format=EVAL_FORMAT, proviso_format=IS.FORMAT)
+            row.update(format=EVAL_FORMAT, proviso_format=IS.FORMAT, proviso_version=I.VERSION)
             write(out_path, row)
             status = ("ERROR " + row["error"][:120]) if "error" in row else (
                 "not reproduced here" if not row["reproduced"] else

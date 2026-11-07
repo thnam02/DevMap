@@ -33,6 +33,8 @@ from dc_engine import impact as I  # noqa: E402
 from dc_engine import importstate as IS  # noqa: E402
 from dc_engine import record as REC  # noqa: E402
 
+ROW_FORMAT = f"{IS.FORMAT}/{I.VERSION}"   # rows of another maps format or Proviso version are recomputed
+
 WORK = os.environ.get("PROVISO_WORK", os.path.expanduser("~/proviso-work/v2"))
 NR = os.environ.get("NAMERTS_HOME", os.path.join(WORK, "NameRTS"))
 OUT = os.environ.get("NRBENCH_OUT", os.path.join(HERE, "results", "nrbench"))  # v2: results/nrbench_v2
@@ -134,12 +136,28 @@ def run_pair(proj, tree, p, python):
     extra = [x for x in os.environ.get("PROVISO_EXTRA_PATH", "").split(os.pathsep) if x]
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([tree, *extra]), "PYTHONDONTWRITEBYTECODE": "1",
            "PATH": os.path.dirname(python) + os.pathsep + os.environ.get("PATH", "")}
-    cov_path = os.path.join(WORK, "nrbench", proj, "covmap.json")
+    py_tag = subprocess.run([python, "-c", "import sys; print('%d.%d' % sys.version_info[:2])"], capture_output=True,
+                            text=True).stdout.strip()
+    cache_dir = os.path.join(WORK, "nrbench", proj, "maps")
+    cov_path = os.path.join(cache_dir, f"{p['true_parent']}.f{IS.FORMAT}.py{py_tag}.json")
     t0 = time.time()
     synced = C["sync"](tree, python) if C.get("sync") else {}   # the commit's own pinned test dependencies
     targets = [t for t in C["targets"] if os.path.exists(os.path.join(tree, t))]  # test layout moves over history
-    REC.record(tree, C["pkg"], cov_path, python, targets, WORKERS, "", ["-p", "no:randomly"], env)
-    rec_s = time.time() - t0
+    # recorded once per parent commit, maps format and interpreter: later runs of the pair (another Proviso version,
+    # an ablation of selection rules) reuse it. Recorder ablations (PROVISO_OFF with recorder parts) record afresh.
+    rec_parts = {"subprocess", "mp", "fixtures", "setup"} & set(filter(None, os.environ.get("PROVISO_OFF", "").split(",")))
+    if rec_parts or not os.path.exists(cov_path) or not os.path.exists(cov_path + ".meta"):
+        os.makedirs(cache_dir, exist_ok=True)
+        tmp_path = cov_path + ".tmp" if not rec_parts else os.path.join(cache_dir, "ablation-covmap.json")
+        REC.record(tree, C["pkg"], tmp_path, python, targets, WORKERS, "", ["-p", "no:randomly"], env)
+        rec_s = time.time() - t0
+        if rec_parts:
+            cov_path = tmp_path
+        else:
+            os.replace(tmp_path, cov_path)
+            json.dump({"record_s": rec_s}, open(cov_path + ".meta", "w"))
+    else:
+        rec_s = json.load(open(cov_path + ".meta")).get("record_s", 0)
     cov = json.load(open(cov_path))
     tests = [n for n in cov if not n.startswith("__")]
     if not tests:
@@ -187,7 +205,7 @@ def main_project(proj, n, python):
     py_ver = subprocess.run([python, "-c", "import sys; print('%d.%d' % sys.version_info[:2])"], capture_output=True,
                             text=True).stdout.strip()
     # rows from another interpreter version are recomputed too (results must come from one environment)
-    done = {r["current"] for r in _rows(out) if r.get("format") == IS.FORMAT and "error" not in r and r.get("py") == py_ver}
+    done = {r["current"] for r in _rows(out) if r.get("format") == ROW_FORMAT and "error" not in r and r.get("py") == py_ver}
     base = os.path.join(WORK, "nrbench", proj)
     tree = os.path.join(base, "repo")
     if not os.path.isdir(os.path.join(tree, ".git")):
@@ -198,9 +216,9 @@ def main_project(proj, n, python):
     for i, p in enumerate(todo):
         t = time.time()
         try:
-            row = {**run_pair(proj, tree, p, python), "format": IS.FORMAT, "py": py_ver}
+            row = {**run_pair(proj, tree, p, python), "format": ROW_FORMAT, "py": py_ver}
         except Exception as e:  # noqa: BLE001
-            row = {"current": p["current"], "true_parent": p["true_parent"], "error": repr(e)[:400], "format": IS.FORMAT, "py": py_ver}
+            row = {"current": p["current"], "true_parent": p["true_parent"], "error": repr(e)[:400], "format": ROW_FORMAT, "py": py_ver}
         finally:
             shutil.rmtree(os.path.join(tree, ".dc-engine"), ignore_errors=True)
         with open(out, "a") as fh:
@@ -219,7 +237,7 @@ def _rows(path):
     out = {}
     for line in open(path):
         r = json.loads(line)
-        if r.get("format") == IS.FORMAT:
+        if r.get("format") == ROW_FORMAT:
             out[r["current"]] = r
     return list(out.values())
 

@@ -75,7 +75,7 @@ def verify(proj):
     todo = [r for r in rows if set(r["proviso_missed"]) - set(r.get("gt_not_recorded", []))]
     out = os.path.join(OUT, f"verify_{proj}.jsonl")
     # a pair counts as verified only for the current Proviso (another version may miss other files)
-    done = {r["current"] for r in map(json.loads, open(out)) if r.get("format") == N.IS.FORMAT} \
+    done = {r["current"] for r in map(json.loads, open(out)) if r.get("format") == N.ROW_FORMAT} \
         if os.path.exists(out) else set()
     tree = os.path.join(N.WORK, "nrbench", proj, "repo")
     py = venv_python(proj)
@@ -109,7 +109,7 @@ def verify(proj):
         finally:
             N.git(tree, "checkout", "-q", "-f", r["true_parent"], check=False)
             N.git(tree, "clean", "-q", "-fdx", check=False)
-        row["format"] = N.IS.FORMAT
+        row["format"] = N.ROW_FORMAT
         with open(out, "a") as fh:
             fh.write(json.dumps(row) + "\n")
         print(f"[{proj}] {r['current'][:10]} files {len(files)}: "
