@@ -200,6 +200,8 @@ def run_tests(tree: str, py: str, tests: list[str], test_files: list[str]) -> di
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--core", action="store_true", help="only the core sample (the first 80 instances)")
+    ap.add_argument("--held-out", action="store_true", help="only the instances after the core sample")
+    ap.add_argument("--skip-repo", default="", help="leave these repositories out (comma-separated)")
     ap.add_argument("--limit", type=int, default=0, help="at most N instances (in the sample's order)")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--tag", default="", help="a later Proviso version: rows go to eval-TAG.jsonl / eval-TAG.md "
@@ -214,6 +216,10 @@ def main():
     sample = json.load(open(os.path.join(OUT, "sample.json")))["instances"]
     if a.core:
         sample = [x for x in sample if x["core"]]
+    if a.held_out:
+        sample = [x for x in sample if not x["core"]]
+    skip = set(filter(None, a.skip_repo.split(",")))
+    sample = [x for x in sample if x["repo"] not in skip]
     if a.limit:
         sample = sample[:a.limit]
     meta = P.load_instances()
