@@ -1,0 +1,14 @@
+{"id": "select:function:sqlglot/jsonpath.py:173", "proviso": {"selected": 1164, "time_share": 1.0, "missed": [], "selection_s": 3.05, "reason": "module sqlglot.dialects.duckdb no longer imports"}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:class:sqlglot/parsers/singlestore.py:210", "proviso": {"selected": 3, "time_share": 0.0079, "missed": [], "selection_s": 1.48, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:module:sqlglot/typing/duckdb.py:125", "proviso": {"selected": 155, "time_share": 0.0698, "missed": [], "selection_s": 1.53, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:function:sqlglot/parser.py:8518", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.68, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:class:sqlglot/dialects/spark.py:32", "proviso": {"selected": 169, "time_share": 0.0829, "missed": [], "selection_s": 1.55, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:module:sqlglot/executor/env.py:267", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.37, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:function:sqlglot/optimizer/simplify.py:362", "proviso": {"selected": 3, "time_share": 0.0241, "missed": [], "selection_s": 0.41, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:class:sqlglot/parsers/dax.py:10", "proviso": {"selected": 4, "time_share": 0.008, "missed": [], "selection_s": 2.07, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:module:sqlglot/typing/mysql.py:202", "proviso": {"selected": 155, "time_share": 0.0698, "missed": [], "selection_s": 1.87, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:8bf484ce23", "proviso": {"selected": 192, "time_share": 0.1178, "missed": [], "selection_s": 4.12, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:1e6c6c58e1", "proviso": {"selected": 133, "time_share": 0.0791, "missed": [], "selection_s": 2.0, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:b54d32f036", "proviso": {"selected": 61, "time_share": 0.0171, "missed": [], "selection_s": 0.26, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:cefce19186", "proviso": {"selected": 1046, "time_share": 0.9996, "missed": [], "selection_s": 3.37, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:6874e1c4bf", "proviso": {"selected": 3, "time_share": 0.0105, "missed": [], "selection_s": 0.16, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
