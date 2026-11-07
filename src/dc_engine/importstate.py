@@ -378,40 +378,52 @@ def cache_key(root: str, tops: list[str], python: str, files: list[str] | None =
     return hashlib.sha1(json.dumps([trees, ver, sorted(files or [])]).encode()).hexdigest()
 
 
+# (v2.2) the base snapshot's cache format: more samples for finding order-unstable values (the maps keep FORMAT)
+BASE_FORMAT = f"{FORMAT}.b2"
+# heap shifts and export locations of the extra base samples. Values whose order follows memory addresses (sympy's
+# multipledispatch orderings: a topological sort over a set of classes) can come out in another order in any process;
+# with only two extra samples at one location such a value often looked stable and then "changed" on every edit.
+UNSTABLE_SAMPLES = [(0, 5003), (0, 20011), (1, 0), (1, 5003), (1, 20011), (2, 0), (2, 7919), (2, 30011)]
+
+
 def base_snapshot(root: str, files: list[str], python: str, cache_path: str) -> dict | None:
-    """Snapshot of the HEAD commit (exported to a temporary directory), cached per commit."""
+    """Snapshot of the HEAD commit (exported to a temporary directory), cached per commit. Keys whose fingerprint
+    differs between the first snapshot and any of the extra samples (other heap shifts, other export locations, run
+    in parallel) are recorded as order-unstable: diff() compares them without order."""
     tops = sorted({f.split("/", 1)[0] for f in files})
     head = cache_key(root, tops, python, files)
     try:
         cached = json.load(open(cache_path))
-        if cached.get("head") == head and cached.get("format") == FORMAT:
+        if cached.get("head") == head and cached.get("format") == BASE_FORMAT:
             return cached["snapshot"]
     except (OSError, ValueError, KeyError):
         pass
-    tmp = tempfile.mkdtemp(prefix="dc-base-")
+    arch = subprocess.run(["git", "-C", root, "archive", "HEAD", *tops], capture_output=True)
+    if arch.returncode != 0:
+        return None
+    # three export locations with different path lengths (the location shapes what is allocated at import)
+    tmps = [tempfile.mkdtemp(prefix=p) for p in ("dc-base-", "dc-base-location-two-", "dc-b3-")]
     try:
-        arch = subprocess.run(["git", "-C", root, "archive", "HEAD", *tops], capture_output=True)
-        if arch.returncode != 0:
-            return None
-        subprocess.run(["tar", "-x", "-C", tmp], input=arch.stdout, capture_output=True)
-        snap = snapshot(tmp, files, python)
-        unstable: set[str] = set()
-        for pad in (5003, 20011):
-            if snap is None:
-                break
-            again = snapshot(tmp, files, python, heap_pad=pad)
-            if again is None:
-                snap = None
-                break
-            unstable |= {k for k, v in snap["state"].items() if again["state"].get(k) != v}
+        for t in tmps:
+            subprocess.run(["tar", "-x", "-C", t], input=arch.stdout, capture_output=True)
+        snap = snapshot(tmps[0], files, python)
         if snap is not None:
-            snap["unstable"] = sorted(unstable)
+            from concurrent.futures import ThreadPoolExecutor
+            workers = max(1, min(len(UNSTABLE_SAMPLES), (os.cpu_count() or 2) // 2))
+            with ThreadPoolExecutor(workers) as ex:
+                others = list(ex.map(lambda s: snapshot(tmps[s[0]], files, python, heap_pad=s[1]), UNSTABLE_SAMPLES))
+            if any(o is None for o in others):
+                snap = None
+            else:
+                unstable = {k for o in others for k, v in snap["state"].items() if o["state"].get(k) != v}
+                snap["unstable"] = sorted(unstable)
     finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        for t in tmps:
+            shutil.rmtree(t, ignore_errors=True)
     if snap is not None:
         try:
             os.makedirs(os.path.dirname(cache_path) or ".", exist_ok=True)
-            json.dump({"head": head, "format": FORMAT, "snapshot": snap}, open(cache_path, "w"))
+            json.dump({"head": head, "format": BASE_FORMAT, "snapshot": snap}, open(cache_path, "w"))
         except OSError:
             pass
     return snap

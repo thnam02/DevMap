@@ -147,3 +147,46 @@ class ImportStateNoise(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+ORDERED = '''class A: pass
+class B: pass
+class C: pass
+class D: pass
+class E: pass
+class F: pass
+# order follows the classes' memory addresses (a set of classes), like sympy's multipledispatch orderings
+BY_ADDRESS = tuple({A, B, C, D, E, F})
+PRIORITY = ["low", "mid", "high"]
+'''
+
+
+class OrderNoise(unittest.TestCase):
+    """(v2.2) Values whose order follows memory addresses are compared without order once seen to vary; a reorder of
+    a value whose order is fixed is still a change."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root, True)
+        os.makedirs(os.path.join(self.root, "pkg"))
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write("")
+        open(os.path.join(self.root, "pkg", "order.py"), "w").write(ORDERED)
+        _git(self.root, "init", "-q")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "base")
+        self.files = ["pkg/__init__.py", "pkg/order.py"]
+        self.base = S.base_snapshot(self.root, self.files, sys.executable, os.path.join(self.root, "base.json"))
+
+    def changed(self):
+        return set(S.diff(self.base, S.snapshot(self.root, self.files, sys.executable), set())["changed"])
+
+    def test_address_ordered_value_is_marked_unstable(self):
+        self.assertIn("pkg.order:BY_ADDRESS", self.base["unstable"])
+        for _ in range(3):
+            self.assertNotIn("pkg.order:BY_ADDRESS", self.changed())
+
+    def test_reordering_a_fixed_list_is_a_change(self):
+        self.assertNotIn("pkg.order:PRIORITY", self.base["unstable"])
+        open(os.path.join(self.root, "pkg", "order.py"), "w").write(
+            ORDERED.replace('["low", "mid", "high"]', '["high", "mid", "low"]'))
+        self.assertIn("pkg.order:PRIORITY", self.changed())
