@@ -1,0 +1,13 @@
+{"id": "select:function:pygments/lexers/javascript.py:755", "proviso": {"selected": 18, "time_share": 0.023, "missed": [], "selection_s": 0.26, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:class:pygments/styles/algol.py:54", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.82, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/lexers/bibtex.py:47", "proviso": {"selected": 9, "time_share": 0.0004, "missed": [], "selection_s": 0.16, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/lexers/mime.py:175", "proviso": {"selected": 6, "time_share": 0.0009, "missed": [], "selection_s": 0.17, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:class:pygments/lexers/int_fiction.py:1281", "proviso": {"selected": 9, "time_share": 0.0161, "missed": [], "selection_s": 1.89, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/lexers/esoteric.py:62", "proviso": {"selected": 22, "time_share": 0.0161, "missed": [], "selection_s": 0.17, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:class:pygments/filters/__init__.py:597", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.68, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:module:pygments/lexers/_mapping.py:192", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.75, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "realeval:2b915b92b8", "proviso": {"selected": 9, "time_share": 0.0105, "missed": [], "selection_s": 3.5, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "realeval:0b9138ac85", "proviso": {"selected": 10, "time_share": 0.0101, "missed": [], "selection_s": 3.3, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "realeval:bdd74ebf8e", "proviso": {"selected": 16, "time_share": 0.0092, "missed": [], "selection_s": 2.7, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "realeval:0853028bfe", "proviso": {"selected": 166, "time_share": 0.0411, "missed": [], "selection_s": 0.18, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "realeval:74fab4eb60", "proviso": {"selected": 2996, "time_share": 1.0, "missed": [], "selection_s": 2.57, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
