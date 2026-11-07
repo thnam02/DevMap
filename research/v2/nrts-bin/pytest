@@ -1,3 +1,4 @@
 #!/bin/sh
-# NameRTS calls bare `pytest`: use the interpreter the pipeline runs with (PROVISO_PY)
-exec "${PROVISO_PY:-python3}" -m pytest "$@"
+# NameRTS calls bare `pytest`: use the interpreter the pipeline runs with (PROVISO_PY); NRTS_PYTEST_ARGS (unset in the
+# main benchmark) adds options, e.g. `-p nrts_reap` (plug/nrts_reap.py) for the SWE-bench runs
+exec "${PROVISO_PY:-python3}" -m pytest ${NRTS_PYTEST_ARGS} "$@"

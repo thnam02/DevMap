@@ -37,12 +37,15 @@ OUT, WORK = P.OUT, P.WORK
 NR_FORMAT = 1
 INIT_TIMEOUT = int(os.environ.get("NAMERTS_INIT_TIMEOUT", str(6 * 3600)))
 SELECT_TIMEOUT = int(os.environ.get("NAMERTS_SELECT_TIMEOUT", "3600"))
+# the same per-test-file limit as Proviso's recorder in swe_eval.py (PROVISO_RECORD_FILE_TIMEOUT, 900 s there): a
+# file whose tests run longer in NameRTS's initial run is cut off (plug/nrts_reap.py) and its tests always selected
+FILE_TIMEOUT = int(os.environ.get("NAMERTS_FILE_TIMEOUT", "900"))
 EXECNET = "execnet==2.1.1"   # NameRTS's pinned version (environment_313.yml); its pytest-xdist needs it in the env
 
 
 def nr_env(repo: str, tree: str, py: str, workers: int) -> dict:
     base = os.environ.get("PROVISO_WORK", os.path.expanduser("~/proviso-work/v2"))
-    extra = [os.path.join(tree, "src")] if os.path.isdir(os.path.join(tree, "src")) else []
+    extra = ([os.path.join(tree, "src")] if os.path.isdir(os.path.join(tree, "src")) else []) + [os.path.join(HERE, "plug")]
     return {**os.environ,
             "NAMERTS_HOME": os.environ.get("NAMERTS_HOME", os.path.join(base, "NameRTS")),
             "NAMERTS_BIN": os.path.join(HERE, "nrts-bin"), "NAMERTS_DEPS": os.environ.get("NAMERTS_DEPS", ""),
@@ -50,17 +53,39 @@ def nr_env(repo: str, tree: str, py: str, workers: int) -> dict:
             "NAMERTS_WORKERS": str(workers), "NAMERTS_TEST_DIRS": "",
             "NAMERTS_EXTRA_PATH": os.pathsep.join(extra),
             "PROVISO_PY": py,   # nrts-bin/pytest runs `$PROVISO_PY -m pytest`: the tests run in the instance's env
+            # end each finished per-file worker at once (NameRTS's isolation mode keeps them all until the run ends:
+            # hundreds of idle processes on sympy, out of memory); outcomes and NameRTS's records are unchanged
+            "NRTS_PYTEST_ARGS": "" if os.environ.get("NAMERTS_NO_REAP") else "-p nrts_reap",
             "PATH": os.path.dirname(py) + os.pathsep + os.environ.get("PATH", "")}
 
 
-def driver(action: str, repo: str, tree: str, cache: str, py: str, workers: int, log: str) -> str:
+def kill_strays(tree: str) -> int:
+    """SIGKILL leftover execnet worker processes (pytest-xdist's `python -c "import sys;exec(eval(...))"` gateways)
+    running in this tree: after a timeout or crash they can outlive NameRTS's process group."""
+    n = 0
+    for pid in os.listdir("/proc"):
+        if not pid.isdigit():
+            continue
+        try:
+            cmd = open(f"/proc/{pid}/cmdline", "rb").read()
+            if b"exec(eval(sys.stdin.readline()))" in cmd and \
+                    os.path.realpath(os.readlink(f"/proc/{pid}/cwd")).startswith(os.path.realpath(tree)):
+                os.kill(int(pid), signal.SIGKILL)
+                n += 1
+        except (OSError, ValueError):
+            continue
+    return n
+
+
+def driver(action: str, repo: str, tree: str, cache: str, py: str, workers: int, log: str,
+           extra_env: dict | None = None) -> str:
     """namerts_driver.py in its own process group (killed whole on timeout: NameRTS starts pytest through a shell)."""
     cmd = [sys.executable, os.path.join(HERE, "namerts_driver.py"), action, tree, cache,
            "sympy" if repo == "sympy__sympy" else repo.split("__")[1]]
     os.makedirs(os.path.dirname(log), exist_ok=True)
     with open(log, "w") as fh:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=fh, text=True, start_new_session=True,
-                             env=nr_env(repo, tree, py, workers))
+                             env={**nr_env(repo, tree, py, workers), **(extra_env or {})})
         try:
             out, _ = p.communicate(timeout=INIT_TIMEOUT if action == "init" else SELECT_TIMEOUT)
         except subprocess.TimeoutExpired:
@@ -68,6 +93,10 @@ def driver(action: str, repo: str, tree: str, cache: str, py: str, workers: int,
             p.communicate()
             raise RuntimeError(f"NameRTS {action} exceeded "
                                f"{INIT_TIMEOUT if action == 'init' else SELECT_TIMEOUT} s")
+        finally:
+            strays = kill_strays(tree)
+            if strays:
+                fh.write(f"\n[swe_eval_namerts] killed {strays} leftover worker processes\n")
         fh.write("\n--- stdout ---\n" + out)
     if p.returncode:
         raise RuntimeError(f"NameRTS {action} exit {p.returncode}: " + open(log).read()[-400:])
@@ -88,14 +117,21 @@ def init(inst: str, repo: str, tree: str, py: str, workers: int) -> tuple[str, d
     if os.path.exists(meta) and os.path.isfile(os.path.join(cache, "nbdp_cache.json")):
         return cache, json.load(open(meta))
     shutil.rmtree(cache, ignore_errors=True)
+    timed = os.path.join(WORK, "nr-timeouts", inst)
+    shutil.rmtree(timed, ignore_errors=True)
     t = time.time()
-    out = driver("init", repo, tree, cache, py, workers, os.path.join(WORK, "nr-logs", inst + ".init.log"))
+    out = driver("init", repo, tree, cache, py, workers, os.path.join(WORK, "nr-logs", inst + ".init.log"),
+                 {"NRTS_FILE_TIMEOUT": str(FILE_TIMEOUT) if FILE_TIMEOUT else "", "NRTS_TIMEOUT_DIR": timed})
     deps = json.load(open(os.path.join(cache, "dependencies.json"))) if \
         os.path.exists(os.path.join(cache, "dependencies.json")) else {}
     if not (deps or {}).get("dynamic_deps"):
         shutil.rmtree(cache, ignore_errors=True)
         raise RuntimeError("NameRTS's own test run recorded nothing (dynamic_deps empty): " + out[-300:])
-    info = {"init_s": round(time.time() - t)}
+    over = set()
+    if os.path.isdir(timed):
+        for name in os.listdir(timed):
+            over |= {l.strip() for l in open(os.path.join(timed, name)) if l.strip()}
+    info = {"init_s": round(time.time() - t), "file_timeout": FILE_TIMEOUT, "timed_out_files": sorted(over)}
     for line in out.splitlines():
         if line.startswith("{"):
             try:
@@ -134,7 +170,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--core", action="store_true")
     ap.add_argument("--limit", type=int, default=0, help="at most N instances (in the sample's order)")
-    ap.add_argument("--repo", default="", help="only this repository (e.g. pallets__flask), for a quick check")
+    ap.add_argument("--repo", default="", help="only these repositories (comma-separated, e.g. pallets__flask)")
+    ap.add_argument("--skip-repo", default="", help="leave these repositories out (comma-separated)")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     lock = open(os.path.join(WORK, "swe_eval.lock"), "w")
@@ -147,7 +184,9 @@ def main():
         sys.exit(f"NameRTS not found at {base} (set NAMERTS_HOME)")
     prov = proviso_rows()
     sample = json.load(open(os.path.join(OUT, "sample.json")))["instances"]
-    sample = [x for x in sample if (not a.core or x["core"]) and (not a.repo or x["repo"] == a.repo)
+    only, skip = set(filter(None, a.repo.split(","))), set(filter(None, a.skip_repo.split(",")))
+    sample = [x for x in sample if (not a.core or x["core"]) and (not only or x["repo"] in only)
+              and x["repo"] not in skip
               and any((x["instance"], k) in prov for k in range(len(x["cases"])))]
     if a.limit:
         sample = sample[:a.limit]
@@ -202,6 +241,9 @@ def main():
                 if sel is None:
                     raise RuntimeError("NameRTS printed no selection: " + out[-300:])
                 files = {os.path.relpath(f, tree) if os.path.isabs(f) else f for f in sel}
+                over = set(info.get("timed_out_files") or [])
+                row["nr_timed_out_files"] = len(over)
+                files |= over   # cut off in NameRTS's initial run: always selected (Proviso's rule for its own)
                 chosen = {n for n in nodes if n.split("::", 1)[0] in files}
                 missed = []
                 for t_ in pr["reproduced"]:
