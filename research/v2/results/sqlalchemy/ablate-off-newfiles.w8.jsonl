@@ -1,0 +1,11 @@
+{"id": "select:function:lib/sqlalchemy/engine/default.py:1537", "proviso": {"selected": 2261, "time_share": 0.8008, "missed": [], "selection_s": 1.15, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:class:lib/sqlalchemy/engine/reflection.py:1859", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.6, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:module:lib/sqlalchemy/sql/operators.py:2776", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.94, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:function:lib/sqlalchemy/engine/row.py:315", "proviso": {"selected": 67, "time_share": 0.6922, "missed": [], "selection_s": 0.75, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:class:lib/sqlalchemy/engine/default.py:1452", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.7, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:function:lib/sqlalchemy/engine/default.py:2107", "proviso": {"selected": 2309, "time_share": 0.8013, "missed": [], "selection_s": 1.2, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:function:lib/sqlalchemy/sql/coercions.py:1027", "proviso": {"selected": 612, "time_share": 0.7179, "missed": [], "selection_s": 0.82, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:class:lib/sqlalchemy/engine/default.py:1440", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.74, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "realeval:21ab0f4249", "proviso": {"selected": 9421, "time_share": 1.0, "missed": [], "selection_s": 2.69, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "realeval:4ef36de359", "proviso": {"selected": 6569, "time_share": 1.0, "missed": [], "selection_s": 2.15, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "realeval:48410f8340", "proviso": {"selected": 7505, "time_share": 1.0, "missed": [], "selection_s": 2.25, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
