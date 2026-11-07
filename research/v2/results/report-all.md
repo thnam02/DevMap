@@ -15,8 +15,9 @@
 | namerts | 25 of 59 | 91 | 50.9% (20.7%) |
 | tdad | 56 of 59 | 743 | 1.1% (0.8%) |
 | tdad_nocap | 45 of 59 | 418 | 47.3% (84.4%) |
+| proviso_v2 | 0 of 59 | 0 | 19.7% (4.5%) |
 
-End to end (plain s): full suite median 27.4; Proviso median 2.8, mean 6.8; faster on 80 of 95; selection median 1.58 s
+End to end (plain s): full suite median 27.4; Proviso median 3.3, mean 7.0; faster on 80 of 95; selection median 1.60 s
 
 ## Real commits: 52 changes, 32 break tests (45 failing tests)
 
@@ -33,8 +34,9 @@ End to end (plain s): full suite median 27.4; Proviso median 2.8, mean 6.8; fast
 | namerts | 14 of 32 | 19 | 46.7% (20.3%) |
 | tdad | 29 of 32 | 39 | 0.9% (0.3%) |
 | tdad_nocap | 19 of 32 | 24 | 37.6% (2.9%) |
+| proviso_v2 | 0 of 32 | 0 | 22.6% (7.3%) |
 
-End to end (plain s): full suite median 31.2; Proviso median 3.7, mean 8.6; faster on 43 of 52; selection median 1.47 s
+End to end (plain s): full suite median 31.2; Proviso median 4.3, mean 9.0; faster on 43 of 52; selection median 1.66 s
 
 # sympy (01c75e920f; targets sympy/functions)
 
@@ -53,10 +55,11 @@ End to end (plain s): full suite median 31.2; Proviso median 3.7, mean 8.6; fast
 | func_file | 13 of 47 | 630 | 38.3% (10.3%) |
 | proviso | 3 of 47 | 3 | 53.6% (56.3%) |
 | namerts | 7 of 47 | 837 | 66.1% (98.5%) |
+| proviso_v2 | 3 of 47 | 3 | 53.6% (56.3%) |
 
 testmon: could not run on 8 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 35.8; faster on 55 of 91; selection median 3.32 s
+End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 35.7; faster on 55 of 91; selection median 3.38 s
 
 ## Real commits: 21 changes, 1 break tests (2 failing tests)
 
@@ -71,8 +74,9 @@ End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 35.8; fa
 | func_file | 0 of 1 | 0 | 56.6% (83.1%) |
 | proviso | 0 of 1 | 0 | 41.9% (4.5%) |
 | namerts | 0 of 1 | 0 | 57.2% (94.2%) |
+| proviso_v2 | 0 of 1 | 0 | 41.9% (4.5%) |
 
-End to end (plain s): full suite median 60.5; Proviso median 3.4, mean 26.7; faster on 15 of 21; selection median 0.34 s
+End to end (plain s): full suite median 60.5; Proviso median 3.4, mean 26.8; faster on 15 of 21; selection median 0.42 s
 
 TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
 
@@ -93,8 +97,9 @@ TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
 | namerts | 26 of 61 | 2875 | 29.5% (3.1%) |
 | tdad | 61 of 61 | 8241 | 0.2% (0.0%) |
 | tdad_nocap | 34 of 61 | 5439 | 83.7% (87.1%) |
+| proviso_v2 | 2 of 61 | 11 | 89.2% (100.0%) |
 
-End to end (plain s): full suite median 24.2; Proviso median 27.0, mean 23.8; faster on 38 of 94; selection median 2.78 s
+End to end (plain s): full suite median 24.2; Proviso median 26.9, mean 23.8; faster on 38 of 94; selection median 2.66 s
 
 ## Real commits: 30 changes, 10 break tests (27 failing tests)
 
@@ -111,8 +116,9 @@ End to end (plain s): full suite median 24.2; Proviso median 27.0, mean 23.8; fa
 | namerts | 3 of 10 | 8 | 29.6% (0.1%) |
 | tdad | 10 of 10 | 27 | 0.1% (0.0%) |
 | tdad_nocap | 3 of 10 | 6 | 74.7% (84.6%) |
+| proviso_v2 | 0 of 10 | 0 | 83.7% (100.0%) |
 
-End to end (plain s): full suite median 24.5; Proviso median 26.6, mean 24.1; faster on 7 of 30; selection median 2.60 s
+End to end (plain s): full suite median 24.5; Proviso median 27.4, mean 25.1; faster on 7 of 30; selection median 2.72 s
 
 # pygments (156d85fdd1; targets tests)
 
@@ -131,8 +137,9 @@ End to end (plain s): full suite median 24.5; Proviso median 26.6, mean 24.1; fa
 | namerts | 56 of 56 | 588 | 4.8% (0.0%) |
 | tdad | 56 of 56 | 629 | 2.3% (0.1%) |
 | tdad_nocap | 56 of 56 | 627 | 4.8% (0.1%) |
+| proviso_v2 | 0 of 56 | 0 | 25.1% (1.5%) |
 
-End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.2; faster on 73 of 94; selection median 1.73 s
+End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.3; faster on 73 of 94; selection median 1.71 s
 
 (2 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -151,8 +158,9 @@ End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.2; faste
 | namerts | 29 of 29 | 55 | 2.2% (0.0%) |
 | tdad | 29 of 29 | 55 | 1.5% (0.4%) |
 | tdad_nocap | 29 of 29 | 55 | 2.2% (0.4%) |
+| proviso_v2 | 1 of 29 | 1 | 14.9% (1.8%) |
 
-End to end (plain s): full suite median 9.5; Proviso median 1.9, mean 2.9; faster on 48 of 54; selection median 1.75 s
+End to end (plain s): full suite median 9.5; Proviso median 2.8, mean 3.7; faster on 47 of 54; selection median 2.56 s
 
 testmon: run without the test files that have no extension (pytest-testmon crashes on them); their tests count as always selected by testmon and file_coverage
 
@@ -172,10 +180,11 @@ testmon: run without the test files that have no extension (pytest-testmon crash
 | namerts | 11 of 60 | 6952 | 38.5% (23.5%) |
 | tdad | 56 of 60 | 9215 | 1.9% (2.0%) |
 | tdad_nocap | 24 of 60 | 1118 | 73.3% (83.9%) |
+| proviso_v2 | 2 of 60 | 194 | 71.6% (98.3%) |
 
 testmon: could not run on 2 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; faster on 39 of 95; selection median 1.82 s
+End to end (plain s): full suite median 63.2; Proviso median 64.0, mean 46.6; faster on 39 of 95; selection median 1.87 s
 
 (1 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -193,8 +202,9 @@ End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; fa
 | namerts | 0 of 4 | 0 | 62.2% (71.7%) |
 | tdad | 3 of 4 | 5 | 1.4% (1.1%) |
 | tdad_nocap | 0 of 4 | 0 | 62.2% (79.3%) |
+| proviso_v2 | 1 of 4 | 1 | 69.7% (98.6%) |
 
-End to end (plain s): full suite median 64.3; Proviso median 53.7, mean 46.5; faster on 10 of 24; selection median 0.62 s
+End to end (plain s): full suite median 64.3; Proviso median 53.7, mean 46.7; faster on 10 of 24; selection median 0.72 s
 
 file_coverage: not reported here: testmon's per-test coverage records link project code to only about 250 of 2,939 tests on datasette, so file-level selection from them is not meaningful
 

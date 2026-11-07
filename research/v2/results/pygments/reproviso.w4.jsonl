@@ -110,3 +110,17 @@
 {"id": "realeval:b583de4794", "proviso": {"selected": 4, "time_share": 0.0001, "missed": [], "selection_s": 1.52, "reason": null}, "format": 22}
 {"id": "realeval:d193c96929", "proviso": {"selected": 10, "time_share": 0.0103, "missed": [], "selection_s": 1.28, "reason": null}, "format": 22}
 {"id": "realeval:cfca62e6e9", "proviso": {"selected": 4, "time_share": 0.0001, "missed": [], "selection_s": 0.95, "reason": null}, "format": 22}
+{"id": "select:function:pygments/style.py:103", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.47, "reason": "module pygments.styles.bw no longer imports"}, "format": "22/2.2"}
+{"id": "select:class:pygments/filters/__init__.py:227", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.62, "reason": null}, "format": "22/2.2"}
+{"id": "select:module:pygments/lexers/_php_builtins.py:480", "proviso": {"selected": 85, "time_share": 0.0237, "missed": [], "selection_s": 1.86, "reason": null}, "format": "22/2.2"}
+{"id": "select:function:pygments/formatters/terminal256.py:53", "proviso": {"selected": 7, "time_share": 0.0007, "missed": [], "selection_s": 0.21, "reason": null}, "format": "22/2.2"}
+{"id": "select:class:pygments/lexers/markup.py:1659", "proviso": {"selected": 27, "time_share": 0.0907, "missed": [], "selection_s": 1.74, "reason": null}, "format": "22/2.2"}
+{"id": "select:module:pygments/token.py:169", "proviso": {"selected": 228, "time_share": 0.1642, "missed": [], "selection_s": 1.72, "reason": null}, "format": "22/2.2"}
+{"id": "select:function:pygments/lexers/perl.py:529", "proviso": {"selected": 53, "time_share": 0.0408, "missed": [], "selection_s": 3.12, "reason": null}, "format": "22/2.2"}
+{"id": "select:class:pygments/styles/autumn.py:61", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 2.39, "reason": null}, "format": "22/2.2"}
+{"id": "select:module:pygments/lexers/_mapping.py:559", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 3.16, "reason": null}, "format": "22/2.2"}
+{"id": "realeval:ed139881e3", "proviso": {"selected": 10, "time_share": 0.012, "missed": [], "selection_s": 2.23, "reason": null}, "format": "22/2.2"}
+{"id": "realeval:5822fd1fda", "proviso": {"selected": 14, "time_share": 0.0134, "missed": [], "selection_s": 2.03, "reason": null}, "format": "22/2.2"}
+{"id": "realeval:b583de4794", "proviso": {"selected": 4, "time_share": 0.0001, "missed": [], "selection_s": 2.84, "reason": null}, "format": "22/2.2"}
+{"id": "realeval:d193c96929", "proviso": {"selected": 10, "time_share": 0.0103, "missed": [], "selection_s": 1.75, "reason": null}, "format": "22/2.2"}
+{"id": "realeval:cfca62e6e9", "proviso": {"selected": 4, "time_share": 0.0001, "missed": [], "selection_s": 0.95, "reason": null}, "format": "22/2.2"}

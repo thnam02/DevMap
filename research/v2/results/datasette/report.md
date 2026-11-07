@@ -14,10 +14,11 @@
 | namerts | 11 of 60 | 6952 | 38.5% (23.5%) |
 | tdad | 56 of 60 | 9215 | 1.9% (2.0%) |
 | tdad_nocap | 24 of 60 | 1118 | 73.3% (83.9%) |
+| proviso_v2 | 2 of 60 | 194 | 71.6% (98.3%) |
 
 testmon: could not run on 2 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; faster on 39 of 95; selection median 1.82 s
+End to end (plain s): full suite median 63.2; Proviso median 64.0, mean 46.6; faster on 39 of 95; selection median 1.87 s
 
 (1 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -35,7 +36,8 @@ End to end (plain s): full suite median 63.2; Proviso median 63.9, mean 46.5; fa
 | namerts | 0 of 4 | 0 | 62.2% (71.7%) |
 | tdad | 3 of 4 | 5 | 1.4% (1.1%) |
 | tdad_nocap | 0 of 4 | 0 | 62.2% (79.3%) |
+| proviso_v2 | 1 of 4 | 1 | 69.7% (98.6%) |
 
-End to end (plain s): full suite median 64.3; Proviso median 53.7, mean 46.5; faster on 10 of 24; selection median 0.62 s
+End to end (plain s): full suite median 64.3; Proviso median 53.7, mean 46.7; faster on 10 of 24; selection median 0.72 s
 
 file_coverage: not reported here: testmon's per-test coverage records link project code to only about 250 of 2,939 tests on datasette, so file-level selection from them is not meaningful
