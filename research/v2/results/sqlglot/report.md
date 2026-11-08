@@ -17,7 +17,7 @@
 | tdad_nocap | 45 of 59 | 418 | 47.3% (84.4%) |
 | proviso_v2 | 0 of 59 | 0 | 19.7% (4.5%) |
 
-End to end (plain s): full suite median 27.4; Proviso median 3.3, mean 7.0; faster on 80 of 95; selection median 1.60 s
+End to end (plain s): full suite median 27.4; Proviso median 3.4, mean 7.0; faster on 80 of 95; selection median 1.56 s
 
 ## Real commits: 52 changes, 32 break tests (45 failing tests)
 
@@ -36,4 +36,4 @@ End to end (plain s): full suite median 27.4; Proviso median 3.3, mean 7.0; fast
 | tdad_nocap | 19 of 32 | 24 | 37.6% (2.9%) |
 | proviso_v2 | 0 of 32 | 0 | 22.6% (7.3%) |
 
-End to end (plain s): full suite median 31.2; Proviso median 4.3, mean 9.0; faster on 43 of 52; selection median 1.66 s
+End to end (plain s): full suite median 31.2; Proviso median 4.9, mean 9.7; faster on 43 of 52; selection median 2.08 s

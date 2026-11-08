@@ -11,13 +11,13 @@
 | testmon | 6 of 61 | 1146 | 25.9% (13.1%) |
 | func_only | 36 of 61 | 4091 | 28.3% (0.0%) |
 | func_file | 4 of 61 | 22 | 80.7% (78.8%) |
-| proviso | 2 of 61 | 11 | 89.2% (100.0%) |
+| proviso | 3 of 61 | 14 | 89.2% (100.0%) |
 | namerts | 26 of 61 | 2875 | 29.5% (3.1%) |
 | tdad | 61 of 61 | 8241 | 0.2% (0.0%) |
 | tdad_nocap | 34 of 61 | 5439 | 83.7% (87.1%) |
 | proviso_v2 | 2 of 61 | 11 | 89.2% (100.0%) |
 
-End to end (plain s): full suite median 24.2; Proviso median 26.9, mean 23.8; faster on 38 of 94; selection median 2.66 s
+End to end (plain s): full suite median 24.2; Proviso median 26.9, mean 23.9; faster on 38 of 94; selection median 2.65 s
 
 ## Real commits: 30 changes, 10 break tests (27 failing tests)
 
@@ -36,4 +36,4 @@ End to end (plain s): full suite median 24.2; Proviso median 26.9, mean 23.8; fa
 | tdad_nocap | 3 of 10 | 6 | 74.7% (84.6%) |
 | proviso_v2 | 0 of 10 | 0 | 83.7% (100.0%) |
 
-End to end (plain s): full suite median 24.5; Proviso median 27.4, mean 25.1; faster on 7 of 30; selection median 2.72 s
+End to end (plain s): full suite median 24.5; Proviso median 27.9, mean 26.2; faster on 7 of 30; selection median 3.90 s

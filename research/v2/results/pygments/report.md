@@ -17,7 +17,7 @@
 | tdad_nocap | 56 of 56 | 627 | 4.8% (0.1%) |
 | proviso_v2 | 0 of 56 | 0 | 25.1% (1.5%) |
 
-End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.3; faster on 73 of 94; selection median 1.71 s
+End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.2; faster on 73 of 94; selection median 1.67 s
 
 (2 failing tests left out: they were created by the change, so no selector could pick them)
 
@@ -38,6 +38,6 @@ End to end (plain s): full suite median 7.9; Proviso median 1.8, mean 3.3; faste
 | tdad_nocap | 29 of 29 | 55 | 2.2% (0.4%) |
 | proviso_v2 | 1 of 29 | 1 | 14.9% (1.8%) |
 
-End to end (plain s): full suite median 9.5; Proviso median 2.8, mean 3.7; faster on 47 of 54; selection median 2.56 s
+End to end (plain s): full suite median 9.5; Proviso median 3.3, mean 4.0; faster on 48 of 54; selection median 2.90 s
 
 testmon: run without the test files that have no extension (pytest-testmon crashes on them); their tests count as always selected by testmon and file_coverage

@@ -124,3 +124,17 @@
 {"id": "realeval:b54d32f036", "proviso": {"selected": 61, "time_share": 0.0171, "missed": [], "selection_s": 0.34, "reason": null}, "format": "22/2.2"}
 {"id": "realeval:cefce19186", "proviso": {"selected": 1046, "time_share": 0.9996, "missed": [], "selection_s": 2.97, "reason": null}, "format": "22/2.2"}
 {"id": "realeval:6874e1c4bf", "proviso": {"selected": 3, "time_share": 0.0105, "missed": [], "selection_s": 0.2, "reason": null}, "format": "22/2.2"}
+{"id": "select:function:sqlglot/jsonpath.py:173", "proviso": {"selected": 1164, "time_share": 1.0, "missed": [], "selection_s": 3.08, "reason": "module sqlglot.dialects.duckdb no longer imports"}, "format": "23/2.3"}
+{"id": "select:class:sqlglot/parsers/singlestore.py:210", "proviso": {"selected": 3, "time_share": 0.0079, "missed": [], "selection_s": 1.46, "reason": null}, "format": "23/2.3"}
+{"id": "select:module:sqlglot/typing/duckdb.py:125", "proviso": {"selected": 155, "time_share": 0.0698, "missed": [], "selection_s": 1.53, "reason": null}, "format": "23/2.3"}
+{"id": "select:function:sqlglot/parser.py:8518", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.68, "reason": null}, "format": "23/2.3"}
+{"id": "select:class:sqlglot/dialects/spark.py:32", "proviso": {"selected": 169, "time_share": 0.0829, "missed": [], "selection_s": 1.49, "reason": null}, "format": "23/2.3"}
+{"id": "select:module:sqlglot/executor/env.py:267", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 1.34, "reason": null}, "format": "23/2.3"}
+{"id": "select:function:sqlglot/optimizer/simplify.py:362", "proviso": {"selected": 3, "time_share": 0.0241, "missed": [], "selection_s": 0.41, "reason": null}, "format": "23/2.3"}
+{"id": "select:class:sqlglot/parsers/dax.py:10", "proviso": {"selected": 4, "time_share": 0.008, "missed": [], "selection_s": 1.57, "reason": null}, "format": "23/2.3"}
+{"id": "select:module:sqlglot/typing/mysql.py:202", "proviso": {"selected": 155, "time_share": 0.0698, "missed": [], "selection_s": 2.03, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:8bf484ce23", "proviso": {"selected": 192, "time_share": 0.1178, "missed": [], "selection_s": 6.81, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:1e6c6c58e1", "proviso": {"selected": 133, "time_share": 0.0791, "missed": [], "selection_s": 3.24, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:b54d32f036", "proviso": {"selected": 61, "time_share": 0.0171, "missed": [], "selection_s": 0.63, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:cefce19186", "proviso": {"selected": 1046, "time_share": 0.9996, "missed": [], "selection_s": 8.07, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:6874e1c4bf", "proviso": {"selected": 3, "time_share": 0.0105, "missed": [], "selection_s": 0.16, "reason": null}, "format": "23/2.3"}

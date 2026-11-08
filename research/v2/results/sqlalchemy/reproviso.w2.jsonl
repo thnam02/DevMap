@@ -106,3 +106,15 @@
 {"id": "realeval:40ccf772d3", "proviso": {"selected": 504, "time_share": 0.7032, "missed": [], "selection_s": 0.61, "reason": null}, "format": "22/2.2"}
 {"id": "realeval:06fd857c55", "proviso": {"selected": 7681, "time_share": 1.0, "missed": [], "selection_s": 12.46, "reason": null}, "format": "22/2.2"}
 {"id": "realeval:8a287bf5c5", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.58, "reason": null}, "format": "22/2.2"}
+{"id": "select:function:lib/sqlalchemy/sql/elements.py:3562", "proviso": {"selected": 107, "time_share": 0.7146, "missed": [], "selection_s": 1.19, "reason": null}, "format": "23/2.3"}
+{"id": "select:class:lib/sqlalchemy/sql/selectable.py:7508", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.9, "reason": null}, "format": "23/2.3"}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:336", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 3.17, "reason": null}, "format": "23/2.3"}
+{"id": "select:function:lib/sqlalchemy/sql/compiler.py:6326", "proviso": {"selected": 1109, "time_share": 0.762, "missed": [], "selection_s": 1.47, "reason": null}, "format": "23/2.3"}
+{"id": "select:class:lib/sqlalchemy/engine/default.py:300", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 3.05, "reason": null}, "format": "23/2.3"}
+{"id": "select:module:lib/sqlalchemy/sql/operators.py:2764", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.68, "reason": null}, "format": "23/2.3"}
+{"id": "select:function:lib/sqlalchemy/sql/elements.py:5350", "proviso": {"selected": 169, "time_share": 0.7099, "missed": [], "selection_s": 1.17, "reason": null}, "format": "23/2.3"}
+{"id": "select:class:lib/sqlalchemy/sql/dml.py:1662", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.51, "reason": null}, "format": "23/2.3"}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:361", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 4.66, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:40ccf772d3", "proviso": {"selected": 504, "time_share": 0.7032, "missed": [], "selection_s": 0.78, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:06fd857c55", "proviso": {"selected": 7681, "time_share": 1.0, "missed": [], "selection_s": 22.38, "reason": null}, "format": "23/2.3"}
+{"id": "realeval:8a287bf5c5", "proviso": {"selected": 1, "time_share": 0.0031, "missed": [], "selection_s": 0.59, "reason": null}, "format": "23/2.3"}

@@ -19,7 +19,7 @@
 
 testmon: could not run on 8 change(s) (e.g. the change breaks collection under it); those changes are left out of its row
 
-End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 35.7; faster on 55 of 91; selection median 3.38 s
+End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 39.4; faster on 55 of 91; selection median 3.51 s
 
 ## Real commits: 21 changes, 1 break tests (2 failing tests)
 
@@ -36,6 +36,6 @@ End to end (plain s): full suite median 58.0; Proviso median 33.7, mean 35.7; fa
 | namerts | 0 of 1 | 0 | 57.2% (94.2%) |
 | proviso_v2 | 0 of 1 | 0 | 41.9% (4.5%) |
 
-End to end (plain s): full suite median 60.5; Proviso median 3.4, mean 26.8; faster on 15 of 21; selection median 0.42 s
+End to end (plain s): full suite median 60.5; Proviso median 6.7, mean 27.8; faster on 15 of 21; selection median 0.76 s
 
 TDAD: did not complete: TDAD's test linking ran out of memory (over 23 GB)
