@@ -9,3 +9,14 @@
 {"id": "select:module:datasette/app.py:398", "proviso": {"selected": 2212, "time_share": 0.9832, "missed": [], "selection_s": 2.29, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
 {"id": "realeval:1538832830", "proviso": {"selected": 1976, "time_share": 0.9913, "missed": ["tests/test_docs.py::test_view_classes_are_documented"], "selection_s": 2.09, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
 {"id": "realeval:faff4c8820", "proviso": {"selected": 83, "time_share": 0.1441, "missed": [], "selection_s": 0.26, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:function:datasette/publish/common.py:33", "proviso": {"selected": 2291, "time_share": 0.984, "missed": [], "selection_s": 1.93, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:class:datasette/views/execute_write.py:221", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.88, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:module:datasette/app.py:309", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.09, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:module:datasette/app.py:396", "proviso": {"selected": 2212, "time_share": 0.9832, "missed": [], "selection_s": 2.24, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:function:datasette/views/table.py:1429", "proviso": {"selected": 17, "time_share": 0.0813, "missed": [], "selection_s": 0.63, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:class:datasette/views/table_extras.py:279", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.76, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:function:datasette/views/table_create_alter.py:1361", "proviso": {"selected": 42, "time_share": 0.0836, "missed": [], "selection_s": 0.49, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:function:datasette/views/table.py:1860", "proviso": {"selected": 545, "time_share": 0.452, "missed": [], "selection_s": 0.7, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "select:module:datasette/app.py:398", "proviso": {"selected": 2212, "time_share": 0.9832, "missed": [], "selection_s": 2.36, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "realeval:1538832830", "proviso": {"selected": 1976, "time_share": 0.9913, "missed": ["tests/test_docs.py::test_view_classes_are_documented"], "selection_s": 2.2, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
+{"id": "realeval:faff4c8820", "proviso": {"selected": 83, "time_share": 0.1441, "missed": [], "selection_s": 0.18, "reason": null}, "format": "22/2.2.1", "variant": "off-byname"}
