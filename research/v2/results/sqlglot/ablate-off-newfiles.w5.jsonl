@@ -11,3 +11,16 @@
 {"id": "realeval:2a46a03311", "proviso": {"selected": 98, "time_share": 0.0755, "missed": [], "selection_s": 2.18, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
 {"id": "realeval:8bd7686641", "proviso": {"selected": 152, "time_share": 0.0709, "missed": [], "selection_s": 1.29, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
 {"id": "realeval:f5dd70bff7", "proviso": {"selected": 979, "time_share": 0.2316, "missed": [], "selection_s": 2.81, "reason": null}, "format": "22/2.2", "variant": "off-newfiles"}
+{"id": "select:function:sqlglot/parser.py:10443", "proviso": {"selected": 5, "time_share": 0.0094, "missed": [], "selection_s": 4.22, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:class:sqlglot/generators/duckdb.py:1695", "proviso": {"selected": 258, "time_share": 0.1001, "missed": [], "selection_s": 1.89, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:module:sqlglot/dialects/__init__.py:108", "proviso": {"selected": 1164, "time_share": 1.0, "missed": [], "selection_s": 1.28, "reason": "module sqlglot.dialects.duckdb no longer imports"}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:function:sqlglot/dialects/dialect.py:1943", "proviso": {"selected": 6, "time_share": 0.0118, "missed": [], "selection_s": 0.46, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:class:sqlglot/generators/dremio.py:41", "proviso": {"selected": 2, "time_share": 0.008, "missed": [], "selection_s": 1.6, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:module:sqlglot/parsers/tsql.py:40", "proviso": {"selected": 1051, "time_share": 0.9943, "missed": [], "selection_s": 1.64, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:function:sqlglot/jsonpath.py:133", "proviso": {"selected": 42, "time_share": 0.0668, "missed": [], "selection_s": 1.49, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:class:sqlglot/generators/mysql.py:186", "proviso": {"selected": 214, "time_share": 0.0979, "missed": [], "selection_s": 2.7, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "select:module:sqlglot/optimizer/__init__.py:46", "proviso": {"selected": 35, "time_share": 0.0135, "missed": [], "selection_s": 1.68, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "realeval:5cc5ef046e", "proviso": {"selected": 33, "time_share": 0.0572, "missed": [], "selection_s": 1.99, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "realeval:2a46a03311", "proviso": {"selected": 98, "time_share": 0.0755, "missed": [], "selection_s": 2.48, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "realeval:8bd7686641", "proviso": {"selected": 152, "time_share": 0.0709, "missed": [], "selection_s": 1.31, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
+{"id": "realeval:f5dd70bff7", "proviso": {"selected": 979, "time_share": 0.2316, "missed": [], "selection_s": 3.02, "reason": null}, "format": "22/2.2.1", "variant": "off-newfiles"}
