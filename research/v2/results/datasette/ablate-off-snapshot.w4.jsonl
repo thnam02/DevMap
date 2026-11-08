@@ -9,3 +9,14 @@
 {"id": "select:module:datasette/utils/sqlite.py:32", "proviso": {"selected": 1724, "time_share": 0.8821, "missed": [], "selection_s": 0.27, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:8e17729ff3", "proviso": {"selected": 2837, "time_share": 1.0, "missed": [], "selection_s": 3.32, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:5c9aa3e52a", "proviso": {"selected": 216, "time_share": 0.2764, "missed": [], "selection_s": 0.28, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
+{"id": "select:function:datasette/views/row.py:779", "proviso": {"selected": 65, "time_share": 0.0961, "missed": [], "selection_s": 0.34, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/stored_queries.py:621", "proviso": {"selected": 47, "time_share": 0.0923, "missed": [], "selection_s": 0.24, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/views/table_create_alter.py:361", "proviso": {"selected": 229, "time_share": 0.2314, "missed": [], "selection_s": 0.24, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/views/table_create_alter.py:44", "proviso": {"selected": 229, "time_share": 0.2314, "missed": [], "selection_s": 0.35, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/app.py:3031", "proviso": {"selected": 803, "time_share": 0.5349, "missed": [], "selection_s": 0.71, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/special.py:1096", "proviso": {"selected": 317, "time_share": 0.1634, "missed": [], "selection_s": 0.27, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/views/table_create_alter.py:1301", "proviso": {"selected": 42, "time_share": 0.0836, "missed": [], "selection_s": 0.5, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/filters.py:197", "proviso": {"selected": 469, "time_share": 0.3776, "missed": [], "selection_s": 0.23, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/utils/sqlite.py:32", "proviso": {"selected": 1724, "time_share": 0.8821, "missed": [], "selection_s": 0.26, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:8e17729ff3", "proviso": {"selected": 2837, "time_share": 1.0, "missed": [], "selection_s": 3.27, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:5c9aa3e52a", "proviso": {"selected": 216, "time_share": 0.2764, "missed": [], "selection_s": 0.28, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}

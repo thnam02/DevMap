@@ -11,3 +11,16 @@
 {"id": "realeval:9bc418af0e", "proviso": {"selected": 3, "time_share": 0.0089, "missed": [], "selection_s": 0.22, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:9794193571", "proviso": {"selected": 1024, "time_share": 0.9971, "missed": [], "selection_s": 1.86, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:f8606fe8f9", "proviso": {"selected": 119, "time_share": 0.061, "missed": [], "selection_s": 0.09, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/dialects/dialect.py:1336", "proviso": {"selected": 18, "time_share": 0.0403, "missed": [], "selection_s": 0.54, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:sqlglot/parser.py:987", "proviso": {"selected": 1081, "time_share": 0.9966, "missed": [], "selection_s": 0.69, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:sqlglot/dialects/dialect.py:2181", "proviso": {"selected": 1139, "time_share": 0.9999, "missed": [], "selection_s": 0.25, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/parser.py:4310", "proviso": {"selected": 1081, "time_share": 0.9966, "missed": [], "selection_s": 2.0, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:sqlglot/parsers/clickhouse.py:480", "proviso": {"selected": 89, "time_share": 0.0525, "missed": [], "selection_s": 0.17, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/serde.py:48", "proviso": {"selected": 6, "time_share": 0.0459, "missed": [], "selection_s": 0.18, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/expressions/core.py:837", "proviso": {"selected": 1096, "time_share": 0.9991, "missed": [], "selection_s": 0.66, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:sqlglot/generators/hive.py:352", "proviso": {"selected": 100, "time_share": 0.0763, "missed": [], "selection_s": 0.17, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:1d0e3f3486", "proviso": {"selected": 126, "time_share": 0.0777, "missed": [], "selection_s": 0.27, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:fa73693547", "proviso": {"selected": 3, "time_share": 0.0114, "missed": [], "selection_s": 1.68, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:9bc418af0e", "proviso": {"selected": 3, "time_share": 0.0089, "missed": [], "selection_s": 0.27, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:9794193571", "proviso": {"selected": 1024, "time_share": 0.9971, "missed": [], "selection_s": 2.11, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:f8606fe8f9", "proviso": {"selected": 119, "time_share": 0.061, "missed": [], "selection_s": 0.16, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}

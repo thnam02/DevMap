@@ -1,4 +1,4 @@
-# sqlglot: Proviso 2.2 with off-snapshot vs Proviso 2.2 (maps format 22), same dependency maps
+# sqlglot: Proviso 2.2.1 with off-snapshot vs Proviso 2.2.1 (maps format 22), same dependency maps
 
 | change set | changes | Proviso misses | ablated misses | new misses | Proviso time share | ablated time share |
 |---|---|---|---|---|---|---|

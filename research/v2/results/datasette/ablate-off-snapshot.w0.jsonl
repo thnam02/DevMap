@@ -9,3 +9,14 @@
 {"id": "select:class:datasette/views/table_extras.py:420", "proviso": {"selected": 460, "time_share": 0.3947, "missed": ["tests/test_table_api.py::test_html_only_extras_are_not_available_via_json[actions]"], "selection_s": 0.3, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:9cdf95ac2c", "proviso": {"selected": 709, "time_share": 0.5161, "missed": [], "selection_s": 0.45, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:27b7240f30", "proviso": {"selected": 187, "time_share": 0.3066, "missed": [], "selection_s": 0.28, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
+{"id": "select:function:datasette/app.py:436", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 0.57, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/app.py:2603", "proviso": {"selected": 656, "time_share": 0.5654, "missed": [], "selection_s": 0.6, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/views/table_create_alter.py:366", "proviso": {"selected": 229, "time_share": 0.2314, "missed": [], "selection_s": 0.25, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/utils/sql_analysis.py:95", "proviso": {"selected": 117, "time_share": 0.1248, "missed": [], "selection_s": 0.23, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/facets.py:238", "proviso": {"selected": 214, "time_share": 0.2812, "missed": [], "selection_s": 0.29, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/special.py:789", "proviso": {"selected": 317, "time_share": 0.1634, "missed": [], "selection_s": 0.35, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/utils/sql_analysis.py:83", "proviso": {"selected": 117, "time_share": 0.1248, "missed": [], "selection_s": 0.24, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/utils/__init__.py:1297", "proviso": {"selected": 308, "time_share": 0.2257, "missed": [], "selection_s": 0.44, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/table_extras.py:420", "proviso": {"selected": 460, "time_share": 0.3947, "missed": ["tests/test_table_api.py::test_html_only_extras_are_not_available_via_json[actions]"], "selection_s": 0.26, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:9cdf95ac2c", "proviso": {"selected": 709, "time_share": 0.5161, "missed": [], "selection_s": 0.52, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:27b7240f30", "proviso": {"selected": 187, "time_share": 0.3066, "missed": [], "selection_s": 0.3, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}

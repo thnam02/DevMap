@@ -9,3 +9,14 @@
 {"id": "realeval:4bf30aaf8e", "proviso": {"selected": 51, "time_share": 0.1012, "missed": [], "selection_s": 0.28, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:daf1989ebe", "proviso": {"selected": 2698, "time_share": 1.0, "missed": [], "selection_s": 0.06, "reason": "new or deleted source file datasette/telemetry.py"}, "format": "22/2.2", "variant": "off-snapshot"}
 {"id": "realeval:d9f9ed5027", "proviso": {"selected": 220, "time_share": 0.2755, "missed": [], "selection_s": 0.27, "reason": null}, "format": "22/2.2", "variant": "off-snapshot"}
+{"id": "select:function:datasette/app.py:1555", "proviso": {"selected": 1871, "time_share": 0.912, "missed": [], "selection_s": 0.57, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/special.py:209", "proviso": {"selected": 317, "time_share": 0.1634, "missed": ["tests/test_telemetry_registry.py::test_every_registered_metric_attribute_is_emitted"], "selection_s": 0.35, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/resources.py:28", "proviso": {"selected": 1520, "time_share": 0.8636, "missed": [], "selection_s": 0.22, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/views/table.py:1171", "proviso": {"selected": 120, "time_share": 0.115, "missed": [], "selection_s": 0.6, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/table_extras.py:650", "proviso": {"selected": 460, "time_share": 0.3947, "missed": [], "selection_s": 0.25, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:module:datasette/views/table_create_alter.py:357", "proviso": {"selected": 229, "time_share": 0.2314, "missed": [], "selection_s": 0.28, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:datasette/utils/sqlite.py:310", "proviso": {"selected": 171, "time_share": 0.3024, "missed": [], "selection_s": 0.29, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:class:datasette/views/table_extras.py:163", "proviso": {"selected": 460, "time_share": 0.3947, "missed": [], "selection_s": 0.24, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:4bf30aaf8e", "proviso": {"selected": 51, "time_share": 0.1012, "missed": [], "selection_s": 0.33, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:daf1989ebe", "proviso": {"selected": 2698, "time_share": 1.0, "missed": [], "selection_s": 0.14, "reason": "new or deleted source file datasette/telemetry.py"}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "realeval:d9f9ed5027", "proviso": {"selected": 220, "time_share": 0.2755, "missed": [], "selection_s": 0.22, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
