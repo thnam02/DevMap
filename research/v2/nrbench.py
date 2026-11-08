@@ -101,11 +101,24 @@ def pairs(proj):
 
 
 def put_current(tree, parent, current):
-    """Working tree = `current`, index and HEAD = `parent`; files deleted by the change are removed."""
+    """Working tree = `current`, index and HEAD = `parent`; files deleted by the change are removed.
+
+    Afterwards the tree must differ from `parent` in exactly the files of parent..current. Anything else (a file a test
+    run rewrote that `checkout -f` left alone because its cached stat data still matched, an encoding round trip) is
+    restored from `parent`; returns those paths, recorded in the row (sphinx's tests/roots/test-warnings/wrongenc.inc
+    showed up as changed in 45 of 50 sphinx pairs although no pair changes it)."""
     git(tree, "checkout", "-q", "-f", parent)
+    # without its index git rewrites every tracked file: a file a test rewrote with the same size and time stamp
+    # (invisible to git's stat check, so to checkout -f and to Proviso's own diff) is restored too
+    index = os.path.join(tree, ".git", "index")
+    if os.path.isfile(index):
+        os.remove(index)
+    git(tree, "reset", "-q", "--hard", parent)
     git(tree, "clean", "-q", "-fdx", "-e", ".dc-engine")
+    expected = set()
     for line in git(tree, "diff", "--name-status", "--no-renames", parent, current).splitlines():
         st, f = line.split("\t", 1)
+        expected.add(f)
         p = os.path.join(tree, f)
         if st.startswith("D"):
             if os.path.exists(p):
@@ -115,6 +128,20 @@ def put_current(tree, parent, current):
             if blob.returncode == 0:
                 os.makedirs(os.path.dirname(p) or tree, exist_ok=True)
                 open(p, "wb").write(blob.stdout)
+    git(tree, "update-index", "-q", "--really-refresh", check=False)   # re-read every file, not the cached stat data
+    extra = [f for f in git(tree, "diff", "--name-only", "--no-renames", parent).splitlines() if f not in expected]
+    extra += [l[3:] for l in git(tree, "status", "--porcelain", "-uall").splitlines()
+              if l.startswith("??") and l[3:] not in expected and not l[3:].startswith(".dc-engine/")]
+    for f in extra:
+        p = os.path.join(tree, f)
+        if subprocess.run(["git", "cat-file", "-e", f"{parent}:{f}"], cwd=tree, capture_output=True).returncode == 0:
+            blob = subprocess.run(["git", "show", f"{parent}:{f}"], cwd=tree, capture_output=True).stdout
+            open(p, "wb").write(blob)
+        elif os.path.exists(p):
+            os.remove(p)
+    if extra:
+        git(tree, "update-index", "-q", "--really-refresh", check=False)
+    return extra
 
 
 def file_of(nodeid):
@@ -166,7 +193,7 @@ def run_pair(proj, tree, p, python):
         tail = " | ".join((col.stdout + col.stderr).strip().splitlines()[-4:])
         raise RuntimeError(f"the dependency map recorded no tests; collection says: {tail}")
     files_all = {file_of(n) for n in tests}
-    put_current(tree, p["true_parent"], p["current"])
+    repaired = put_current(tree, p["true_parent"], p["current"])
     t0 = time.time()
     sel, why = I.selection(tree, cov, python)
     sel_s = time.time() - t0
@@ -194,7 +221,8 @@ def run_pair(proj, tree, p, python):
             "proviso_time_share": round(sum(cov[n].get("time", 0) for n in sel_tests & set(tests)) / t_all, 4),
             "namerts_files": len(p["namerts"]), "namerts_missed": sorted(gt - set(p["namerts"])),
             "namerts_safe": gt <= set(p["namerts"]), "gt_not_recorded": unrunnable,
-            "record_s": round(rec_s), "selection_s": round(sel_s, 2), "pinned_deps": synced}
+            "record_s": round(rec_s), "selection_s": round(sel_s, 2), "pinned_deps": synced,
+            "tree_repaired": repaired[:20]}
 
 
 def main_project(proj, n, python):

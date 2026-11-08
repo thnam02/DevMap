@@ -39,21 +39,35 @@ def collect_files(root: str, python: str, targets: list[str], env: dict) -> list
 def merge(parts: list[dict]) -> dict:
     out: dict = {"__fixtures__": {}, "__global__": {"funcs": []}}
     glob: set = set()
+    gfiles: set = set()
+    gdirs: set = set()
+    file_records = bool(parts)
     for m in parts:
         for k, v in m.items():
             if k == "__fixtures__":
                 for fk, r in v.items():
-                    cur = out["__fixtures__"].setdefault(fk, {"funcs": set(), "classes": set(), "always": False})
+                    cur = out["__fixtures__"].setdefault(fk, {"funcs": set(), "classes": set(), "always": False,
+                                                             "files": set(), "dirs": set()})
                     cur["funcs"] |= {tuple(x) for x in r["funcs"]}
                     cur["classes"] |= set(r["classes"])
                     cur["always"] = cur["always"] or r["always"]
+                    cur["files"] |= set(r.get("files", ()))
+                    cur["dirs"] |= set(r.get("dirs", ()))
             elif k == "__global__":
                 glob |= {tuple(x) for x in v["funcs"]}
+                gfiles |= set(v.get("files", ()))
+                gdirs |= set(v.get("dirs", ()))
+                # (v2.3) the map holds file records only if every part was recorded with them (an unrecorded file,
+                # a timed-out one, has no part: its tests are always selected anyway)
+                file_records = file_records and bool(v.get("file_records"))
             else:
                 out[k] = v
-    out["__fixtures__"] = {k: {"funcs": sorted(r["funcs"]), "classes": sorted(r["classes"]), "always": r["always"]}
+    out["__fixtures__"] = {k: {"funcs": sorted(r["funcs"]), "classes": sorted(r["classes"]), "always": r["always"],
+                               **({"files": sorted(r["files"])} if r["files"] else {}),
+                               **({"dirs": sorted(r["dirs"])} if r["dirs"] else {})}
                            for k, r in out["__fixtures__"].items()}
-    out["__global__"] = {"funcs": sorted(glob)}
+    out["__global__"] = {"funcs": sorted(glob), "files": sorted(gfiles), "dirs": sorted(gdirs),
+                         "file_records": file_records}
     return out
 
 

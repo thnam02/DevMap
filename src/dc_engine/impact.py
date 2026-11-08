@@ -48,7 +48,8 @@ STATE_DIR = ".dc-engine"
 # source file runs the full suite), conftest (edits to shared test code select nothing beyond themselves, as in v1),
 # byname (v2.1: changed functions found from changed line numbers only), config (v2.1: pytest configuration files
 # are not looked at), data (v2.2: changed non-Python files are not looked at), syntax (v2.2.1: a changed file that no
-# longer parses is not looked at);
+# longer parses is not looked at), files (v2.3: per-test file records not used: a data-file change runs the full suite
+# as in v2.2);
 # recorder parts (subprocess, mp, fixtures, setup) are read by covplugin at recording time. PROVISO_MODE=traditional:
 # a change to code that runs at import selects every test (all tests run it), and docstring edits count: the classic
 # "every test that executes changed code" rule.
@@ -310,7 +311,7 @@ def packages(covmap: dict) -> list[str]:
 
 # The Proviso version these selection rules belong to (evaluation rows record it; the dependency maps' format is
 # importstate.FORMAT, which a selection-only change leaves as it is).
-VERSION = "2.2.1"
+VERSION = "2.3"
 
 IMPORT_STATE_MAX_NAMES = 200
 EARLY_FULL_SHARE = 0.9  # run everything without a snapshot when edited functions reach this share of test time
@@ -752,23 +753,96 @@ def _unparsable_change(root: str, changed: list[tuple[str, str]], test_files: se
     return None
 
 
-# (v2.2) files in the package that are not Python (JSON, YAML, templates, data): code reads them while it runs, and
-# nothing records which test reads which file, so a change to one runs the full suite. Byte-code and editor files
-# do not count.
+# (v2.2) files in the package that are not Python (JSON, YAML, templates, data): code reads them while it runs. (v2.3)
+# The recorder notes which test reads which file; a change selects those tests (_data_readers). Byte-code and editor
+# files do not count.
 _NOT_DATA = (".pyc", ".pyo", ".pyd", ".so", ".dll", ".dylib", ".pyi", ".swp", ".orig", ".rej", ".bak", ".tmp", ".log", "~")
 
 
-def _data_file_change(changed: list[tuple[str, str]], test_files: set[str]) -> str | None:
-    """The first changed file that code or tests may read while they run: not Python, not a stub, not byte-code or
-    an editor/patch leftover, not a hidden file, and not itself a test (data files that are tests run themselves).
+def _data_changes(changed: list[tuple[str, str]], test_files: set[str]) -> list[tuple[str, str]]:
+    """The changed files that code or tests may read while they run: not Python, not a stub, not byte-code or an
+    editor/patch leftover, not a hidden file, and not itself a test (data files that are tests run themselves).
     Test data (fixtures, golden files, sphinx test roots) counts: tests read it."""
-    for _, path in changed:
+    out = []
+    for code, path in changed:
         base = os.path.basename(path)
         if path.endswith(".py") or path in test_files or path.endswith(_NOT_DATA) or "/__pycache__/" in f"/{path}" \
                 or base.startswith(".") or ".egg-info" in path:
             continue
-        return path
-    return None
+        out.append((code, path))
+    return out
+
+
+def _data_file_change(changed: list[tuple[str, str]], test_files: set[str]) -> str | None:
+    found = _data_changes(changed, test_files)
+    return found[0][1] if found else None
+
+
+def _data_readers(covmap: dict, changes: list[tuple[str, str]], code: bool = False
+                  ) -> tuple[set[str], set[str], str | None, list[str]]:
+    """(v2.3) The tests that read the changed files, from the files each test opened and the directories it listed
+    while recorded (its own call and every fixture, import and session record it is linked to). A file added or
+    removed also reaches the tests that listed a directory above it. Returns (tests, test files to run whole, a reason
+    to run the full suite instead, notes):
+      read while the package is imported           -> full suite (every test imports it)
+      read while pytest sets up or collects (conftest code, collection hooks: the "<session>" record)
+                                                   -> full suite (it may decide which tests exist)
+      read while a test module is imported (parametrisation from files)
+                                                   -> that whole test file (new or renamed cases have no id yet)
+      no test read it, a new untracked file        -> nothing (a lock file, an editor backup, a scratch file)
+      no test read it, under a test directory      -> nothing (test data no test uses)
+      no test read it, tracked, in the package     -> full suite (package data the code may read in a way not
+                                                      recorded: from C, from another process)
+    code=True: Python files that tests read as data (pylint's functional-test inputs, inspect.getsource). Only their
+    readers are added: whether the code itself runs is decided by the coverage rules, so none of the full-suite rules
+    applies."""
+    glob = covmap.get("__global__") or {}
+    gfiles, gdirs = set(glob.get("files") or ()), set(glob.get("dirs") or ())
+    fx = covmap.get("__fixtures__") or {}
+    fx_files = {k: set(r.get("files") or ()) for k, r in fx.items() if r.get("files")}
+    fx_dirs = {k: set(r.get("dirs") or ()) for k, r in fx.items() if r.get("dirs")}
+
+    def under(path, dirs):
+        return any(d in (".", "") or path == d or path.startswith(d.rstrip("/") + "/") for d in dirs)
+    out, whole, notes = set(), set(), []
+    for st, path in changes:
+        listing = st in "?AD"   # added or removed: a directory listing above it sees the difference
+
+        def reads(files, dirs):
+            return path in files or (listing and under(path, dirs))
+        if not code and reads(gfiles, gdirs):
+            return set(), set(), f"a file read while the package is imported changed ({path})", notes
+        if not code and reads(fx_files.get("<session>", ()), fx_dirs.get("<session>", ())):
+            return set(), set(), f"a file read while pytest collects or sets up the tests changed ({path})", notes
+        hit, files_hit = set(), set()
+        for k in set(fx_files) | set(fx_dirs):
+            if k.startswith("<import>@") and reads(fx_files.get(k, ()), fx_dirs.get(k, ())):
+                files_hit.add(k[len("<import>@"):])
+        for node, v in tests_of(covmap).items():
+            if node.split("::", 1)[0] in files_hit:
+                continue
+            if reads(set(v.get("files") or ()), v.get("dirs") or ()):
+                hit.add(node)
+                continue
+            for k in v.get("fx", ()):
+                if reads(fx_files.get(k, ()), fx_dirs.get(k, ())):
+                    hit.add(node)
+                    break
+        if not code and not hit and not files_hit and st != "?" and not _is_test_path(path):
+            return set(), set(), f"a file in the package changed that no recorded test read ({path})", notes
+        if hit or files_hit:
+            notes.append(f"{path}: {len(hit)} test(s) read it"
+                         + (f", read while collecting {', '.join(sorted(files_hit))}" if files_hit else ""))
+        elif not code:
+            notes.append(f"{path}: no test read it")
+        out |= hit
+        whole |= files_hit
+    return out, whole, None, notes
+
+
+def _code_reads(changed: list[tuple[str, str]], test_files: set[str]) -> list[tuple[str, str]]:
+    """(v2.3) Changed Python files that are not collected test modules: tests may read them as data."""
+    return [(c, p) for c, p in changed if p.endswith(".py") and p not in test_files]
 
 
 def _selection(root: str, covmap: dict, python: str | None = None) -> tuple[list[str] | None, dict]:
@@ -798,9 +872,23 @@ def _selection(root: str, covmap: dict, python: str | None = None) -> tuple[list
     broken = None if _off("syntax") else _unparsable_change(root, changed, test_files)
     if broken:
         return None, {"reason": f"{broken} no longer parses: every test that imports it fails"}
-    data = None if (_off("data") or _traditional()) else _data_file_change(changed, test_files)
-    if data:
-        return None, {"reason": f"a file the code may read changed ({data}): not tracked per test"}
+    data_changes = [] if (_off("data") or _traditional()) else _data_changes(changed, test_files)
+    data_sel: set[str] = set()
+    data_whole: set[str] = set()
+    data_notes: list[str] = []
+    file_records = not _off("files") and bool((covmap.get("__global__") or {}).get("file_records"))
+    if data_changes:
+        if not file_records:
+            # a map recorded without file records (before v2.3): which test reads a data file is unknown
+            return None, {"reason": f"a file the code may read changed ({data_changes[0][1]}): not tracked per test"}
+        data_sel, data_whole, data_full, data_notes = _data_readers(covmap, data_changes)
+        if data_full:
+            return None, {"reason": data_full}
+    if file_records and not _traditional():
+        code_sel, code_whole, _, code_notes = _data_readers(covmap, _code_reads(changed, test_files), code=True)
+        data_sel |= code_sel
+        data_whole |= code_whole
+        data_notes += code_notes
     # a new source file changes existing code only through what importing it does (a registration, a patched
     # value), which the import-time comparison below sees; its own definitions are new, so nothing existing reads them
     if (new_src or gone_src) and (_off("newfiles") or _traditional() or _off("snapshot")):
@@ -1017,6 +1105,14 @@ def _selection(root: str, covmap: dict, python: str | None = None) -> tuple[list
             hit = {n for n in tests_of(covmap) if naming.mentions(n.split("::", 1)[0], names)}
             shared |= hit
             shared_why.append(f"{f}: tests naming {', '.join(sorted(names)[:8])}")
+    if data_notes:
+        shared |= data_sel
+        shared_why.extend(data_notes)
+    if data_whole:   # test files whose collection read a changed file: run whole (new cases have no id yet)
+        extra = sorted(set(extra) | data_whole)
+        why["agent_tests"] = extra
+        shared = {n for n in shared if n.split("::", 1)[0] not in data_whole}
+        sel = [n for n in sel if n.split("::", 1)[0] not in data_whole]
     if shared_why:
         why["shared_test_code"] = shared_why
     _flush_file_names()

@@ -119,20 +119,25 @@ class AgentBehaviour(unittest.TestCase):
         self.git("checkout", "-qf", "BASE")
         self.git("branch", "-qD", "amended")
 
-    def test_data_files_run_the_full_suite(self):
-        for path, content in (("pkg/settings.json", '{"limit": 6}\n'), ("pkg/templates/page.html", "<b/>\n"),
-                              ("tests/data/expected.yaml", "x: 2\n"), ("pkg/new_table.csv", "a,b\n")):
+    def test_data_files_select_their_readers(self):
+        # (v2.3) the recorder notes which test opened which file: a JSON the code reads selects the test that ran it;
+        # a template nobody read, tracked in the package, runs the full suite (it may be read in a way not recorded);
+        # test data nobody read and a new untracked file select nothing
+        cases = (("pkg/settings.json", '{"limit": 6}\n', ["test_limit"]), ("pkg/templates/page.html", "<b/>\n", None),
+                 ("tests/data/expected.yaml", "x: 2\n", []), ("pkg/new_table.csv", "a,b\n", []))
+        for path, content, want in cases:
             with self.subTest(path):
                 open(os.path.join(self.root, path), "w").write(content)
                 sel, why = self.sel()
-                self.assertIsNone(sel)
-                self.assertIn(path, why["reason"])
+                self.assertEqual(sel, want)
+                if want is None:
+                    self.assertIn(path, why["reason"])
                 self.tearDown()
 
-    def test_committed_data_file_runs_the_full_suite(self):
+    def test_committed_data_file_selects_its_readers(self):
         open(os.path.join(self.root, "pkg/settings.json"), "w").write('{"limit": 6}\n')
         self.git("commit", "-qam", "data")
-        self.assertIsNone(self.sel()[0])
+        self.assertEqual(self.sel()[0], ["test_limit"])
 
     def test_leftovers_and_stubs_are_not_data(self):
         for name in ("pkg/core.py.bak", "pkg/core.pyi", "pkg/__pycache__/core.cpython-313.pyc", "pkg/.notes"):

@@ -93,10 +93,11 @@ DISABLE = mon.DISABLE
 
 
 class Target:
-    __slots__ = ("funcs", "classes", "always")
+    __slots__ = ("funcs", "classes", "always", "files", "dirs")
 
     def __init__(self):
         self.funcs, self.classes, self.always = set(), set(), False
+        self.files, self.dirs = set(), set()   # (v2.3) project files opened for reading, directories listed
 
 
 GLOBAL = Target()          # code run while a PACKAGE module is imported (import-time state: the snapshot's channel)
@@ -248,12 +249,104 @@ def _outside_key(item):
 
 # ------------------------------------------------------------------------------------------------------------ hooks
 
+# (v2.3) Files read and directories listed, per recording target, from Python's audit events (PEP 578): open() and
+# os.open for reading, os.listdir / os.scandir / glob.glob. Only paths under the project count, byte-code and
+# extension modules excluded. Python sources count when they are read as data (pylint's functional tests read their
+# input .py files; inspect.getsource); the import system's own reads are left out (_from_project), since code that runs
+# is recorded by function. A file read by C code that bypasses Python's I/O, or by another process, is not seen: tests
+# that start a Python process are already always selected.
+_AUDITED = frozenset({"open", "os.listdir", "os.scandir", "glob.glob"})
+_CODE_EXT = (".pyc", ".pyo", ".so", ".pyd")
+_SKIP_DIRS = (".git" + os.sep, ".dc-engine" + os.sep)
+_audit_on = [True]
+
+
+def _static_prefix(pattern: str) -> str:
+    """The directory part of a glob pattern before its first wildcard."""
+    parts = []
+    for part in os.path.normpath(pattern).split(os.sep)[:-1]:
+        if any(ch in part for ch in "*?["):
+            break
+        parts.append(part)
+    return os.sep.join(parts) or "."
+
+
+def _audit(event, args):
+    if event not in _AUDITED or not _audit_on[0]:
+        return
+    try:
+        p = args[0]
+        if p is None:
+            p = "."
+        if isinstance(p, int):
+            return
+        p = os.fsdecode(os.fspath(p))
+        if p.startswith("<"):   # a pseudo file name ("<string>", "<unknown>"): nothing on disk
+            return
+        if event == "open":
+            mode, flags = args[1], args[2]
+            if isinstance(mode, str):
+                if "r" not in mode and "+" not in mode:
+                    return
+            elif isinstance(flags, int) and flags & os.O_WRONLY and not flags & os.O_RDWR:
+                return
+        elif event == "glob.glob":
+            p = _static_prefix(p)
+        full = os.path.abspath(p)
+        if full != ROOT and not full.startswith(ROOT + os.sep):
+            return
+        rel = os.path.relpath(full, ROOT)
+        if rel.startswith(_SKIP_DIRS) or (event == "open" and rel.endswith(_CODE_EXT)) or \
+                os.sep + "__pycache__" + os.sep in os.sep + rel:
+            return
+        t = _target()
+        if not _from_project(t):
+            return
+        (t.files if event == "open" else t.dirs).add(rel.replace(os.sep, "/"))
+    except Exception:  # noqa: BLE001  (an audit hook must never raise into the code under test)
+        return
+
+
+_LIB_MARKS = ("site-packages", "dist-packages")
+
+
+def _is_project_file(fn: str) -> bool:
+    return (fn.startswith(ROOT + os.sep) and not any(m in fn for m in _LIB_MARKS))
+
+
+def _from_project(target) -> bool:
+    """Whether a read belongs to the code under test rather than to Python's or pytest's own machinery:
+      - the import system listing a package directory to find modules (frozen importlib, before any project frame):
+        only Python files matter there, and those are recorded as code;
+      - pytest walking the tree to collect tests, reading its configuration, or a plugin doing so outside any fixture
+        (no project frame on the stack, recorded under the session): new test files run themselves and configuration
+        changes have their own rule.
+    A library called from project code (json.load, pandas.read_csv, importlib.resources) counts, and so does a plugin
+    fixture (pytest-datadir) run for a test: it is recorded under that fixture."""
+    f = sys._getframe(2)
+    seen_project = False
+    while f is not None:
+        fn = f.f_code.co_filename
+        if fn.startswith("<frozen importlib"):
+            if not seen_project:
+                return False
+        elif _is_project_file(fn):
+            seen_project = True
+            break
+        f = f.f_back
+    if seen_project:
+        return True
+    return target is not _fixtures.get(SESSION)
+
+
 def _begin():
     # from the moment the plugin is loaded (-p), before conftest files import the package
     mon.use_tool_id(TOOL, "proviso-cov-v2")
     mon.register_callback(TOOL, mon.events.PY_START, _start)
     mon.register_callback(TOOL, mon.events.PY_RETURN, _module_end)
     mon.set_events(TOOL, mon.events.PY_START)
+    if "files" not in _OFF:
+        sys.addaudithook(_audit)
 
 
 if os.environ.get("COVMAP_OUT"):
@@ -335,6 +428,10 @@ def pytest_runtest_makereport(item, call):
                                                   f"<import>@{item.nodeid.split('::', 1)[0]}"}
         _map[item.nodeid] = {"funcs": sorted(own.funcs), "classes": sorted(own.classes), "always": own.always,
                              "time": t, "ok": ok, "fx": sorted(keys)}
+        if own.files:
+            _map[item.nodeid]["files"] = sorted(own.files)
+        if own.dirs:
+            _map[item.nodeid]["dirs"] = sorted(own.dirs)
 
 
 _times: dict = {}
@@ -362,6 +459,7 @@ if hasattr(os, "register_at_fork"):
 
 
 def pytest_sessionfinish(session, exitstatus):
+    _audit_on[0] = False
     mon.set_events(TOOL, 0)
     mon.free_tool_id(TOOL)
     # a test collected here whose body never ran (its setup failed, or the run stopped before it) has no record of
@@ -372,13 +470,17 @@ def pytest_sessionfinish(session, exitstatus):
             _map[nid] = {"funcs": [], "classes": [], "always": True, "time": 0.0, "ok": False, "fx": [],
                          "unrecorded": True}
     used = {k for v in _map.values() for k in v["fx"]}
-    _map["__fixtures__"] = {k: {"funcs": sorted(t.funcs), "classes": sorted(t.classes), "always": t.always}
-                            for k, t in _fixtures.items() if k in used and (t.funcs or t.classes or t.always)}
+    _map["__fixtures__"] = {k: {"funcs": sorted(t.funcs), "classes": sorted(t.classes), "always": t.always,
+                                **({"files": sorted(t.files)} if t.files else {}),
+                                **({"dirs": sorted(t.dirs)} if t.dirs else {})}
+                            for k, t in _fixtures.items()
+                            if k in used and (t.funcs or t.classes or t.always or t.files or t.dirs)}
     # every test keeps the keys of all the fixture instances it used, also those whose own record is empty (a fixture
     # that only patches the clock): an edit to such a fixture in conftest.py is traced to its users through them
     if "fixtures" in _OFF:
         for v in _map.values():
             if "fx" in v:
                 v["fx"] = [k for k in v["fx"] if k in _map["__fixtures__"]]
-    _map["__global__"] = {"funcs": sorted(GLOBAL.funcs)}
+    _map["__global__"] = {"funcs": sorted(GLOBAL.funcs), "files": sorted(GLOBAL.files), "dirs": sorted(GLOBAL.dirs),
+                          "file_records": "files" not in _OFF}
     json.dump(_map, open(os.environ["COVMAP_OUT"], "w"))

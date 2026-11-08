@@ -9,13 +9,15 @@
 #   bash research/v2/run_v2.sh dev      # 2. NameRTS benchmark, development projects (loguru pylint pvlib) + verify
 #   bash research/v2/run_v2.sh test     # 3. NameRTS benchmark, test projects (sphinx seaborn xarray dask sympy)
 #                                       #    + verify — run only after 1 and 2 are reviewed
-# NameRTS-benchmark results: v2.2 in research/v2/results/nrbench_v2.2 (v2 in nrbench_v2, v1 in nrbench); main-benchmark
-# rows keep the frozen v2 result as "proviso_v2" when v2.2 re-scores them.
+# NameRTS-benchmark results: research/v2/results/nrbench_v<VERSION> for the Proviso version in src (v2.3 in nrbench_v2.3,
+# v2.2.1 in nrbench_v2.2.1, v2 in nrbench_v2, v1 in nrbench); main-benchmark rows keep the frozen v2 result as
+# "proviso_v2" when a later version re-scores them.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 export TMPDIR=${TMPDIR:-$HOME/proviso-work/tmp}
 mkdir -p "$TMPDIR"
-export NRBENCH_OUT=${NRBENCH_OUT:-research/v2/results/nrbench_v2.2}   # v2 results stay in nrbench_v2
+PV=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' src/dc_engine/impact.py)
+export NRBENCH_OUT=${NRBENCH_OUT:-research/v2/results/nrbench_v$PV}
 step=${1:-}
 case $step in
   gate)
@@ -59,17 +61,17 @@ case $step in
       cat research/v2/results/*/ablate-"$name".md
       git add research/v2/results
     else
-      export NRBENCH_OUT=research/v2/results/nrbench_ablate_$name
+      export NRBENCH_OUT=research/v2/results/nrbench_ablate_v${PV}_$name
       bash research/v2/run_nrbench.sh loguru pylint pvlib
       git add "$NRBENCH_OUT"
     fi
-    git commit -qm "Ablation $name ($step, $(hostname), $(date +%F))" && { git pull -q --rebase && git push -q && echo "== pushed"; } ;;
+    git commit -qm "Ablation $name, Proviso v$PV ($step, $(hostname), $(date +%F))" && { git pull -q --rebase && git push -q && echo "== pushed"; } ;;
   dev|test)
     if [ "$step" = dev ]; then P="loguru pylint pvlib"; else P="sphinx seaborn xarray dask sympy"; fi
     bash research/v2/run_nrbench.sh $P
     python3 research/v2/nrcheck.py verify $P 2>&1 | tee "$NRBENCH_OUT/verify_$step.log"
     git add "$NRBENCH_OUT"
-    git commit -qm "Proviso v2.2 on NameRTS's benchmark: $step projects verified ($(hostname), $(date +%F))" && \
+    git commit -qm "Proviso v$PV on NameRTS's benchmark: $step projects verified ($(hostname), $(date +%F))" && \
       { git pull -q --rebase && git push -q && echo "== pushed"; } ;;
   *) sed -n 2,9p "$0"; exit 1 ;;
 esac
