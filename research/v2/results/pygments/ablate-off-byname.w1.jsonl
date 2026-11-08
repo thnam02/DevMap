@@ -1,0 +1,14 @@
+{"id": "select:function:pygments/lexers/pascal.py:493", "proviso": {"selected": 11, "time_share": 0.0118, "missed": [], "selection_s": 0.23, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:function:pygments/formatters/img.py:159", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 0.21, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:module:pygments/lexers/_mapping.py:185", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.74, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:function:pygments/lexers/data.py:482", "proviso": {"selected": 30, "time_share": 0.0028, "missed": [], "selection_s": 0.21, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:class:pygments/lexers/grammar_notation.py:257", "proviso": {"selected": 11, "time_share": 0.0116, "missed": [], "selection_s": 1.85, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:module:pygments/lexers/_mapping.py:7", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.75, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:function:pygments/lexers/modula2.py:1550", "proviso": {"selected": 9, "time_share": 0.0026, "missed": [], "selection_s": 0.2, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:class:pygments/styles/default.py:69", "proviso": {"selected": 206, "time_share": 0.1608, "missed": [], "selection_s": 1.67, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:module:pygments/lexers/_mapping.py:405", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 2.2, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:96fff34d11", "proviso": {"selected": 15, "time_share": 0.0102, "missed": [], "selection_s": 2.03, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:510a9c227e", "proviso": {"selected": 15, "time_share": 0.0108, "missed": [], "selection_s": 2.01, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:c3d93adb98", "proviso": {"selected": 11, "time_share": 0.0096, "missed": [], "selection_s": 1.71, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:94702fe584", "proviso": {"selected": 17, "time_share": 0.0185, "missed": [], "selection_s": 1.8, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:1fa7ace39f", "proviso": {"selected": 9, "time_share": 0.0102, "missed": [], "selection_s": 1.34, "reason": null}, "format": "22/2.2", "variant": "off-byname"}

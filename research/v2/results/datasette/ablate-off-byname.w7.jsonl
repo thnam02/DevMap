@@ -1,0 +1,11 @@
+{"id": "select:function:datasette/stored_queries.py:156", "proviso": {"selected": 751, "time_share": 0.4853, "missed": [], "selection_s": 0.3, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:class:datasette/views/stored_queries.py:302", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.88, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:class:datasette/views/table_extras.py:661", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.02, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:function:datasette/utils/multipart.py:641", "proviso": {"selected": 58, "time_share": 0.0762, "missed": [], "selection_s": 0.3, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:class:datasette/views/special.py:252", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.98, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:module:datasette/app.py:386", "proviso": {"selected": 2212, "time_share": 0.9832, "missed": [], "selection_s": 2.04, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:function:datasette/app.py:638", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 0.76, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "select:class:datasette/views/table_extras.py:651", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.8, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:cca08d2886", "proviso": {"selected": 2557, "time_share": 1.0, "missed": ["tests/test_plugins.py::test_plugin_hooks_have_tests[shutdown]"], "selection_s": 0.56, "reason": "your edited functions run in 91% of the test time"}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:d0836ddedc", "proviso": {"selected": 2221, "time_share": 0.9847, "missed": [], "selection_s": 1.66, "reason": null}, "format": "22/2.2", "variant": "off-byname"}
+{"id": "realeval:df4c0fde0f", "proviso": {"selected": 2149, "time_share": 0.9942, "missed": [], "selection_s": 0.97, "reason": null}, "format": "22/2.2", "variant": "off-byname"}

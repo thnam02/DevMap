@@ -1,0 +1,11 @@
+{"id": "select:function:datasette/utils/multipart.py:415", "proviso": {"selected": 102, "time_share": 0.0767, "missed": [], "selection_s": 0.3, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:function:datasette/utils/sql_analysis.py:308", "proviso": {"selected": 117, "time_share": 0.1248, "missed": [], "selection_s": 0.43, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:module:datasette/utils/sql_analysis.py:89", "proviso": {"selected": 2217, "time_share": 0.9832, "missed": [], "selection_s": 1.97, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:module:datasette/views/execute_write.py:30", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.94, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:function:datasette/app.py:1786", "proviso": {"selected": 291, "time_share": 0.3278, "missed": [], "selection_s": 0.6, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:class:datasette/views/table_extras.py:1016", "proviso": {"selected": 2199, "time_share": 0.9831, "missed": [], "selection_s": 1.98, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:function:datasette/csrf.py:86", "proviso": {"selected": 1638, "time_share": 0.8984, "missed": [], "selection_s": 0.29, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:function:datasette/views/index.py:174", "proviso": {"selected": 178, "time_share": 0.1697, "missed": [], "selection_s": 0.28, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "select:module:datasette/views/table_create_alter.py:356", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.01, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:287e8ba3b2", "proviso": {"selected": 2825, "time_share": 1.0, "missed": [], "selection_s": 2.85, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
+{"id": "realeval:34a7c28ba3", "proviso": {"selected": 115, "time_share": 0.1738, "missed": [], "selection_s": 0.67, "reason": null}, "format": "22/2.2", "variant": "off-conftest"}
