@@ -1,4 +1,4 @@
-# datasette: Proviso 2.2 with traditional vs Proviso 2.2 (maps format 22), same dependency maps
+# datasette: Proviso 2.2.1 with traditional vs Proviso 2.2.1 (maps format 22), same dependency maps
 
 | change set | changes | Proviso misses | ablated misses | new misses | Proviso time share | ablated time share |
 |---|---|---|---|---|---|---|
