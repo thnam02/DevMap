@@ -11,3 +11,16 @@
 {"id": "realeval:544e58c5f3", "proviso": {"selected": 28, "time_share": 0.193, "missed": [], "selection_s": 0.19, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
 {"id": "realeval:edef94d66c", "proviso": {"selected": 15, "time_share": 0.0128, "missed": [], "selection_s": 2.12, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
 {"id": "realeval:d091e9341f", "proviso": {"selected": 5214, "time_share": 1.0, "missed": [], "selection_s": 2.2, "reason": null}, "format": "22/2.2", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/lexers/robotframework.py:538", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 0.23, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:class:pygments/styles/emacs.py:65", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.75, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:module:pygments/lexers/_mapping.py:325", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.84, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/formatters/html.py:805", "proviso": {"selected": 154, "time_share": 0.0323, "missed": [], "selection_s": 0.18, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:class:pygments/lexers/json5.py:59", "proviso": {"selected": 12, "time_share": 0.0117, "missed": [], "selection_s": 1.67, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/lexer.py:952", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 0.19, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:function:pygments/formatters/groff.py:157", "proviso": {"selected": 8, "time_share": 0.0004, "missed": [], "selection_s": 0.18, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "select:class:pygments/styles/perldoc.py:67", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.68, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "realeval:209a33deb1", "proviso": {"selected": 15, "time_share": 0.0106, "missed": [], "selection_s": 2.91, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "realeval:857e46ae5b", "proviso": {"selected": 34, "time_share": 0.0301, "missed": [], "selection_s": 2.44, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "realeval:544e58c5f3", "proviso": {"selected": 28, "time_share": 0.193, "missed": [], "selection_s": 0.31, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "realeval:edef94d66c", "proviso": {"selected": 15, "time_share": 0.0128, "missed": [], "selection_s": 2.41, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
+{"id": "realeval:d091e9341f", "proviso": {"selected": 5214, "time_share": 1.0, "missed": [], "selection_s": 3.49, "reason": null}, "format": "22/2.2.1", "variant": "off-docs-hints"}
