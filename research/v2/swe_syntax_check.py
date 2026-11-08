@@ -38,7 +38,11 @@ def parses(src: bytes) -> bool:
 def broken_files(clone: str, base: str, test_patch: str, patch: str) -> list[str] | str:
     ref = set(re.findall(r"(?m)^\+\+\+ b/(\S+)$", test_patch or ""))
     patch, _ = E.without_files(patch, ref)
-    files = sorted(set(re.findall(r"(?m)^diff --git a/\S+ b/(\S+)$", patch)))
+    # every file the patch names: `diff --git` headers and plain unified-diff headers (some agents emit only
+    # those), old and new names (a rename or a deletion needs the old file at base)
+    files = sorted(set(re.findall(r"(?m)^diff --git a/(\S+) b/\S+$", patch)) |
+                   set(re.findall(r"(?m)^diff --git a/\S+ b/(\S+)$", patch)) |
+                   {f for f in re.findall(r"(?m)^(?:---|\+\+\+) [ab]/(\S+)", patch)})
     tmp = tempfile.mkdtemp(prefix="swe-syntax-")
     try:
         old = {}
