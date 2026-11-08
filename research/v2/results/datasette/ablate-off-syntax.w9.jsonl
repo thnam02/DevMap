@@ -1,0 +1,10 @@
+{"id": "select:function:datasette/database.py:971", "proviso": {"selected": 295, "time_share": 0.2997, "missed": [], "selection_s": 0.41, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/views/special.py:315", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 5.18, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/views/special.py:231", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.01, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:function:datasette/app.py:2388", "proviso": {"selected": 23, "time_share": 0.0845, "missed": [], "selection_s": 0.72, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/views/execute_write.py:464", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.98, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:module:datasette/utils/sql_analysis.py:96", "proviso": {"selected": 2217, "time_share": 0.9832, "missed": [], "selection_s": 1.92, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:function:datasette/utils/sqlite.py:334", "proviso": {"selected": 40, "time_share": 0.0792, "missed": [], "selection_s": 0.41, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/views/special.py:489", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.01, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "realeval:caf238aac8", "proviso": {"selected": 1518, "time_share": 0.7896, "missed": [], "selection_s": 0.43, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "realeval:2588634358", "proviso": {"selected": 2818, "time_share": 1.0, "missed": [], "selection_s": 0.21, "reason": "your edited functions run in 100% of the test time"}, "format": "22/2.2.1", "variant": "off-syntax"}

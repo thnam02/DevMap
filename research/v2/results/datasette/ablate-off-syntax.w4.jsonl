@@ -1,0 +1,11 @@
+{"id": "select:function:datasette/views/row.py:779", "proviso": {"selected": 65, "time_share": 0.0961, "missed": [], "selection_s": 0.35, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/views/stored_queries.py:621", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.1, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:module:datasette/views/table_create_alter.py:361", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.85, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:module:datasette/views/table_create_alter.py:44", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.98, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:function:datasette/app.py:3031", "proviso": {"selected": 803, "time_share": 0.5349, "missed": [], "selection_s": 0.58, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/views/special.py:1096", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.99, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:function:datasette/views/table_create_alter.py:1301", "proviso": {"selected": 42, "time_share": 0.0836, "missed": [], "selection_s": 0.39, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:class:datasette/filters.py:197", "proviso": {"selected": 2228, "time_share": 0.9832, "missed": [], "selection_s": 1.97, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "select:module:datasette/utils/sqlite.py:32", "proviso": {"selected": 2219, "time_share": 0.9833, "missed": [], "selection_s": 1.7, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "realeval:8e17729ff3", "proviso": {"selected": 2837, "time_share": 1.0, "missed": [], "selection_s": 4.92, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
+{"id": "realeval:5c9aa3e52a", "proviso": {"selected": 216, "time_share": 0.2764, "missed": [], "selection_s": 0.27, "reason": null}, "format": "22/2.2.1", "variant": "off-syntax"}
