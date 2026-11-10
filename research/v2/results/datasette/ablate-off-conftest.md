@@ -1,4 +1,4 @@
-# datasette: Proviso 2.2.1 with off-conftest vs Proviso 2.2.1 (maps format 22), same dependency maps
+# datasette: Proviso 2.3 with off-conftest vs Proviso 2.3 (maps format 23), same dependency maps
 
 | change set | changes | Proviso misses | ablated misses | new misses | Proviso time share | ablated time share |
 |---|---|---|---|---|---|---|

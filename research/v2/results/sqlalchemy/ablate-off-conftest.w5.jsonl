@@ -20,3 +20,14 @@
 {"id": "select:module:lib/sqlalchemy/sql/compiler.py:374", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 3.47, "reason": null}, "format": "22/2.2.1", "variant": "off-conftest"}
 {"id": "realeval:7e28adbe0c", "proviso": {"selected": 6919, "time_share": 1.0, "missed": [], "selection_s": 4.51, "reason": null}, "format": "22/2.2.1", "variant": "off-conftest"}
 {"id": "realeval:6a54490c9d", "proviso": {"selected": 2213, "time_share": 0.8495, "missed": [], "selection_s": 1.83, "reason": null}, "format": "22/2.2.1", "variant": "off-conftest"}
+{"id": "select:function:lib/sqlalchemy/engine/_result_cy.py:567", "proviso": {"selected": 354, "time_share": 0.72, "missed": [], "selection_s": 0.81, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:class:lib/sqlalchemy/sql/sqltypes.py:3136", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.89, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:296", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 3.12, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:function:lib/sqlalchemy/sql/selectable.py:2582", "proviso": {"selected": 2523, "time_share": 0.8348, "missed": [], "selection_s": 1.14, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:class:lib/sqlalchemy/sql/selectable.py:3055", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 3.18, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:324", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 3.07, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:function:lib/sqlalchemy/sql/elements.py:3444", "proviso": {"selected": 53, "time_share": 0.6953, "missed": [], "selection_s": 1.5, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:class:lib/sqlalchemy/sql/coercions.py:648", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 2.82, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "select:module:lib/sqlalchemy/sql/compiler.py:374", "proviso": {"selected": 9760, "time_share": 1.0, "missed": [], "selection_s": 4.06, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "realeval:7e28adbe0c", "proviso": {"selected": 6919, "time_share": 1.0, "missed": [], "selection_s": 4.82, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
+{"id": "realeval:6a54490c9d", "proviso": {"selected": 2213, "time_share": 0.8495, "missed": [], "selection_s": 2.28, "reason": null}, "format": "23/2.3", "variant": "off-conftest"}
