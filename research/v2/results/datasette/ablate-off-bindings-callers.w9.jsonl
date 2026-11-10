@@ -18,3 +18,13 @@
 {"id": "select:class:datasette/views/special.py:489", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 1.99, "reason": null}, "format": "22/2.2.1", "variant": "off-bindings-callers"}
 {"id": "realeval:caf238aac8", "proviso": {"selected": 1518, "time_share": 0.7896, "missed": [], "selection_s": 0.4, "reason": null}, "format": "22/2.2.1", "variant": "off-bindings-callers"}
 {"id": "realeval:2588634358", "proviso": {"selected": 2818, "time_share": 1.0, "missed": [], "selection_s": 0.22, "reason": "your edited functions run in 100% of the test time"}, "format": "22/2.2.1", "variant": "off-bindings-callers"}
+{"id": "select:function:datasette/database.py:971", "proviso": {"selected": 311, "time_share": 0.313, "missed": [], "selection_s": 0.44, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:class:datasette/views/special.py:315", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 4.95, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:class:datasette/views/special.py:231", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 2.03, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:function:datasette/app.py:2388", "proviso": {"selected": 34, "time_share": 0.0882, "missed": [], "selection_s": 0.68, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:class:datasette/views/execute_write.py:464", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 1.87, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:module:datasette/utils/sql_analysis.py:96", "proviso": {"selected": 2220, "time_share": 0.9832, "missed": [], "selection_s": 1.95, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:function:datasette/utils/sqlite.py:334", "proviso": {"selected": 43, "time_share": 0.0799, "missed": [], "selection_s": 0.29, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:class:datasette/views/special.py:489", "proviso": {"selected": 2201, "time_share": 0.9831, "missed": [], "selection_s": 2.05, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "realeval:caf238aac8", "proviso": {"selected": 1520, "time_share": 0.7901, "missed": [], "selection_s": 0.55, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "realeval:2588634358", "proviso": {"selected": 2818, "time_share": 1.0, "missed": [], "selection_s": 0.28, "reason": "your edited functions run in 100% of the test time"}, "format": "23/2.3", "variant": "off-bindings-callers"}

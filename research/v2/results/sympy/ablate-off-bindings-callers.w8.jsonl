@@ -18,3 +18,13 @@
 {"id": "select:module:sympy/core/relational.py:1589", "proviso": {"selected": 353, "time_share": 0.9401, "missed": [], "selection_s": 2.97, "reason": null}, "format": "22/2.2.1", "variant": "off-bindings-callers"}
 {"id": "realeval:ce96d33116", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 2.37, "reason": null}, "format": "22/2.2.1", "variant": "off-bindings-callers"}
 {"id": "realeval:5f8bf9bae0", "proviso": {"selected": 118, "time_share": 0.6064, "missed": [], "selection_s": 0.6, "reason": null}, "format": "22/2.2.1", "variant": "off-bindings-callers"}
+{"id": "select:function:sympy/core/function.py:1568", "proviso": {"selected": 235, "time_share": 0.8291, "missed": [], "selection_s": 0.41, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:class:sympy/functions/elementary/complexes.py:525", "proviso": {"selected": 23, "time_share": 0.2316, "missed": [], "selection_s": 3.64, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:class:sympy/core/numbers.py:3216", "proviso": {"selected": 581, "time_share": 1.0, "missed": [], "selection_s": 23.42, "reason": "module sympy no longer imports"}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:function:sympy/functions/elementary/hyperbolic.py:979", "proviso": {"selected": 1, "time_share": 0.0, "missed": [], "selection_s": 0.37, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:module:sympy/core/assumptions_generated.py:1477", "proviso": {"selected": 578, "time_share": 1.0, "missed": [], "selection_s": 2.85, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:function:sympy/functions/special/zeta_functions.py:157", "proviso": {"selected": 2, "time_share": 0.028, "missed": [], "selection_s": 0.18, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:function:sympy/functions/elementary/integers.py:269", "proviso": {"selected": 1, "time_share": 0.0611, "missed": [], "selection_s": 0.2, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "select:module:sympy/core/relational.py:1589", "proviso": {"selected": 353, "time_share": 0.9401, "missed": [], "selection_s": 2.95, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "realeval:ce96d33116", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 2.56, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
+{"id": "realeval:5f8bf9bae0", "proviso": {"selected": 118, "time_share": 0.6064, "missed": [], "selection_s": 0.51, "reason": null}, "format": "23/2.3", "variant": "off-bindings-callers"}
