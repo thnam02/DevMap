@@ -18,3 +18,13 @@
 {"id": "select:module:sympy/core/assumptions_generated.py:1484", "proviso": {"selected": 575, "time_share": 0.999, "missed": [], "selection_s": 3.61, "reason": null}, "format": "22/2.2.1", "variant": "off-data"}
 {"id": "realeval:a1021ffb1f", "proviso": {"selected": 2, "time_share": 0.0229, "missed": [], "selection_s": 0.42, "reason": null}, "format": "22/2.2.1", "variant": "off-data"}
 {"id": "realeval:850d9a3f79", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.41, "reason": null}, "format": "22/2.2.1", "variant": "off-data"}
+{"id": "select:function:sympy/functions/elementary/integers.py:558", "proviso": {"selected": 4, "time_share": 0.1224, "missed": [], "selection_s": 0.28, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:module:sympy/core/relational.py:1580", "proviso": {"selected": 156, "time_share": 0.4206, "missed": [], "selection_s": 6.65, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:function:sympy/core/function.py:629", "proviso": {"selected": 136, "time_share": 0.6136, "missed": [], "selection_s": 0.85, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:function:sympy/functions/elementary/miscellaneous.py:561", "proviso": {"selected": 53, "time_share": 0.1032, "missed": [], "selection_s": 0.45, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:module:sympy/core/relational.py:1576", "proviso": {"selected": 156, "time_share": 0.4206, "missed": [], "selection_s": 3.52, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:function:sympy/functions/elementary/integers.py:266", "proviso": {"selected": 1, "time_share": 0.0611, "missed": [], "selection_s": 0.25, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:class:sympy/core/numbers.py:3877", "proviso": {"selected": 578, "time_share": 0.9997, "missed": [], "selection_s": 3.86, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "select:module:sympy/core/assumptions_generated.py:1484", "proviso": {"selected": 575, "time_share": 0.999, "missed": [], "selection_s": 3.58, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "realeval:a1021ffb1f", "proviso": {"selected": 2, "time_share": 0.0229, "missed": [], "selection_s": 0.43, "reason": null}, "format": "23/2.3", "variant": "off-data"}
+{"id": "realeval:850d9a3f79", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.27, "reason": null}, "format": "23/2.3", "variant": "off-data"}
