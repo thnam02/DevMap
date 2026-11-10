@@ -24,3 +24,16 @@
 {"id": "realeval:3086608e6f", "proviso": {"selected": 5, "time_share": 0.0097, "missed": [], "selection_s": 0.19, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
 {"id": "realeval:64d6f59a49", "proviso": {"selected": 1, "time_share": 0.0097, "missed": [], "selection_s": 0.54, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
 {"id": "realeval:3ca824895e", "proviso": {"selected": 84, "time_share": 0.0661, "missed": [], "selection_s": 0.16, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/optimizer/pushdown_predicates.py:144", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 0.27, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:class:sqlglot/generators/duckdb.py:1576", "proviso": {"selected": 225, "time_share": 0.0945, "missed": [], "selection_s": 0.28, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:module:sqlglot/executor/env.py:296", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.06, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/generators/clickhouse.py:684", "proviso": {"selected": 3, "time_share": 0.0109, "missed": [], "selection_s": 0.21, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:class:sqlglot/expressions/ddl.py:252", "proviso": {"selected": 112, "time_share": 0.0824, "missed": [], "selection_s": 0.15, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/tokenizer_core.py:885", "proviso": {"selected": 1123, "time_share": 0.9984, "missed": [], "selection_s": 0.33, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:function:sqlglot/tokenizer_core.py:1314", "proviso": {"selected": 1123, "time_share": 0.9984, "missed": [], "selection_s": 0.29, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:class:sqlglot/tokens.py:335", "proviso": {"selected": 1129, "time_share": 0.9991, "missed": [], "selection_s": 0.12, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:a7fcf9e07f", "proviso": {"selected": 119, "time_share": 0.0676, "missed": [], "selection_s": 0.3, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:1ba7b2715d", "proviso": {"selected": 1, "time_share": 0.0084, "missed": [], "selection_s": 0.35, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:3086608e6f", "proviso": {"selected": 5, "time_share": 0.0097, "missed": [], "selection_s": 0.21, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:64d6f59a49", "proviso": {"selected": 1, "time_share": 0.0097, "missed": [], "selection_s": 0.4, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:3ca824895e", "proviso": {"selected": 84, "time_share": 0.0661, "missed": [], "selection_s": 0.16, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}

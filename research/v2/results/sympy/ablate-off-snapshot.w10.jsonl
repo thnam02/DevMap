@@ -18,3 +18,13 @@
 {"id": "select:module:sympy/core/assumptions_generated.py:1484", "proviso": {"selected": 0, "time_share": 0.0, "missed": ["sympy/functions/elementary/tests/test_exponential.py::test_issue_9116"], "selection_s": 0.09, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
 {"id": "realeval:a1021ffb1f", "proviso": {"selected": 2, "time_share": 0.0229, "missed": [], "selection_s": 0.38, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
 {"id": "realeval:850d9a3f79", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.31, "reason": null}, "format": "22/2.2.1", "variant": "off-snapshot"}
+{"id": "select:function:sympy/functions/elementary/integers.py:558", "proviso": {"selected": 4, "time_share": 0.1224, "missed": [], "selection_s": 0.27, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:module:sympy/core/relational.py:1580", "proviso": {"selected": 367, "time_share": 0.9548, "missed": [], "selection_s": 0.22, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:function:sympy/core/function.py:629", "proviso": {"selected": 136, "time_share": 0.6136, "missed": [], "selection_s": 0.53, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:function:sympy/functions/elementary/miscellaneous.py:561", "proviso": {"selected": 53, "time_share": 0.1032, "missed": [], "selection_s": 0.27, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:module:sympy/core/relational.py:1576", "proviso": {"selected": 367, "time_share": 0.9548, "missed": [], "selection_s": 0.19, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:function:sympy/functions/elementary/integers.py:266", "proviso": {"selected": 1, "time_share": 0.0611, "missed": [], "selection_s": 0.25, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:class:sympy/core/numbers.py:3877", "proviso": {"selected": 575, "time_share": 0.999, "missed": [], "selection_s": 0.27, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "select:module:sympy/core/assumptions_generated.py:1484", "proviso": {"selected": 0, "time_share": 0.0, "missed": ["sympy/functions/elementary/tests/test_exponential.py::test_issue_9116"], "selection_s": 0.1, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:a1021ffb1f", "proviso": {"selected": 2, "time_share": 0.0229, "missed": [], "selection_s": 0.34, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
+{"id": "realeval:850d9a3f79", "proviso": {"selected": 0, "time_share": 0.0, "missed": [], "selection_s": 0.35, "reason": null}, "format": "23/2.3", "variant": "off-snapshot"}
