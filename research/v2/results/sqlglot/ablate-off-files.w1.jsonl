@@ -1,0 +1,14 @@
+{"id": "select:function:sqlglot/executor/env.py:26", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 0.16, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:sqlglot/parsers/bigquery.py:747", "proviso": {"selected": 2, "time_share": 0.0084, "missed": [], "selection_s": 0.22, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:module:sqlglot/executor/env.py:308", "proviso": {"selected": 1, "time_share": 0.0078, "missed": [], "selection_s": 2.28, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:sqlglot/parser.py:2080", "proviso": {"selected": 1164, "time_share": 1.0, "missed": [], "selection_s": 1.6, "reason": "your edited functions run in 97% of the test time"}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:sqlglot/parsers/clickhouse.py:343", "proviso": {"selected": 77, "time_share": 0.0393, "missed": [], "selection_s": 1.55, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:module:sqlglot/typing/__init__.py:424", "proviso": {"selected": 155, "time_share": 0.0698, "missed": [], "selection_s": 1.55, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:sqlglot/parsers/hive.py:186", "proviso": {"selected": 5, "time_share": 0.0118, "missed": [], "selection_s": 0.21, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:sqlglot/dialects/drill.py:17", "proviso": {"selected": 32, "time_share": 0.0446, "missed": [], "selection_s": 1.46, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:module:sqlglot/typing/snowflake.py:568", "proviso": {"selected": 155, "time_share": 0.0698, "missed": [], "selection_s": 1.61, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:4eb2c99a15", "proviso": {"selected": 10, "time_share": 0.0092, "missed": [], "selection_s": 2.28, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:51587ffdec", "proviso": {"selected": 32, "time_share": 0.0191, "missed": [], "selection_s": 0.47, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:5fe5606b90", "proviso": {"selected": 1144, "time_share": 1.0, "missed": [], "selection_s": 0.8, "reason": "your edited functions run in 100% of the test time"}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:49d6ed4366", "proviso": {"selected": 1142, "time_share": 1.0, "missed": [], "selection_s": 0.28, "reason": "your edited functions run in 100% of the test time"}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:284ea43fe7", "proviso": {"selected": 50, "time_share": 0.0505, "missed": [], "selection_s": 2.5, "reason": null}, "format": "23/2.3", "variant": "off-files"}

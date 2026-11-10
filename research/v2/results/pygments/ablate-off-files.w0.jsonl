@@ -1,0 +1,14 @@
+{"id": "select:function:pygments/lexers/dsls.py:896", "proviso": {"selected": 25, "time_share": 0.0171, "missed": [], "selection_s": 1.79, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:pygments/lexers/data.py:605", "proviso": {"selected": 30, "time_share": 0.0028, "missed": [], "selection_s": 0.22, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:pygments/filters/__init__.py:239", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.66, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:pygments/lexers/php.py:119", "proviso": {"selected": 7, "time_share": 0.0004, "missed": [], "selection_s": 0.22, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:pygments/util.py:193", "proviso": {"selected": 29, "time_share": 0.0161, "missed": [], "selection_s": 0.19, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:module:pygments/lexers/_mapping.py:584", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.8, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:pygments/style.py:99", "proviso": {"selected": 5342, "time_share": 1.0, "missed": [], "selection_s": 1.52, "reason": "module pygments.styles.lilypond no longer imports"}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:pygments/styles/coffee.py:48", "proviso": {"selected": 4, "time_share": 0.0002, "missed": [], "selection_s": 1.77, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:module:pygments/token.py:211", "proviso": {"selected": 228, "time_share": 0.1642, "missed": [], "selection_s": 2.96, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:398050e157", "proviso": {"selected": 24, "time_share": 0.0165, "missed": ["tests/test_html_formatter.py::test_external_css"], "selection_s": 0.43, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:a43b45dcf0", "proviso": {"selected": 4, "time_share": 0.0001, "missed": [], "selection_s": 2.56, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:b073d8adf1", "proviso": {"selected": 64, "time_share": 0.1424, "missed": [], "selection_s": 2.83, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:d24e272894", "proviso": {"selected": 197, "time_share": 0.1945, "missed": ["tests/test_irc_formatter.py::test_linecount_output"], "selection_s": 2.29, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:72101ab2ee", "proviso": {"selected": 101, "time_share": 0.0381, "missed": [], "selection_s": 1.65, "reason": null}, "format": "23/2.3", "variant": "off-files"}

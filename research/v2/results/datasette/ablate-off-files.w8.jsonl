@@ -1,0 +1,11 @@
+{"id": "select:function:datasette/app.py:1555", "proviso": {"selected": 1872, "time_share": 0.9121, "missed": [], "selection_s": 0.71, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:datasette/views/special.py:209", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.91, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:datasette/resources.py:28", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.02, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:datasette/views/table.py:1171", "proviso": {"selected": 120, "time_share": 0.115, "missed": [], "selection_s": 0.69, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:datasette/views/table_extras.py:650", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 2.01, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:module:datasette/views/table_create_alter.py:357", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.96, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:function:datasette/utils/sqlite.py:310", "proviso": {"selected": 171, "time_share": 0.3024, "missed": [], "selection_s": 0.35, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "select:class:datasette/views/table_extras.py:163", "proviso": {"selected": 2198, "time_share": 0.9831, "missed": [], "selection_s": 1.95, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:4bf30aaf8e", "proviso": {"selected": 51, "time_share": 0.1012, "missed": [], "selection_s": 0.33, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:daf1989ebe", "proviso": {"selected": 2093, "time_share": 0.9916, "missed": [], "selection_s": 6.16, "reason": null}, "format": "23/2.3", "variant": "off-files"}
+{"id": "realeval:d9f9ed5027", "proviso": {"selected": 220, "time_share": 0.2755, "missed": [], "selection_s": 0.2, "reason": null}, "format": "23/2.3", "variant": "off-files"}
