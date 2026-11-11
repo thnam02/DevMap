@@ -22,6 +22,9 @@ class Task:
     regression_tests: list[str] | str = field(default_factory=list)
     setup: str = ""
     fix_commit: str = ""
+    # an existing interpreter whose packages the run environment inherits (a prepared SWE-bench environment): the
+    # run venv is built from it with --system-site-packages and the project is linked, not installed
+    python: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -48,6 +51,7 @@ class Task:
             regression_tests=regr if isinstance(regr, str) else [str(x) for x in regr],
             setup=str(data.get("setup") or ""),
             fix_commit=str(data.get("fix_commit") or ""),
+            python=str(data.get("python") or ""),
         )
 
 

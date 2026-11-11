@@ -245,7 +245,7 @@ def run_setup(
 ) -> None:
     if not setup or not setup.strip():
         return
-    if _offline.is_offline() and env and env.get("VIRTUAL_ENV"):
+    if (_offline.is_offline(env) or _offline.is_offline()) and env and env.get("VIRTUAL_ENV"):
         if _offline.offline_setup(setup, repo, venv_python(env["VIRTUAL_ENV"]), env):
             return
     r = subprocess.run(
@@ -439,13 +439,17 @@ def venv_env(venv: str, base: dict[str, str] | None = None) -> dict[str, str]:
     return env
 
 
-def create_run_venv(slot: str) -> str:
+def create_run_venv(slot: str, base_python: str = "") -> str:
+    """The run's venv: from the harness interpreter, or (a task with `python`) from that prepared interpreter,
+    inheriting its packages."""
     dest = os.path.join(slot, "venv")
     if os.path.exists(dest):
         shutil.rmtree(dest)
     os.makedirs(slot, exist_ok=True)
-    venv_argv = [sys.executable, "-m", "venv", dest]
-    if _offline.is_offline():
+    if base_python and not os.path.isfile(base_python):
+        raise RuntimeError(f"the task's interpreter does not exist: {base_python}")
+    venv_argv = [base_python or sys.executable, "-m", "venv", dest]
+    if _offline.is_offline() and not base_python:
         venv_argv.insert(3, "--system-site-packages")
     r = subprocess.run(
         venv_argv,
@@ -455,7 +459,27 @@ def create_run_venv(slot: str) -> str:
         raise RuntimeError(
             f"python -m venv failed ({r.returncode}): {dest}\n{r.stderr or r.stdout}"
         )
+    if base_python:
+        _inherit_site(dest, base_python)
     return dest
+
+
+def _inherit_site(venv: str, base_python: str) -> None:
+    """Make the prepared environment's packages visible in the run venv. A venv made from a venv's interpreter
+    inherits only the underlying installation (sys.base_prefix), not that environment's site-packages, so they are
+    added explicitly, with site.addsitedir (their own .pth files, e.g. editable installs, are processed too). The file
+    sorts after the project link written by setup, so the run's own copy of the project comes first on sys.path."""
+    r = subprocess.run([base_python, "-c", "import sysconfig, json; p = sysconfig.get_paths(); "
+                        "print(json.dumps(sorted({p['purelib'], p['platlib']})))"],
+                       capture_output=True, text=True, timeout=60)
+    if r.returncode != 0:
+        raise RuntimeError(f"cannot locate site-packages for {base_python}: {r.stderr[-300:]}")
+    dirs = json.loads(r.stdout)
+    site = subprocess.run([venv_python(venv), "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"],
+                          capture_output=True, text=True, timeout=60).stdout.strip()
+    with open(os.path.join(site, "zz_dc_eval_base_env.pth"), "w", encoding="utf-8") as fh:
+        for d in dirs:
+            fh.write(f"import site; site.addsitedir({d!r})\n")
 
 
 def _hook_payload(command: str) -> str | None:
@@ -1185,8 +1209,12 @@ def execute_run(
         refuse_run_copy(repo_dir)
         refuse_engine_inside_runs(eval_dir, engine_path)
         if do_grade:
-            venv = create_run_venv(slot)
+            venv = create_run_venv(slot, task.python)
             run_env = venv_env(venv)
+            if task.python:
+                # the prepared environment has the dependencies at the task's versions: install nothing, link the
+                # project (offline mode's path for `pip install -e .`)
+                run_env["DC_EVAL_OFFLINE"] = "1"
             py = venv_python(venv)
             install_test_env(py, repo_dir, env=run_env)
             run_setup(repo_dir, task.setup, env=run_env)
