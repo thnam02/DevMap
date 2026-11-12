@@ -65,6 +65,8 @@ def main(argv: list[str] | None = None) -> None:
     r.add_argument("--dry-run", action="store_true")
     r.add_argument("--model", default=DEFAULT_MODEL)
     r.add_argument("--max-budget-usd", type=float, default=DEFAULT_BUDGET_USD)
+    r.add_argument("--max-total-usd", type=float, default=None,
+                   help="stop before a run that could take the total recorded cost past this")
     r.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT_S, help="wall-clock seconds per run")
     r.add_argument(
         "--arm", choices=("both",) + ALL_ARMS, default="both",
@@ -146,6 +148,7 @@ def main(argv: list[str] | None = None) -> None:
                 dry_run=a.dry_run,
                 model=a.model,
                 budget_usd=a.max_budget_usd,
+                max_total_usd=a.max_total_usd,
                 timeout_s=a.timeout,
                 claude_bin=a.claude,
                 runner=a.runner,

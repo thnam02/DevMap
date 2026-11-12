@@ -31,6 +31,10 @@ class Task:
     # the hidden tests come only from test_patch, applied to the base version (SWE-bench): never from a commit after
     # the base in the source clone, which for such tasks is unrelated history
     test_patch_only: bool = False
+    # replay tasks: a patch applied to the run's copy before the agent starts (an earlier attempt the agent continues
+    # from, left uncommitted), and the name of the impact/ assets folder when several tasks share one (default: id)
+    start_patch: str = ""
+    assets: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -60,6 +64,8 @@ class Task:
             python=str(data.get("python") or ""),
             files={str(k): str(v) for k, v in (data.get("files") or {}).items()},
             test_patch_only=bool(data.get("test_patch_only")),
+            start_patch=str(data.get("start_patch") or ""),
+            assets=str(data.get("assets") or ""),
         )
 
 

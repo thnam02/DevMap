@@ -189,6 +189,50 @@ def clone_url(url: str, eval_dir: str) -> str:
     return dest
 
 
+def _base_store(src_repo: str, full: str) -> str | None:
+    """A bare repository beside the source clone holding only the history up to `full` (built once per commit)."""
+    store = os.path.abspath(src_repo).rstrip(os.sep) + f".base-{full[:12]}.git"
+    if os.path.isdir(os.path.join(store, "objects")):
+        return store
+    tmp = f"{store}.tmp-{os.getpid()}"
+    shutil.rmtree(tmp, ignore_errors=True)
+    ref = f"refs/dc-eval/base-{full[:12]}"
+    git(["update-ref", ref, full], cwd=src_repo, check=False)
+    try:
+        ok = git(["init", "-q", "--bare", tmp], cwd=os.path.dirname(store), check=False).returncode == 0
+        ok = ok and git(["fetch", "-q", "--no-tags", os.path.abspath(src_repo), f"{ref}:refs/heads/base"],
+                        cwd=tmp, check=False, timeout=900).returncode == 0
+    finally:
+        git(["update-ref", "-d", ref], cwd=src_repo, check=False)
+    if not ok:
+        shutil.rmtree(tmp, ignore_errors=True)
+        return None
+    try:
+        os.rename(tmp, store)
+    except OSError:  # built meanwhile by another process
+        shutil.rmtree(tmp, ignore_errors=True)
+    return store if os.path.isdir(os.path.join(store, "objects")) else None
+
+
+def _copy_from_base_store(src_repo: str, full: str, dest: str) -> bool:
+    """The run copy borrows its objects from the base store (git alternates), so each run stores only its working
+    tree instead of the whole history; the store has nothing after `full`, so later commits stay out of reach."""
+    store = _base_store(src_repo, full)
+    if not store:
+        return False
+    os.makedirs(dest, exist_ok=True)
+    ok = git(["init", "-q"], cwd=dest, check=False).returncode == 0
+    if ok:
+        info = os.path.join(dest, ".git", "objects", "info")
+        os.makedirs(info, exist_ok=True)
+        with open(os.path.join(info, "alternates"), "w", encoding="utf-8") as fh:
+            fh.write(os.path.join(store, "objects") + "\n")
+        ok = git(["checkout", "-q", "--detach", full], cwd=dest, check=False, timeout=300).returncode == 0
+    if not ok:
+        shutil.rmtree(dest, ignore_errors=True)
+    return ok
+
+
 def _fresh_copy(src_repo: str, commit: str, dest: str) -> None:
     """Isolated checkout of `commit` whose history stops at `commit`.
 
@@ -207,6 +251,8 @@ def _fresh_copy(src_repo: str, commit: str, dest: str) -> None:
         full = git(
             ["rev-parse", "--verify", f"{commit}^{{commit}}"], cwd=src_repo, check=False,
         ).stdout.strip()
+        if full and _copy_from_base_store(src_repo, full, dest):
+            return
         if full:
             ref = f"refs/dc-eval/base-{full[:12]}"
             git(["update-ref", ref, full], cwd=src_repo, check=False)
@@ -462,6 +508,17 @@ def create_run_venv(slot: str, base_python: str = "") -> str:
     if base_python:
         _inherit_site(dest, base_python)
     return dest
+
+
+def apply_start_patch(repo_dir: str, patch: str) -> None:
+    """A replay task's starting state: the patch, applied with `git apply` and left uncommitted (the agent sees it
+    in `git diff`). The task builder normalised it so that it applies exactly; failing to apply is an error."""
+    if not patch or not patch.strip():
+        return
+    r = subprocess.run(["git", "apply", "--whitespace=nowarn", "-"], cwd=repo_dir, input=patch if patch.endswith("\n")
+                       else patch + "\n", capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"the task's start_patch does not apply: {(r.stderr or r.stdout)[-400:]}")
 
 
 def write_task_files(repo_dir: str, files: dict[str, str]) -> None:
@@ -795,6 +852,21 @@ def _mark_contaminated(row: dict[str, Any]) -> dict[str, Any]:
     ):
         row["status"] = "contaminated"
     return row
+
+
+def spent_usd(results_path: str) -> float:
+    """What the runs recorded in results.jsonl cost (each run counted once: its last row)."""
+    last: dict[tuple[str, str, str], float] = {}
+    if os.path.isfile(results_path):
+        with open(results_path, encoding="utf-8") as fh:
+            for line in fh:
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(r, dict):
+                    last[(str(r.get("task")), str(r.get("arm")), str(r.get("rep")))] = float(r.get("cost_usd") or 0)
+    return sum(last.values())
 
 
 def plan_runs(
@@ -1228,6 +1300,7 @@ def execute_run(
         refuse_run_copy(repo_dir)
         refuse_engine_inside_runs(eval_dir, engine_path)
         write_task_files(repo_dir, task.files)
+        apply_start_patch(repo_dir, task.start_patch)
         if do_grade:
             venv = create_run_venv(slot, task.python)
             run_env = venv_env(venv)
@@ -1267,7 +1340,7 @@ def execute_run(
                 settings_path = write_proviso_files(
                     slot, repo_dir, probe_py, cfg["proviso"],
                     brief=os.path.join(eval_dir, "briefs", task.id + ".md"),
-                    assets=os.path.join(eval_dir, "impact", task.id))
+                    assets=os.path.join(eval_dir, "impact", task.assets or task.id))
             if cfg["mcp"]:
                 mcp_path, settings_path = write_layer_files(
                     slot, probe_python=probe_py,
@@ -1480,6 +1553,7 @@ def run_eval(
     fresh: bool = False,
     agent_bin: str = "agent",
     seed: int = DEFAULT_ARM_SEED,
+    max_total_usd: float | None = None,
 ) -> int:
     print_safety_warning()
     eval_dir = os.path.abspath(eval_dir)
@@ -1583,6 +1657,12 @@ def run_eval(
                 print(f"\nskip {task.id} {arm} rep {rep} (already complete)", flush=True)
                 skipped += 1
             continue
+        if max_total_usd is not None:
+            spent = spent_usd(results_path)
+            if spent + budget_usd > max_total_usd + 1e-9:
+                print(f"\nstopping: ${spent:.2f} spent; another run (up to ${budget_usd:.2f}) could pass the total "
+                      f"limit of ${max_total_usd:.2f}", flush=True)
+                return 5
         print(f"\n→ {task.id} {arm} rep {rep}", flush=True)
         ensure_engine_pin(pin)
         try:
