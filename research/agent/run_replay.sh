@@ -15,6 +15,8 @@
 #   PROVISO_REPLAY_FROM=REPLAY_DIR bash research/agent/run_replay.sh
 #   PROVISO_AGENT_SHARD=1/2 ... and PROVISO_AGENT_SHARD=2/2 ... in two terminals: two runs at a time
 #   PROVISO_AGENT_DRY=1 ... prints the plan and calls no model (free)
+#   PROVISO_AGENT_CASES=20 PROVISO_AGENT_REPS=1 PROVISO_AGENT_TOTAL_USD=15 ... the early check: 20 cases spread over the
+#   repositories, one repetition (40 runs)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 REPO_DIR=$(pwd)
@@ -46,12 +48,30 @@ if command -v timeout >/dev/null; then TO=(timeout); elif command -v gtimeout >/
 else TO=(perl -e 'alarm shift; exec @ARGV'); fi
 [ -d "$SRC/tasks" ] && [ -d "$SRC/impact" ] || { echo "no tasks/ and impact/ in $SRC: run replay_tasks.py first"; exit 1; }
 
-# this shard's cases: every SN-th in name order
+# this shard's cases: every SN-th in name order; PROVISO_AGENT_CASES=N first narrows them to N cases taken round-robin
+# across the repositories (the early check), and a later full run resumes those runs
 mkdir -p "$W"
 rm -rf "$W/tasks" "$W/impact"
 mkdir -p "$W/tasks" "$W/impact"
+ALL=$(cd "$SRC/tasks" && ls *.json | sort)
+if [ -n "${PROVISO_AGENT_CASES:-}" ]; then
+  ALL=$(python3 - "$PROVISO_AGENT_CASES" $ALL <<'PYEOF'
+import collections, re, sys
+n, names = int(sys.argv[1]), sys.argv[2:]
+by = collections.OrderedDict()
+for f in names:
+    by.setdefault(re.sub(r"-\d+__c\d+\.json$", "", f), []).append(f)
+out = []
+while len(out) < n and any(by.values()):
+    for q in by.values():
+        if q and len(out) < n:
+            out.append(q.pop(0))
+print("\n".join(sorted(out)))
+PYEOF
+)
+fi
 i=0
-for t in $(cd "$SRC/tasks" && ls *.json | sort); do
+for t in $ALL; do
   if [ $(( i % SN )) -eq $(( SI - 1 )) ]; then
     cp "$SRC/tasks/$t" "$W/tasks/"
     a=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("assets") or d["id"])' "$SRC/tasks/$t")
