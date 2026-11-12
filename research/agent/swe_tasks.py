@@ -14,13 +14,18 @@ Per task, in EVAL_DIR:
 Preflight (free): each instance's reference fix (source files only) applied to the base tree, Proviso's selection
 against those assets; it must narrow the tests (median share below 85%), else the paid runs would test nothing.
 
-Runs as the normal user on the PC (it reads the SWE-bench clones and environments in PROVISO_WORK):
+Missing pieces are built on the spot, the same way the SWE-bench evaluation built them: the instance list (copied from
+research/v2/results/swe/instances.jsonl), the repository clones, and each (repository, version) environment
+(swe_probe.build_env: Python 3.12 via uv, dependencies resolved as of the version's cutoff date). So a fresh machine
+(e.g. a Mac) needs only git, uv and network access.
   python3 research/agent/swe_tasks.py EVAL_DIR [--n 12] [--workers W]"""
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import os
+import shutil
 import statistics
 import subprocess
 import sys
@@ -70,6 +75,35 @@ def env_python(x: dict) -> str:
     return os.path.join(P.WORK, "envs", f"{x['repo']}__{x['version']}", "bin", "python")
 
 
+def ensure_instances():
+    """The SWE-bench instance list where swe_probe expects it (a fresh machine has only the repository's copy)."""
+    path = os.path.join(P.WORK, "instances.jsonl")
+    if not os.path.exists(path):
+        os.makedirs(P.WORK, exist_ok=True)
+        shutil.copy(os.path.join(P.OUT, "instances.jsonl"), path)
+
+
+def ensure_env(x: dict, meta: dict) -> str:
+    """The task's environment, built as swe_probe's main built it if missing: same instance grouping (genuine agent
+    regressions, issues from 2021), so the same dependency cutoff date."""
+    py = env_python(x)
+    if os.path.isfile(py):
+        return py
+    if not shutil.which("uv"):
+        raise RuntimeError("uv is needed to build the environments (https://docs.astral.sh/uv/)")
+    groups = collections.defaultdict(list)
+    for i in P.broken_tests():
+        if i in meta and int((meta[i].get("created_at") or "0000")[:4]) >= 2021:
+            groups[(meta[i]["repo"].replace("/", "__"), meta[i]["version"])].append(i)
+    insts = groups.get((x["repo"], x["version"])) or [x["instance"]]
+    print(f"  building environment {x['repo']} {x['version']} (once; can take several minutes)", flush=True)
+    e = P.build_env(x["repo"], x["version"], meta[insts[0]]["environment_setup_commit"],
+                    [meta[i]["created_at"] for i in insts], "3.12")
+    if not e.get("ok"):
+        raise RuntimeError(f"environment {x['repo']} {x['version']} failed: {e.get('error', '')[:400]}")
+    return py
+
+
 def agent_tree(inst: dict) -> str:
     """The plain base commit, as the agent's copy starts (no reference tests), for recording and the preflight."""
     repo = inst["instance_id"].rsplit("-", 1)[0]
@@ -86,9 +120,8 @@ def agent_tree(inst: dict) -> str:
 
 
 def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
-    iid, repo, py = x["instance"], x["repo"], env_python(x)
-    if not os.path.isfile(py):
-        raise RuntimeError(f"no prepared environment: {py} (run swe_eval.py on this instance first)")
+    iid, repo = x["instance"], x["repo"]
+    py = ensure_env(x, P.load_instances())
     dest = os.path.join(eval_dir, "impact", iid)
     os.makedirs(dest, exist_ok=True)
     os.makedirs(os.path.join(eval_dir, "tasks"), exist_ok=True)
@@ -150,6 +183,7 @@ def main():
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     eval_dir = os.path.abspath(a.eval_dir)
+    ensure_instances()
     meta = P.load_instances()
     chosen = pick(a.n)
     print("tasks (rule: regression-prone, round-robin over", ", ".join(FAST) + "):", flush=True)

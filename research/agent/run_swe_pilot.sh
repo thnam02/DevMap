@@ -30,7 +30,20 @@ ARMS=baseline,impact-noreport
 OUTDIR="$REPO_DIR/research/agent/results-swe-pilot"
 
 command -v claude >/dev/null || { echo "Claude Code CLI not found: npm install -g @anthropic-ai/claude-code"; exit 1; }
-python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' || { echo "Python 3.12+ needed"; exit 1; }
+# a Python 3.12+ for the harness (macOS's own python3 is older): PROVISO_AGENT_PYTHON, else the first that fits
+HPY=${PROVISO_AGENT_PYTHON:-}
+if [ -z "$HPY" ]; then
+  for c in python3 python3.13 python3.12; do
+    if command -v "$c" >/dev/null && "$c" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)'; then
+      HPY=$(command -v "$c"); break
+    fi
+  done
+fi
+[ -n "$HPY" ] || { echo "Python 3.12+ needed: e.g. uv python install 3.12, then PROVISO_AGENT_PYTHON=\$(uv python find 3.12)"; exit 1; }
+python3() { "$HPY" "$@"; }
+# `timeout` is GNU coreutils (absent on macOS): fall back to gtimeout, else a perl alarm
+if command -v timeout >/dev/null; then TO=timeout; elif command -v gtimeout >/dev/null; then TO=gtimeout
+else TO="perl -e 'alarm shift; exec @ARGV'"; fi
 [ -d "$SRC/tasks" ] && [ -d "$SRC/impact" ] || { echo "no tasks/ and impact/ in $SRC: run swe_tasks.py first"; exit 1; }
 
 NT=$(ls "$SRC"/tasks/*.json | wc -l)
@@ -75,7 +88,7 @@ export DC_EVAL_CLAUDE_HOST_AUTH=1
 PF=$(mktemp -d)
 printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"touch %s/fired"}]}]}}' "$PF" > "$PF/settings.json"
 (cd "$PF" && env -i PATH="$PATH" HOME="$PF" ANTHROPIC_API_KEY=invalid-preflight-key \
-   timeout 60 claude -p "hi" --settings "$PF/settings.json" --output-format stream-json --verbose >/dev/null 2>&1 || true)
+   eval "$TO" 60 claude -p "hi" --settings "$PF/settings.json" --output-format stream-json --verbose >/dev/null 2>&1 || true)
 if [ ! -f "$PF/fired" ]; then
   echo "Pre-flight failed: Claude Code did not run a hook from --settings. Proviso would be inactive; not starting."
   rm -rf "$PF"; exit 1
