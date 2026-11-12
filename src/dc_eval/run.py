@@ -464,6 +464,18 @@ def create_run_venv(slot: str, base_python: str = "") -> str:
     return dest
 
 
+def write_task_files(repo_dir: str, files: dict[str, str]) -> None:
+    """Write a task's generated files into the run's copy (relative paths inside the copy only)."""
+    root = os.path.realpath(repo_dir)
+    for rel, content in (files or {}).items():
+        dest = os.path.realpath(os.path.join(root, rel))
+        if os.path.isabs(rel) or not dest.startswith(root + os.sep):
+            raise RuntimeError(f"task file outside the repository copy: {rel}")
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "w", encoding="utf-8") as fh:
+            fh.write(content)
+
+
 def _inherit_site(venv: str, base_python: str) -> None:
     """Make the prepared environment's packages visible in the run venv. A venv made from a venv's interpreter
     inherits only the underlying installation (sys.base_prefix), not that environment's site-packages, so they are
@@ -1208,6 +1220,7 @@ def execute_run(
             )
         refuse_run_copy(repo_dir)
         refuse_engine_inside_runs(eval_dir, engine_path)
+        write_task_files(repo_dir, task.files)
         if do_grade:
             venv = create_run_venv(slot, task.python)
             run_env = venv_env(venv)

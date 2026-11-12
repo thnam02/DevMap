@@ -25,6 +25,9 @@ class Task:
     # an existing interpreter whose packages the run environment inherits (a prepared SWE-bench environment): the
     # run venv is built from it with --system-site-packages and the project is linked, not installed
     python: str = ""
+    # files a real install would generate, written into the run's copy before setup (pytest's src/_pytest/_version.py:
+    # pytest imports it, and setuptools-scm writes it only at install time); {relative path: content}
+    files: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -52,6 +55,7 @@ class Task:
             setup=str(data.get("setup") or ""),
             fix_commit=str(data.get("fix_commit") or ""),
             python=str(data.get("python") or ""),
+            files={str(k): str(v) for k, v in (data.get("files") or {}).items()},
         )
 
 

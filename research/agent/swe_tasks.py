@@ -15,7 +15,8 @@ Preflight (free): each instance's reference fix (source files only) applied to t
 against those assets; it must narrow the tests (median share below 85%), else the paid runs would test nothing.
 
 Missing pieces are built on the spot, the same way the SWE-bench evaluation built them: the instance list (copied from
-research/v2/results/swe/instances.jsonl), the repository clones, and each (repository, version) environment
+research/v2/results/swe/instances.jsonl, completed with the issue text and patches from SWE-bench's dataset), the
+repository clones, and each (repository, version) environment
 (swe_probe.build_env: Python 3.12 via uv, dependencies resolved as of the version's cutoff date). So a fresh machine
 (e.g. a Mac) needs only git, uv and network access.
   python3 research/agent/swe_tasks.py EVAL_DIR [--n 12] [--workers W]"""
@@ -75,12 +76,50 @@ def env_python(x: dict) -> str:
     return os.path.join(P.WORK, "envs", f"{x['repo']}__{x['version']}", "bin", "python")
 
 
-def ensure_instances():
-    """The SWE-bench instance list where swe_probe expects it (a fresh machine has only the repository's copy)."""
+FULL_FIELDS = ("problem_statement", "patch", "test_patch")
+
+
+def ensure_instances(needed: list[str]):
+    """The SWE-bench instance list where swe_probe expects it, with the issue text and patches. The repository keeps a
+    trimmed copy (no problem statement or patches); the full rows come from SWE-bench's dataset on Hugging Face
+    (princeton-nlp/SWE-bench, test split, as swe_regressions.py loaded it), fetched with `uv run --with datasets`."""
     path = os.path.join(P.WORK, "instances.jsonl")
-    if not os.path.exists(path):
-        os.makedirs(P.WORK, exist_ok=True)
-        shutil.copy(os.path.join(P.OUT, "instances.jsonl"), path)
+    if os.path.exists(path):
+        rows = {json.loads(l)["instance_id"]: json.loads(l) for l in open(path)}
+        if all(all(rows.get(i, {}).get(f) is not None for f in FULL_FIELDS) for i in needed):
+            return
+    print("  fetching SWE-bench instance metadata (issue text and patches) from Hugging Face", flush=True)
+    os.makedirs(P.WORK, exist_ok=True)
+    slim = os.path.join(P.OUT, "instances.jsonl")
+    code = ("import json, sys\n"
+            "from datasets import load_dataset\n"
+            "keep = {json.loads(l)['instance_id'] for l in open(sys.argv[1])}\n"
+            "ds = load_dataset('princeton-nlp/SWE-bench', split='test')\n"
+            "with open(sys.argv[2], 'w') as fh:\n"
+            "    for x in ds:\n"
+            "        if x['instance_id'] in keep:\n"
+            "            fh.write(json.dumps(dict(x)) + '\\n')\n")
+    tmp = path + ".tmp"
+    r = subprocess.run(["uv", "run", "--quiet", "--no-project", "--python", "3.12", "--with", "datasets", "python", "-c",
+                        code, slim, tmp], capture_output=True, text=True, timeout=3600)
+    if r.returncode != 0 or not os.path.exists(tmp):
+        raise RuntimeError(f"could not fetch the SWE-bench metadata: {(r.stderr or r.stdout)[-600:]}")
+    rows = {json.loads(l)["instance_id"]: json.loads(l) for l in open(tmp)}
+    missing = [i for i in needed if not all(rows.get(i, {}).get(f) is not None for f in FULL_FIELDS)]
+    if missing:
+        raise RuntimeError(f"the SWE-bench dataset lacks issue text or patches for: {missing}")
+    os.replace(tmp, path)
+
+
+# files a real install generates that the project imports: written into the recording tree and into each agent copy
+def generated_files(x: dict) -> dict[str, str]:
+    if x["repo"] == "pytest-dev__pytest":
+        parts = (x["version"].split(".") + ["0", "0"])[:3]
+        v = ".".join(parts) + ".dev0"
+        return {"src/_pytest/_version.py": "# written by research/agent/swe_tasks.py (setuptools-scm writes it at install)\n"
+                f"__version__ = version = {v!r}\n"
+                f"__version_tuple__ = version_tuple = ({int(parts[0])}, {int(parts[1])}, {int(parts[2])}, 'dev0')\n"}
+    return {}
 
 
 def ensure_env(x: dict, meta: dict) -> str:
@@ -104,7 +143,7 @@ def ensure_env(x: dict, meta: dict) -> str:
     return py
 
 
-def agent_tree(inst: dict) -> str:
+def agent_tree(inst: dict, files: dict[str, str] | None = None) -> str:
     """The plain base commit, as the agent's copy starts (no reference tests), for recording and the preflight."""
     repo = inst["instance_id"].rsplit("-", 1)[0]
     src = P.repo_clone(repo)
@@ -116,6 +155,9 @@ def agent_tree(inst: dict) -> str:
     git(tree, "fetch", "-q", src, inst["base_commit"])
     git(tree, "checkout", "-q", "-f", inst["base_commit"])
     git(tree, "clean", "-q", "-fdx")
+    for rel, content in (files or {}).items():
+        os.makedirs(os.path.dirname(os.path.join(tree, rel)), exist_ok=True)
+        open(os.path.join(tree, rel), "w").write(content)
     return tree
 
 
@@ -125,7 +167,8 @@ def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     dest = os.path.join(eval_dir, "impact", iid)
     os.makedirs(dest, exist_ok=True)
     os.makedirs(os.path.join(eval_dir, "tasks"), exist_ok=True)
-    tree = agent_tree(inst)
+    gen = generated_files(x)
+    tree = agent_tree(inst, gen)
     cov_path = os.path.join(dest, "covmap.json")
     if not os.path.isfile(cov_path):
         pkg, targets = E.LAYOUT[repo]
@@ -147,7 +190,7 @@ def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     task = {"id": iid, "repo": f"https://github.com/{inst['repo']}.git", "commit": inst["base_commit"],
             "prompt": inst["problem_statement"], "hidden_tests": _tests(inst.get("FAIL_TO_PASS")),
             "test_patch": inst.get("test_patch") or "", "regression_tests": _tests(inst.get("PASS_TO_PASS")),
-            "setup": "python -m pip install -e .", "python": py,
+            "setup": "python -m pip install -e .", "python": py, "files": gen,
             "source": "SWE-bench", "sample": "core" if x["core"] else "held-out"}
     json.dump(task, open(os.path.join(eval_dir, "tasks", iid + ".json"), "w"), indent=1)
     return f"{iid}: {len(tests)} tests in the map"
@@ -155,7 +198,8 @@ def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
 
 def preflight(x: dict, inst: dict, eval_dir: str) -> float:
     iid, py = x["instance"], env_python(x)
-    tree = agent_tree(inst)
+    gen = generated_files(x)
+    tree = agent_tree(inst, gen)
     assets = os.path.join(eval_dir, "impact", iid)
     cov = json.load(open(os.path.join(assets, "covmap.json")))
     os.makedirs(os.path.join(tree, ".dc-engine"), exist_ok=True)
@@ -169,6 +213,8 @@ def preflight(x: dict, inst: dict, eval_dir: str) -> float:
     finally:
         git(tree, "checkout", "-q", "-f", inst["base_commit"])
         git(tree, "clean", "-q", "-fdx", "-e", ".dc-engine")
+        for rel, content in gen.items():
+            open(os.path.join(tree, rel), "w").write(content)
     n = sum(1 for k in cov if not k.startswith("__"))
     share = 1.0 if sel is None else len(sel) / max(1, n)
     print(f"  {iid:32s} reference fix selects {'all' if sel is None else len(sel):>5} of {n} ({share:.0%})"
@@ -183,9 +229,9 @@ def main():
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     eval_dir = os.path.abspath(a.eval_dir)
-    ensure_instances()
-    meta = P.load_instances()
     chosen = pick(a.n)
+    ensure_instances([x["instance"] for x in chosen])
+    meta = P.load_instances()
     print("tasks (rule: regression-prone, round-robin over", ", ".join(FAST) + "):", flush=True)
     for x in chosen:
         print("  ", x["instance"], "core" if x["core"] else "held-out", flush=True)
