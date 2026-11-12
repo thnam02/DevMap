@@ -280,7 +280,8 @@ def restore_hidden_tests(
     return modified
 
 
-GRADER_FILES = (".dc-eval-test.patch", ".dc-eval-hidden.xml", ".dc-eval-regr.xml")
+GRADER_FILES = (".dc-eval-test.patch", ".dc-eval-hidden.xml", ".dc-eval-regr.xml", ".dc-eval-hidden.xml.byfile",
+                ".dc-eval-regr.xml.byfile")
 
 
 def restore_agent_state(task: Task, repo: str, run_dir: str | None) -> None:
@@ -715,9 +716,28 @@ def run_pytest(
         _append_grading_log(log_path, log_title, proc)
     results = _junit_results(xml_path)
     requested = [item for item in args if not item.startswith("-")]
+    by_file = xml_path + BY_FILE
+    if os.path.exists(by_file):
+        os.remove(by_file)
+    if proc.returncode in (4, 5) or not results:
+        # pytest runs nothing when one id is not found (exit 4): e.g. SWE-bench ids cut at a space inside a
+        # parameter ("test_x[a-days" for "test_x[a-days since 2000]"), or a test the agent renamed. Run the files
+        # instead and look each id up (a cut id matches the parameter sets it is the start of).
+        files = sorted({item.split("::", 1)[0] for item in requested if "::" in item})
+        files = [f for f in files if os.path.isfile(os.path.join(repo, f))]
+        if files and set(files) != set(requested):
+            cmd = [*cmd[:6], *files]  # python -m pytest --tb=no -q --junitxml=...
+            proc = subprocess.run(cmd, cwd=repo, capture_output=True, text=True, timeout=timeout)
+            if log_path:
+                _append_grading_log(log_path, log_title + " (by file: pytest found not every id)", proc)
+            results = _junit_results(xml_path)
+            open(by_file, "w").close()
     if not results:
         return {item: False for item in requested}
     return {item: _lookup_node(item, results) for item in requested}
+
+
+BY_FILE = ".byfile"  # marks a JUnit file from a by-file run: it holds more tests than were asked for
 
 
 def _lookup_node(requested: str, results: dict[str, bool]) -> bool:
@@ -737,6 +757,12 @@ def _lookup_node(requested: str, results: dict[str, bool]) -> bool:
             return ok
         if req_mod and req_mod in blob:
             return ok
+    # an id cut at a space inside its parameters: every parameter set it starts must pass
+    if "[" in req_name and not req_name.endswith("]"):
+        cut = [ok for k, ok in results.items() if k.split("::")[-1].startswith(req_name + " ")
+               and (not req_mod or req_mod in k.replace("\\", "/"))]
+        if cut:
+            return all(cut)
     return False
 
 
@@ -847,7 +873,10 @@ def grade_repo(
     hidden_fail = [k for k, ok in hidden.items() if not ok]
     regr_fail = [k for k, ok in regression.items() if not ok]
     resolved = bool(task.hidden_tests) and bool(hidden) and not hidden_fail
-    checks_passed, checks_total = junit_counts(hidden_xml) if hidden else (0, 0)
+    if hidden and os.path.exists(hidden_xml + BY_FILE):  # the file holds whole test files: count the ids asked for
+        checks_passed, checks_total = sum(1 for ok in hidden.values() if ok), len(hidden)
+    else:
+        checks_passed, checks_total = junit_counts(hidden_xml) if hidden else (0, 0)
     if resolved and checks_total and checks_passed < checks_total:
         checks_passed = checks_total  # e.g. skips inside an otherwise passing selection
     if checks_total:

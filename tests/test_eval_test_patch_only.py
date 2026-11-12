@@ -73,6 +73,19 @@ class TestPatchOnly(unittest.TestCase):
             self.assertEqual(again[k], first[k], k)
         self.assertEqual(again["agent_modified_hidden_test_files"], [])
 
+    def test_ids_cut_at_a_space_and_unknown_ids(self):
+        """SWE-bench cuts some parametrized ids at a space; pytest then runs nothing (exit 4) unless the grader runs
+        the files and matches the cut ids. An id that exists nowhere fails alone, not the whole selection."""
+        open(os.path.join(self.repo, "tests", "test_par.py"), "w").write(
+            "import pytest\n\n@pytest.mark.parametrize('u', ['days since 2000', 'hours since 2000'])\n"
+            "def test_p(u):\n    assert u\n")
+        self.task.regression_tests = ["tests/test_mod.py::test_old", "tests/test_par.py::test_p[days",
+                                      "tests/test_par.py::test_p[hours", "tests/test_mod.py::test_gone"]
+        g = self.grade()
+        self.assertTrue(g["resolved"], g)
+        self.assertEqual(g["regression_failed"], ["tests/test_mod.py::test_gone"], g["regression"])
+        self.assertEqual((g["hidden_checks_passed"], g["hidden_checks_total"]), (1, 1))
+
     def test_without_the_flag_the_later_commit_is_used(self):  # the old behaviour, kept for mined tasks
         self.task.test_patch_only = False
         g = self.grade()
