@@ -78,6 +78,15 @@ mkdir -p "$W"
 rm -rf "$W/tasks" "$W/impact"
 cp -r "$SRC/tasks" "$SRC/impact" "$W/"
 # runs of tasks no longer in the task set (rejected by swe_tasks.py's reference-fix check) are set aside, not deleted
+# a task back in the set (e.g. after a grader fix) gets its set-aside runs back
+if [ -d "$W/_dropped" ]; then
+  for d in "$W"/_dropped/*/; do
+    id=$(basename "$d")
+    if [ -f "$W/tasks/$id.json" ] && [ ! -e "$W/runs/$id" ]; then
+      mkdir -p "$W/runs"; mv "$d" "$W/runs/$id"; echo "== restored the runs of $id (a task again)"
+    fi
+  done
+fi
 if [ -d "$W/runs" ]; then
   for d in "$W"/runs/*/; do
     id=$(basename "$d")
