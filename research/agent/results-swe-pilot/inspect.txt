@@ -1,8 +1,8 @@
 48 runs -> /Users/agentrun/DevMap/research/agent/results/interception.json
 
 arm              runs test cmds  broad intercepted Proviso runs runs w/ Proviso output runs w/ report
-baseline           24        33     25           0            0                      0              0
-impact-noreport    24        27     24          25           32                     12              0
+baseline           24        35     29           0            0                      0              0
+impact-noreport    24        30     28          28           35                     13              0
 
 examples of the agents' test commands:
   baseline ['python - <<\'E\'\np=\'seaborn/axisgrid.py\'\ns=open(p).read()\ns=s.replace("""                if hue is not None:\n                    hue = hue[not_na]\n\n""","""                if hue is not None:\n                    hue = hue[not_na]\n\n            if hue is not None:\n                # Drop observations with hue levels not in hue_order\n                in_order = hue.isin(self._hue_order)\n                vector = vector[in_order]\n                hue = hue[in_order]\n\n""",1)\ns=s.replace("""        x = data[x_var]\n        y = data[y_var]\n        if self._hue_var is None:""","""        if self._hue_var is not None:\n            # Drop observations with hue levels not in hue_order\n            data = data[data[self._hue_var].isin(self._hue_order)]\n\n        x = data[x_var]\n        y = data[y_var]\n        if self._hue_var is None:""",1)\nopen(p,\'w\').write(s)\nE\ngit diff --stat; MPLBACKEND=Agg python -m pytest tests/test_axisgrid.py -q 2>&1 | tail -5', 'git stash -q; MPLBACKEND=Agg python -m pytest tests/test_axisgrid.py -q 2>&1 | tail -1; git stash pop -q; git diff --stat | tail -1']

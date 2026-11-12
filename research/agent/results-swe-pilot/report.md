@@ -12,8 +12,8 @@ Runs grouped by dc-engine commit:
 
 | arm | runs | resolved | hidden checks | requests | tokens | tokens/request | time | read calls | dc-engine calls | contracts created | contract retries |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| baseline | 24 | 11 | 46% | 12.417 | 4169340 | 14206.169 | 684.0 | 82 | 0 | 0 | 0 |
-| impact-noreport | 24 | 13 | 54% | 11.833 | 3930032 | 14436.143 | 665.4 | 81 | 0 | 0 | 0 |
+| baseline | 24 | 12 | 56% | 13.708 | 4723365 | 14458.392 | 768.0 | 80 | 0 | 0 | 0 |
+| impact-noreport | 24 | 14 | 65% | 13.417 | 4543937 | 14655.741 | 717.6 | 92 | 0 | 0 | 0 |
 
 ## Tool result sizes
 
@@ -21,25 +21,25 @@ Size of the result text returned to the agent for each completed tool call (char
 
 ### baseline
 
-Total returned chars: **206273** (~51569 tokens).
+Total returned chars: **247924** (~61981 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Read | 88882 | 22221 |
-| Bash | 68520 | 17130 |
-| Grep | 45383 | 11346 |
-| Edit | 3488 | 872 |
+| Bash | 89970 | 22493 |
+| Read | 88849 | 22213 |
+| Grep | 65875 | 16469 |
+| Edit | 3230 | 808 |
 
 ### impact-noreport
 
-Total returned chars: **229945** (~57487 tokens).
+Total returned chars: **270080** (~67520 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Read | 98986 | 24747 |
-| Bash | 80431 | 20108 |
-| Grep | 46198 | 11550 |
-| Edit | 4212 | 1053 |
+| Read | 111497 | 27875 |
+| Bash | 87792 | 21948 |
+| Grep | 65706 | 16427 |
+| Edit | 4967 | 1242 |
 | Write | 118 | 30 |
 
 ### Layer: largest dc-engine responses
@@ -60,14 +60,6 @@ A request is a distinct `model_call_id` when the stream has one, otherwise an as
 | mwaskom__seaborn-2996 | baseline | 1 | 11 | 140778 | 12798 |
 | mwaskom__seaborn-2996 | baseline | 2 | 13 | 189595 | 14584.231 |
 | mwaskom__seaborn-2996 | impact-noreport | 2 | 7 | 113576 | 16225.143 |
-| pallets__flask-5014 | baseline | 1 | 4 | 75606 | 18901.500 |
-| pallets__flask-5014 | impact-noreport | 1 | 10 | 158765 | 15876.500 |
-| pallets__flask-5014 | baseline | 2 | 4 | 75949 | 18987.250 |
-| pallets__flask-5014 | impact-noreport | 2 | 4 | 76112 | 19028 |
-| pallets__flask-5063 | baseline | 1 | 12 | 194447 | 16203.917 |
-| pallets__flask-5063 | impact-noreport | 1 | 5 | 82355 | 16471 |
-| pallets__flask-5063 | baseline | 2 | 7 | 102468 | 14638.286 |
-| pallets__flask-5063 | impact-noreport | 2 | 6 | 101233 | 16872.167 |
 | pydata__xarray-6598 | baseline | 1 | 7 | 107086 | 15298 |
 | pydata__xarray-6598 | impact-noreport | 1 | 6 | 106713 | 17785.500 |
 | pydata__xarray-6598 | impact-noreport | 2 | 5 | 84888 | 16977.600 |
@@ -76,10 +68,6 @@ A request is a distinct `model_call_id` when the stream has one, otherwise an as
 | pydata__xarray-6889 | baseline | 1 | 27 | 429189 | 15895.889 |
 | pydata__xarray-6889 | baseline | 2 | 21 | 310454 | 14783.524 |
 | pydata__xarray-6889 | impact-noreport | 2 | 15 | 211060 | 14070.667 |
-| pylint-dev__pylint-4398 | impact-noreport | 1 | 18 | 197347 | 10963.722 |
-| pylint-dev__pylint-4398 | baseline | 1 | 21 | 208821 | 9943.857 |
-| pylint-dev__pylint-4398 | impact-noreport | 2 | 18 | 200501 | 11138.944 |
-| pylint-dev__pylint-4398 | baseline | 2 | 16 | 213369 | 13335.562 |
 | pylint-dev__pylint-6386 | baseline | 1 | 15 | 182634 | 12175.600 |
 | pylint-dev__pylint-6386 | impact-noreport | 1 | 17 | 213897 | 12582.176 |
 | pylint-dev__pylint-6386 | impact-noreport | 2 | 14 | 184484 | 13177.429 |
@@ -100,11 +88,23 @@ A request is a distinct `model_call_id` when the stream has one, otherwise an as
 | sphinx-doc__sphinx-9829 | impact-noreport | 1 | 9 | 126163 | 14018.111 |
 | sphinx-doc__sphinx-9829 | baseline | 2 | 7 | 81630 | 11661.429 |
 | sphinx-doc__sphinx-9829 | impact-noreport | 2 | 7 | 101758 | 14536.857 |
+| pydata__xarray-6857 | baseline | 1 | 37 | 574986 | 15540.162 |
+| pydata__xarray-6857 | impact-noreport | 1 | 31 | 388609 | 12535.774 |
+| pydata__xarray-6857 | baseline | 2 | 37 | 525125 | 14192.568 |
+| pydata__xarray-6857 | impact-noreport | 2 | 40 | 571480 | 14287 |
+| pylint-dev__pylint-4970 | impact-noreport | 1 | 7 | 121311 | 17330.143 |
+| pylint-dev__pylint-4970 | baseline | 1 | 7 | 100210 | 14315.714 |
+| pylint-dev__pylint-4970 | baseline | 2 | 8 | 99709 | 12463.625 |
+| pylint-dev__pylint-4970 | impact-noreport | 2 | 9 | 120034 | 13337.111 |
+| sphinx-doc__sphinx-9698 | baseline | 1 | 3 | 61990 | 20663.333 |
+| sphinx-doc__sphinx-9698 | impact-noreport | 1 | 6 | 119986 | 19997.667 |
+| sphinx-doc__sphinx-9698 | impact-noreport | 2 | 6 | 108798 | 18133 |
+| sphinx-doc__sphinx-9698 | baseline | 2 | 3 | 62665 | 20888.333 |
 
 | arm | mean requests | mean tokens | mean tokens/request |
 |---|---:|---:|---:|
-| baseline | 12.417 | 173722.500 | 14206.169 |
-| impact-noreport | 11.833 | 163751.333 | 14436.143 |
+| baseline | 13.708 | 196806.875 | 14458.392 |
+| impact-noreport | 13.417 | 189330.708 | 14655.741 |
 
 ## Tool surface (static)
 
@@ -464,16 +464,16 @@ Resolved rate is the fraction of runs where every hidden test passed. Other per-
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | mwaskom__seaborn-2848 | 0 | — | 0 | — | 188628.500 | — | $0.0769 | — | 52.008 | — |
 | mwaskom__seaborn-2996 | 1 | — | 0 | — | 165186.500 | — | $0.0782 | — | 35.723 | — |
-| pallets__flask-5014 | 0 | — | 57 | — | 75777.500 | — | $0.0292 | — | 7.567 | — |
-| pallets__flask-5063 | 0 | — | 53 | — | 148457.500 | — | $0.0593 | — | 20.549 | — |
-| pydata__xarray-6598 | 1 | — | 417 | — | 107071 | — | $0.0442 | — | 13.090 | — |
+| pydata__xarray-6598 | 1 | — | 0 | — | 107071 | — | $0.0442 | — | 13.090 | — |
+| pydata__xarray-6857 | 0 | — | 0 | — | 550055.500 | — | $0.1667 | — | 85.394 | — |
 | pydata__xarray-6889 | 1 | — | 0 | — | 369821.500 | — | $0.1263 | — | 48.142 | — |
-| pylint-dev__pylint-4398 | 0 | — | 62 | — | 211095 | — | $0.0949 | — | 38.000 | — |
+| pylint-dev__pylint-4970 | 0 | — | 0 | — | 99959.500 | — | $0.0421 | — | 14.222 | — |
 | pylint-dev__pylint-6386 | 0.500 | — | 0 | — | 187961.500 | — | $0.0795 | — | 26.538 | — |
-| pytest-dev__pytest-11160 | 0 | — | 47 | — | 74451.500 | — | $0.0414 | — | 13.106 | — |
+| pytest-dev__pytest-11160 | 0.500 | — | 0 | — | 74451.500 | — | $0.0414 | — | 13.106 | — |
 | pytest-dev__pytest-11178 | 1 | — | 0 | — | 108903 | — | $0.0595 | — | 21.368 | — |
 | sphinx-doc__sphinx-9459 | 0 | — | 0 | — | 355460.500 | — | $0.1213 | — | 50.642 | — |
-| sphinx-doc__sphinx-9829 | 1 | — | 12 | — | 91856 | — | $0.0449 | — | 15.284 | — |
+| sphinx-doc__sphinx-9698 | 1 | — | 0 | — | 62327.500 | — | $0.0330 | — | 8.506 | — |
+| sphinx-doc__sphinx-9829 | 0 | — | 0 | — | 91856 | — | $0.0449 | — | 15.284 | — |
 
 ## Paired difference (impact-noreport − baseline) with 95% bootstrap CI
 
@@ -484,14 +484,14 @@ Resamples: 10000 with `random.choices`, seed 0. Each observation is one task (me
 | resolved rate | 12 | 0.0833 | 0.0000 | 0.2500 |
 | hidden checks passed | 12 | 0.0833 | 0.0000 | 0.2500 |
 | regressions | 12 | 0.0000 | 0.0000 | 0.0000 |
-| tokens (all-in, incl. cache) | 12 | -9971.1667 | -39187.1250 | 17135.2083 |
-| requests | 12 | -0.5833 | -2.5000 | 1.3333 |
-| tokens/request | 12 | 229.9738 | -389.6102 | 880.0044 |
-| cost (USD) | 12 | -0.0005 | -0.0076 | 0.0065 |
-| wall time (s) | 12 | -0.7752 | -5.2157 | 3.4540 |
-| read chars | 12 | 421.0000 | -656.4167 | 2017.9583 |
-| read calls | 12 | -0.0417 | -0.8333 | 0.6667 |
+| tokens (all-in, incl. cache) | 12 | -7476.1667 | -38709.1667 | 20221.6250 |
+| requests | 12 | -0.2917 | -2.1667 | 1.5417 |
+| tokens/request | 12 | 197.3487 | -525.8910 | 937.8790 |
+| cost (USD) | 12 | 0.0003 | -0.0067 | 0.0071 |
+| wall time (s) | 12 | -2.0997 | -7.3182 | 2.8499 |
+| read chars | 12 | 943.6667 | -445.3750 | 2731.2500 |
+| read calls | 12 | 0.5000 | -0.5833 | 1.7083 |
 | dc-engine calls | 12 | 0.0000 | 0.0000 | 0.0000 |
 | contracts created | 12 | 0.0000 | 0.0000 | 0.0000 |
 | contract retries | 12 | 0.0000 | 0.0000 | 0.0000 |
-| turns | 12 | -0.5833 | -1.8750 | 0.7500 |
+| turns | 12 | -0.2917 | -1.5833 | 0.9167 |
