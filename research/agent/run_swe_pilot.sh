@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Agent study, SWE-bench pilot: does Proviso's test selection change what a coding agent costs and breaks?
-#   2 arms x N SWE-bench tasks x 1 rep = Claude Code runs (Sonnet), interleaved:
+#   2 arms x N SWE-bench tasks x 2 reps = Claude Code runs (Sonnet), one at a time, interleaved:
 #     baseline         the agent alone; it runs whatever tests it chooses
 #     impact-noreport  Proviso v2.3 rewrites the agent's broad test commands to the tests the change can affect
 #   measures: hidden tests passed (FAIL_TO_PASS), PASS_TO_PASS tests broken, wall time, cost, test commands
 # Spending: each run is capped at PROVISO_AGENT_BUDGET_USD (default 1.40), and the script refuses to start if
-# runs x cap exceeds PROVISO_AGENT_TOTAL_USD (default 30): 10 tasks x 2 arms x 1 rep x $1.40 = $28 (a run can end
-# slightly over its cap, as Claude Code checks it between requests, so this leaves a margin under $30).
+# runs x cap exceeds PROVISO_AGENT_TOTAL_USD (default 70): 12 tasks x 2 arms x 2 reps x $1.40 = $67.20 (a run can
+# end slightly over its cap, as Claude Code checks it between requests, so this leaves a margin under $70).
+# Pilot design (approved 12 Nov 2026): two runs per task measure run-to-run variation, to size the final study.
 #
 # Before this script (as your normal user, free; it reads the SWE-bench clones and environments):
-#   python3 research/agent/swe_tasks.py SWE_EVAL_DIR --n 10     (tasks, Proviso assets, preflight; must print OK)
+#   python3 research/agent/swe_tasks.py SWE_EVAL_DIR --n 12     (tasks, Proviso assets, preflight; must print OK)
 # Then, as the isolated agent user (no SSH keys, git credentials or other secrets), from its clone of the repository
 # at the commit to evaluate, with ANTHROPIC_API_KEY exported in this shell (never written to a file):
 #   PROVISO_AGENT_TASKS_FROM=SWE_EVAL_DIR bash research/agent/run_swe_pilot.sh
@@ -23,8 +24,8 @@ SRC=${PROVISO_AGENT_TASKS_FROM:?set PROVISO_AGENT_TASKS_FROM to the directory sw
 W=${PROVISO_AGENT_WORK:-$HOME/proviso-work/agent-swe}   # must be outside the repository (the harness refuses otherwise)
 VENV=${PROVISO_AGENT_VENV:-$HOME/proviso-work/agent-venv}
 BUDGET=${PROVISO_AGENT_BUDGET_USD:-1.40}   # Claude Code checks between requests: a run can end slightly over
-TOTAL=${PROVISO_AGENT_TOTAL_USD:-30}
-REPS=${PROVISO_AGENT_REPS:-1}
+TOTAL=${PROVISO_AGENT_TOTAL_USD:-70}
+REPS=${PROVISO_AGENT_REPS:-2}
 ARMS=baseline,impact-noreport
 OUTDIR="$REPO_DIR/research/agent/results-swe-pilot"
 

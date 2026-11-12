@@ -3,7 +3,7 @@
 Task rule (fixed before any run): instances of our SWE-bench sample (research/v2/results/swe/sample.json) from the
 repositories with fast test suites (xarray, sphinx, pylint, seaborn, flask, pytest) where at least one published agent
 patch caused a reproduced regression in eval-v2.3.jsonl (regression-prone tasks); taken round-robin across the six
-repositories in sample order, the first N (pilot: 10).
+repositories in sample order, the first N (pilot: 12, two per repository).
 
 Per task, in EVAL_DIR:
   tasks/<id>.json        dc_eval task: base commit, the issue as the prompt, FAIL_TO_PASS as hidden tests (graded
@@ -15,7 +15,7 @@ Preflight (free): each instance's reference fix (source files only) applied to t
 against those assets; it must narrow the tests (median share below 85%), else the paid runs would test nothing.
 
 Runs as the normal user on the PC (it reads the SWE-bench clones and environments in PROVISO_WORK):
-  python3 research/agent/swe_tasks.py EVAL_DIR [--n 10] [--workers W]"""
+  python3 research/agent/swe_tasks.py EVAL_DIR [--n 12] [--workers W]"""
 from __future__ import annotations
 
 import argparse
@@ -146,7 +146,7 @@ def preflight(x: dict, inst: dict, eval_dir: str) -> float:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("eval_dir")
-    ap.add_argument("--n", type=int, default=10)
+    ap.add_argument("--n", type=int, default=12)
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     eval_dir = os.path.abspath(a.eval_dir)
