@@ -466,43 +466,60 @@ def _toml_quoted(body: str, key: str) -> str | None:
     return m.group(1) if m else None
 
 
-def detect_import_name(repo: str) -> str | None:
-    """Import name of the package in `repo`, or None if none can be determined."""
-    pyproject = os.path.join(repo, "pyproject.toml")
-    if os.path.isfile(pyproject):
-        with open(pyproject, encoding="utf-8") as fh:
-            text = fh.read()
-        name = _toml_quoted(_toml_section_body(text, "project"), "name")
-        if not name:
-            name = _toml_quoted(_toml_section_body(text, "tool.poetry"), "name")
-        if name:
-            ident = name.replace("-", "_")
-            if _IDENT.match(ident):
-                return ident
-    setup_cfg = os.path.join(repo, "setup.cfg")
-    if os.path.isfile(setup_cfg):
-        with open(setup_cfg, encoding="utf-8") as fh:
-            text = fh.read()
-        name = _toml_quoted(_toml_section_body(text, "metadata"), "name")
-        if name:
-            ident = name.replace("-", "_")
-            if _IDENT.match(ident):
-                return ident
+def _package_dirs(repo: str) -> list[list[str]]:
+    """Top-level packages (directories with __init__.py), under src/ first, then the repository root."""
     src = os.path.join(repo, "src")
+    out = []
     for root in ((src,) if os.path.isdir(src) else ()) + (repo,):
         found: list[str] = []
         try:
             names = os.listdir(root)
         except OSError:
-            continue
+            names = []
         for n in names:
             if n in _PKG_SKIP_DIRS or n.startswith("."):
                 continue
-            ident = n.replace("-", "_")
-            if not _IDENT.match(ident):
-                continue
-            if os.path.isfile(os.path.join(root, n, "__init__.py")):
-                found.append(ident)
+            if _IDENT.match(n) and os.path.isfile(os.path.join(root, n, "__init__.py")):
+                found.append(n)
+        out.append(found)
+    return out
+
+
+def detect_import_name(repo: str) -> str | None:
+    """Import name of the package in `repo`, or None if none can be determined.
+
+    A distribution name is not an import name: "Flask" is imported as `flask`, "Sphinx" as `sphinx`. The name from
+    the metadata is used only when a package directory of that name exists (ignoring case); otherwise the single
+    top-level package, if there is one."""
+    dirs = _package_dirs(repo)
+    names = []
+    pyproject = os.path.join(repo, "pyproject.toml")
+    if os.path.isfile(pyproject):
+        with open(pyproject, encoding="utf-8") as fh:
+            text = fh.read()
+        names.append(_toml_quoted(_toml_section_body(text, "project"), "name"))
+        names.append(_toml_quoted(_toml_section_body(text, "tool.poetry"), "name"))
+    setup_cfg = os.path.join(repo, "setup.cfg")
+    if os.path.isfile(setup_cfg):
+        with open(setup_cfg, encoding="utf-8") as fh:
+            text = fh.read()
+        body = _toml_section_body(text, "metadata")
+        m = re.search(r"^name\s*=\s*[\"']?([A-Za-z0-9_.\-]+)", body, re.M)  # ini: usually unquoted
+        names.append(m.group(1) if m else None)
+    setup_py = os.path.join(repo, "setup.py")
+    if os.path.isfile(setup_py):  # setup(name='Sphinx', ...): used only if a package directory matches
+        with open(setup_py, encoding="utf-8", errors="replace") as fh:
+            m = re.search(r"\bname\s*=\s*[\"']([A-Za-z0-9_.\-]+)[\"']", fh.read())
+        names.append(m.group(1) if m else None)
+    for name in names:
+        if not name:
+            continue
+        ident = name.replace("-", "_").replace(".", "_").lower()
+        for found in dirs:
+            for d in found:
+                if d.lower() == ident:
+                    return d
+    for found in dirs:
         if len(found) == 1:
             return found[0]
     return None

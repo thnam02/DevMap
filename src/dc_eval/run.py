@@ -1156,7 +1156,11 @@ def regrade_slot(
         py = venv_python(venv)
     try:
         if py and os.path.isdir(venv):
-            install_test_env(py, repo_dir, env=venv_env(venv))
+            env = venv_env(venv)
+            if task.python:
+                # a prepared environment, as in the run itself: install nothing, link the project
+                env["DC_EVAL_OFFLINE"] = "1"
+            install_test_env(py, repo_dir, env=env)
         grade = grade_repo(
             task, repo_dir, python=py, src_repo=src_repo, run_dir=slot,
         )

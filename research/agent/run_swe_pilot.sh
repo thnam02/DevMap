@@ -111,8 +111,14 @@ cp "$W/results.jsonl" "$W/report.md" "$OUTDIR/"
 "$PY" research/agent/inspect_runs.py "$W" > "$OUTDIR/inspect.txt" 2>&1 || echo "== inspect_runs failed (run it by hand later)"
 python3 - "$OUTDIR/results.jsonl" <<'PYEOF'
 import json, sys
-rows = [json.loads(l) for l in open(sys.argv[1]) if l.strip()]
-print(f"== {len(rows)} runs, total cost ${sum(r.get('cost_usd') or 0 for r in rows):.2f}")
+rows = {}
+for l in open(sys.argv[1]):  # a regraded run appears twice: keep its last row
+    if l.strip():
+        r = json.loads(l)
+        rows[(r.get("task"), r.get("arm"), r.get("rep"))] = r
+rows = list(rows.values())
+err = sum(r.get("status") in ("grading_error", "setup_error", "agent_error") for r in rows)
+print(f"== {len(rows)} runs ({err} with errors), total cost ${sum(r.get('cost_usd') or 0 for r in rows):.2f}")
 PYEOF
 # the isolated agent user usually has no git identity or credentials: then the results stay in $OUTDIR to copy
 if git add "$OUTDIR" && ! git diff --cached --quiet \
