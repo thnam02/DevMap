@@ -564,7 +564,11 @@ def install_test_env(
 ) -> None:
     """Install pytest and the repo's test dependencies into `python`'s env."""
     offline = _offline.is_offline(env) or _offline.is_offline()
-    for cmd in install_command_argv(python, repo):
+    cmds = install_command_argv(python, repo)
+    if offline:
+        # link the project before checking pytest: when the project is pytest itself, it is importable only then
+        cmds.sort(key=lambda c: not _offline.is_editable_install(c))
+    for cmd in cmds:
         if offline:
             if _offline.is_pytest_install(cmd):
                 if _offline.pytest_importable(python, env):

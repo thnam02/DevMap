@@ -56,6 +56,29 @@ class BasePython(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stderr)
         self.assertEqual(out.stdout.strip(), "run copy")
 
+    def test_project_that_is_pytest_itself(self):
+        """SWE-bench's pytest environments: their pytest is an editable install of a build folder that is gone, so
+        pytest becomes importable only once the run's copy is linked."""
+        d = self.d
+        os.makedirs(os.path.join(d, "repo", "src", "pytest"))
+        open(os.path.join(d, "repo", "src", "pytest", "__init__.py"), "w").write("WHERE = 'run copy'\n")
+        open(os.path.join(d, "repo", "pyproject.toml"), "w").write('[project]\nname = "pytest"\nversion = "0"\n')
+        base = os.path.join(d, "base")
+        subprocess.run([sys.executable, "-m", "venv", "--without-pip", base], check=True)
+        site = glob.glob(os.path.join(base, "lib", "python3*", "site-packages"))[0]
+        open(os.path.join(site, "__editable__.pytest-8.0.0.pth"), "w").write(os.path.join(d, "gone", "src") + "\n")
+        task = T.Task.from_dict({"id": "toy-2", "repo": "x", "commit": "y", "prompt": "p",
+                                 "setup": "python -m pip install -e .", "python": os.path.join(base, "bin", "python")})
+        venv = R.create_run_venv(os.path.join(d, "slot"), task.python)
+        env = R.venv_env(venv)
+        env["DC_EVAL_OFFLINE"] = "1"
+        py = R.venv_python(venv)
+        install_test_env(py, os.path.join(d, "repo"), env=env)
+        R.run_setup(os.path.join(d, "repo"), task.setup, env=env)
+        out = subprocess.run([py, "-c", "import pytest; print(pytest.WHERE)"], capture_output=True, text=True, env=env)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(out.stdout.strip(), "run copy")
+
     def test_missing_interpreter_is_an_error(self):
         with self.assertRaises(RuntimeError):
             R.create_run_venv(os.path.join(self.d, "slot"), "/nonexistent/bin/python")

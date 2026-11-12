@@ -57,7 +57,9 @@ PYEOF
 
 for t in "$SRC"/tasks/*.json; do
   py=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("python",""))' "$t")
-  [ -x "$py" ] && "$py" -c 'import pytest' 2>/dev/null \
+  # pytest's own tasks: the environment's pytest is the project, linked from each run's copy, so check its dependencies
+  case "$t" in *pytest-dev__pytest-*) chk='import pluggy, iniconfig' ;; *) chk='import pytest' ;; esac
+  [ -x "$py" ] && "$py" -c "$chk" 2>/dev/null \
     || { echo "this user cannot run the task interpreter (or it lacks pytest): $py  ($t)"; exit 1; }
 done
 echo "== task interpreters usable by $(whoami)"
