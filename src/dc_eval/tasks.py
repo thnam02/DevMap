@@ -28,6 +28,9 @@ class Task:
     # files a real install would generate, written into the run's copy before setup (pytest's src/_pytest/_version.py:
     # pytest imports it, and setuptools-scm writes it only at install time); {relative path: content}
     files: dict[str, str] = field(default_factory=dict)
+    # the hidden tests come only from test_patch, applied to the base version (SWE-bench): never from a commit after
+    # the base in the source clone, which for such tasks is unrelated history
+    test_patch_only: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -56,6 +59,7 @@ class Task:
             fix_commit=str(data.get("fix_commit") or ""),
             python=str(data.get("python") or ""),
             files={str(k): str(v) for k, v in (data.get("files") or {}).items()},
+            test_patch_only=bool(data.get("test_patch_only")),
         )
 
 

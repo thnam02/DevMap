@@ -264,7 +264,7 @@ def restore_hidden_tests(
         modified = snapshot_agent_test_files(repo, run_dir, files)
     src = src_repo or ""
     git_cwd = src if src and is_git_repo(src) else repo
-    sha = resolve_fix_commit(task, git_cwd)
+    sha = None if task.test_patch_only else resolve_fix_commit(task, git_cwd)
     if sha and files:
         # files the task adds beyond the fix commit (e.g. extra hidden checks) come from the patch itself
         show_cwd = src if src and is_git_repo(src) else repo
@@ -278,6 +278,32 @@ def restore_hidden_tests(
     _reset_to_head(repo, files)
     apply_patch(repo, task.test_patch)
     return modified
+
+
+GRADER_FILES = (".dc-eval-test.patch", ".dc-eval-hidden.xml", ".dc-eval-regr.xml")
+
+
+def restore_agent_state(task: Task, repo: str, run_dir: str | None) -> None:
+    """Regrading: put the run copy back as the agent left it. An earlier grading replaced the hidden-test files (their
+    agent versions are saved in run_dir) and left its own files; without this, the diff statistics of a regrade would
+    count the earlier grading's test files as the agent's changes."""
+    if not run_dir:
+        return
+    dest_root = os.path.join(run_dir, AGENT_TEST_CHANGES)
+    if not os.path.isfile(os.path.join(dest_root, _SAVED_MARK)):
+        return  # first grading
+    for rel in files_in_test_patch(task.test_patch):
+        live = os.path.join(repo, rel.replace("/", os.sep))
+        saved = os.path.join(dest_root, rel.replace("/", os.sep))
+        if os.path.isfile(saved):
+            os.makedirs(os.path.dirname(live), exist_ok=True)
+            shutil.copy2(saved, live)
+        elif os.path.isfile(live):
+            os.remove(live)  # the agent's copy had no such file
+    for name in GRADER_FILES:
+        p = os.path.join(repo, name)
+        if os.path.isfile(p):
+            os.remove(p)
 
 
 def patch_for_files(patch: str, files: list[str]) -> str:
@@ -343,6 +369,8 @@ def working_tree_stats(repo: str) -> dict[str, Any]:
     if untracked.returncode == 0:
         for ln in untracked.stdout.splitlines():
             s = ln.strip()
+            if s.endswith((".pyc", ".pyo")) or "__pycache__/" in s:
+                continue  # byte code of a test run (the agent's or an earlier grading's), not a change
             if s and s not in names:
                 names.append(s)
     modified_tests = any(is_test_path(n) for n in names)
@@ -792,6 +820,7 @@ def grade_repo(
         with open(log_path, "w", encoding="utf-8") as fh:
             fh.write("")
     preflight_grade_env(repo, python, log_path=log_path)
+    restore_agent_state(task, repo, run_dir)
     tree = working_tree_stats(repo)
     agent_modified = restore_hidden_tests(
         task, repo, src_repo=src_repo, run_dir=run_dir,

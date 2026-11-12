@@ -3,12 +3,23 @@
 Task rule (fixed before any run): instances of our SWE-bench sample (research/v2/results/swe/sample.json) from the
 repositories with fast test suites (xarray, sphinx, pylint, seaborn, flask, pytest) where at least one published agent
 patch caused a reproduced regression in eval-v2.3.jsonl (regression-prone tasks); taken round-robin across the six
-repositories in sample order, the first N (pilot: 12, two per repository).
+repositories in sample order; the first N (pilot: 12) that pass the reference-fix check below. Rejected candidates are
+skipped by that check alone, never by Proviso's selection or by any run's outcome.
+
+Reference-fix check (free; SWE-bench's own validation, redone in our environments): the instance's reference fix
+(source files) applied to the agent's starting copy and graded by dc_eval exactly as an agent's run is graded. Every
+FAIL_TO_PASS test must pass; PASS_TO_PASS tests that fail here are environment failures, dropped from the regression
+tests (kept in the task as `regression_tests_failing_with_reference_fix`); more than 10% of them failing rejects the
+task (its environment does not run its tests). The environments use Python 3.12, which Proviso needs (PEP 669), where
+SWE-bench's use 3.9-3.11: flask 2.x's suite, for example, turns 3.12's pkgutil.get_loader deprecation into an error in
+every test using its app fixture (pyproject filterwarnings = "error"), so flask's tasks fail this check.
 
 Per task, in EVAL_DIR:
   tasks/<id>.json        dc_eval task: base commit, the issue as the prompt, FAIL_TO_PASS as hidden tests (graded
-                         after applying SWE-bench's test patch), PASS_TO_PASS as regression tests, and `python`: the
-                         prepared SWE-bench environment the run inherits (nothing is installed per run)
+                         after applying SWE-bench's test patch to the base version: test_patch_only), PASS_TO_PASS as
+                         regression tests, and `python`: the prepared SWE-bench environment the run inherits (nothing
+                         is installed per run)
+  rejected/<id>/         candidates that failed the reference-fix check, with the reason
   impact/<id>/           Proviso's dependency map, base failures and base import-time snapshot, recorded at the plain
                          base commit (without the reference tests: the agent's copy does not have them)
 Preflight (free): each instance's reference fix (source files only) applied to the base tree, Proviso's selection
@@ -44,14 +55,15 @@ from dc_engine import record as REC  # noqa: E402
 FAST = ["pydata__xarray", "sphinx-doc__sphinx", "pylint-dev__pylint", "mwaskom__seaborn", "pallets__flask",
         "pytest-dev__pytest"]
 LIMIT = 0.85
+ENV_FAIL_LIMIT = 0.10   # PASS_TO_PASS failing with the reference fix: above this share, the environment is broken
 
 
 def git(cwd, *a, check=True, inp=None):
     return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=check, input=inp).stdout
 
 
-def pick(n: int) -> list[dict]:
-    """The rule in the module docstring."""
+def pick(n: int | None = None) -> list[dict]:
+    """The candidates, in the order of the rule in the module docstring (all of them if n is None)."""
     sample = json.load(open(os.path.join(P.OUT, "sample.json")))["instances"]
     rows = {}
     for line in open(os.path.join(P.OUT, "eval-v2.3.jsonl")):
@@ -61,6 +73,7 @@ def pick(n: int) -> list[dict]:
                      and any((rows.get((x["instance"], k)) or {}).get("reproduced") for k in range(len(x["cases"])))]
               for repo in FAST}
     out = []
+    n = n if n is not None else sum(len(q) for q in queues.values())
     while len(out) < n and any(queues.values()):
         for repo in FAST:
             if queues[repo] and len(out) < n:
@@ -190,10 +203,65 @@ def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     task = {"id": iid, "repo": f"https://github.com/{inst['repo']}.git", "commit": inst["base_commit"],
             "prompt": inst["problem_statement"], "hidden_tests": _tests(inst.get("FAIL_TO_PASS")),
             "test_patch": inst.get("test_patch") or "", "regression_tests": _tests(inst.get("PASS_TO_PASS")),
-            "setup": "python -m pip install -e .", "python": py, "files": gen,
+            "setup": "python -m pip install -e .", "python": py, "files": gen, "test_patch_only": True,
             "source": "SWE-bench", "sample": "core" if x["core"] else "held-out"}
     json.dump(task, open(os.path.join(eval_dir, "tasks", iid + ".json"), "w"), indent=1)
     return f"{iid}: {len(tests)} tests in the map"
+
+
+def gold_check(x: dict, inst: dict, eval_dir: str) -> str | None:
+    """The reference-fix check in the module docstring. Returns why the task is rejected, or None (and then the task's
+    regression tests are trimmed to those that pass with the reference fix)."""
+    from dc_eval import grade as G
+    from dc_eval import run as R
+    from dc_eval import tasks as T
+    iid = x["instance"]
+    path = os.path.join(eval_dir, "tasks", iid + ".json")
+    data = json.load(open(path))
+    task = T.Task.from_dict(data)
+    tree = agent_tree(inst, generated_files(x))
+    work = os.path.join(P.WORK, "gold", iid)
+    shutil.rmtree(work, ignore_errors=True)
+    repo = os.path.join(work, "repo")
+    subprocess.run(["git", "clone", "-q", "--shared", tree, repo], check=True)
+    git(repo, "checkout", "-q", "-f", inst["base_commit"])
+    R.write_task_files(repo, task.files)
+    ref = set(P.test_files_of_patch(inst.get("test_patch")))
+    patch, _ = E.without_files(inst["patch"], ref)
+    E.apply_patch(repo, patch)
+    venv = R.create_run_venv(work, task.python)
+    env = R.venv_env(venv)
+    env["DC_EVAL_OFFLINE"] = "1"
+    py = R.venv_python(venv)
+    G.install_test_env(py, repo, env=env)
+    R.run_setup(repo, task.setup, env=env)
+    g = G.grade_repo(task, repo, python=py, src_repo=tree, run_dir=work)
+    n_regr = len(g["regression"])
+    print(f"  {iid:32s} reference fix: hidden {g['hidden_checks_passed']}/{g['hidden_checks_total']} "
+          f"({len(g['hidden_failed'])} failing), PASS_TO_PASS failing {len(g['regression_failed'])} of {n_regr}",
+          flush=True)
+    if not g["resolved"]:
+        return (f"the reference fix does not pass the hidden tests here: {g['hidden_failed'][:5]} "
+                f"(grading log: {os.path.join(work, G.GRADING_LOG)})")
+    if n_regr and len(g["regression_failed"]) > ENV_FAIL_LIMIT * n_regr:
+        return (f"{len(g['regression_failed'])} of {n_regr} PASS_TO_PASS tests fail with the reference fix: the "
+                f"environment does not run this task's tests (grading log: {os.path.join(work, G.GRADING_LOG)})")
+    failing = set(g["regression_failed"])
+    data["regression_tests"] = [t for t in data["regression_tests"] if t not in failing]
+    data["regression_tests_failing_with_reference_fix"] = sorted(failing)
+    json.dump(data, open(path, "w"), indent=1)
+    return None
+
+
+def reject(eval_dir: str, iid: str, why: str):
+    dest = os.path.join(eval_dir, "rejected", iid)
+    shutil.rmtree(dest, ignore_errors=True)
+    os.makedirs(dest)
+    for sub, name in (("tasks", iid + ".json"), ("impact", iid)):
+        src = os.path.join(eval_dir, sub, name)
+        if os.path.exists(src):
+            shutil.move(src, os.path.join(dest, name))
+    open(os.path.join(dest, "reason.txt"), "w").write(why + "\n")
 
 
 def preflight(x: dict, inst: dict, eval_dir: str) -> float:
@@ -229,34 +297,50 @@ def main():
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     a = ap.parse_args()
     eval_dir = os.path.abspath(a.eval_dir)
-    chosen = pick(a.n)
-    ensure_instances([x["instance"] for x in chosen])
+    cands = pick()
+    ensure_instances([x["instance"] for x in cands])
     meta = P.load_instances()
-    print("tasks (rule: regression-prone, round-robin over", ", ".join(FAST) + "):", flush=True)
-    for x in chosen:
-        print("  ", x["instance"], "core" if x["core"] else "held-out", flush=True)
-    ok = []
-    for x in chosen:
+    print(f"candidates (rule: regression-prone, round-robin over {', '.join(FAST)}); the first {a.n} that pass the "
+          "reference-fix check:", flush=True)
+    chosen, rejected = [], []
+    for x in cands:
+        if len(chosen) == a.n:
+            break
+        iid = x["instance"]
+        print(f"- {iid} ({'core' if x['core'] else 'held-out'})", flush=True)
         try:
-            print(build(x, meta[x["instance"]], eval_dir, a.workers), flush=True)
-            ok.append(x)
-        except Exception as e:  # noqa: BLE001
-            print(x["instance"], "ERROR", repr(e)[:300], flush=True)
+            print("  " + build(x, meta[iid], eval_dir, a.workers), flush=True)
+            why = gold_check(x, meta[iid], eval_dir)
+        except Exception as e:  # noqa: BLE001  (a failure of ours, not of the task: stop rather than skip it)
+            sys.exit(f"{iid} ERROR {e!r}"[:600] + "\nfix this before the paid runs")
+        if why:
+            print(f"  REJECTED: {why}", flush=True)
+            reject(eval_dir, iid, why)
+            rejected.append(iid)
+        else:
+            chosen.append(x)
+    if len(chosen) < a.n:
+        sys.exit(f"only {len(chosen)} candidates pass the reference-fix check")
+    keep = {x["instance"] for x in chosen}
+    for f in sorted(os.listdir(os.path.join(eval_dir, "tasks"))):
+        if f.endswith(".json") and f[:-5] not in keep:  # from an earlier build of this directory
+            reject(eval_dir, f[:-5], "not among the first tasks that pass the reference-fix check")
+            print(f"  removed earlier task {f[:-5]} (not selected now)", flush=True)
+    print(f"tasks: {len(chosen)}; rejected by the reference-fix check: {', '.join(rejected) or 'none'}", flush=True)
     print("preflight (free): does Proviso narrow the tests?", flush=True)
     shares = []
-    for x in ok:
+    for x in chosen:
         try:
             shares.append(preflight(x, meta[x["instance"]], eval_dir))
         except Exception as e:  # noqa: BLE001
             print(x["instance"], "PREFLIGHT ERROR", repr(e)[:300], flush=True)
-    if len(ok) < len(chosen) or len(shares) < len(ok):
-        sys.exit("some tasks failed to build or check; fix them before paid runs")
+    if len(shares) < len(chosen):
+        sys.exit("some tasks failed the preflight; fix them before paid runs")
     med = statistics.median(shares)
     print(f"median share selected: {med:.0%} (limit {LIMIT:.0%})", flush=True)
     if med >= LIMIT:
         sys.exit("Proviso selects nearly everything on most tasks; not starting paid runs.")
     print("OK: ready for the paid runs", flush=True)
-
 
 if __name__ == "__main__":
     main()

@@ -15,6 +15,7 @@
 # at the commit to evaluate, with ANTHROPIC_API_KEY exported in this shell (never written to a file):
 #   PROVISO_AGENT_TASKS_FROM=SWE_EVAL_DIR bash research/agent/run_swe_pilot.sh
 #   PROVISO_AGENT_DRY=1 ... prints the plan and calls no model (free)
+#   PROVISO_AGENT_REGRADE=1 ... grades the saved runs again first (free); without a key it then reports and stops
 # The agent user needs read and execute access to the task interpreters (the SWE-bench environments and the
 # Python installation they link to); the tasks name them in their "python" field.
 set -euo pipefail
@@ -76,12 +77,34 @@ PY="$VENV/bin/python"
 mkdir -p "$W"
 rm -rf "$W/tasks" "$W/impact"
 cp -r "$SRC/tasks" "$SRC/impact" "$W/"
+# runs of tasks no longer in the task set (rejected by swe_tasks.py's reference-fix check) are set aside, not deleted
+if [ -d "$W/runs" ]; then
+  for d in "$W"/runs/*/; do
+    id=$(basename "$d")
+    if [ ! -f "$W/tasks/$id.json" ]; then
+      mkdir -p "$W/_dropped"; rm -rf "$W/_dropped/$id"; mv "$d" "$W/_dropped/$id"; echo "== set aside the runs of $id (no longer a task)"
+    fi
+  done
+fi
+IDS=$(cd "$W/tasks" && ls *.json | sed 's/\.json$//' | tr '\n' ' ')
 
 if [ -n "${PROVISO_AGENT_DRY:-}" ]; then
   cd "$W"
   "$PY" -m dc_eval run --eval-dir "$W" --arms "$ARMS" --reps "$REPS" --model sonnet --max-budget-usd "$BUDGET" \
     --timeout 1800 --dry-run
   exit 0
+fi
+
+# PROVISO_AGENT_REGRADE=1: grade every saved run again with the current grader and tasks (free; no agent is run)
+if [ -n "${PROVISO_AGENT_REGRADE:-}" ] && [ -d "$W/runs" ]; then
+  echo "== regrading the saved runs ($(date +%T))"
+  (cd "$W" && "$PY" -m dc_eval grade --eval-dir "$W") || echo "== some regrades failed (see above)"
+  if [ -z "${ANTHROPIC_API_KEY:-}" ]; then   # regrade only: report what the saved runs show, spend nothing
+    # shellcheck disable=SC2086
+    (cd "$W" && "$PY" -m dc_eval report --eval-dir "$W" --tasks $IDS)
+    "$PY" research/agent/inspect_runs.py "$W" > "$W/inspect.txt" 2>&1 || true
+    echo "== regraded; report: $W/report.md (no key set, so no runs started)"; exit 0
+  fi
 fi
 
 [ -n "${ANTHROPIC_API_KEY:-}" ] || { echo "ANTHROPIC_API_KEY is not set in this shell (export it; do not save it to a file)."; exit 1; }
@@ -103,19 +126,22 @@ echo "== running the pilot ($(date +%T)); cap \$$BUDGET per run"
 cd "$W"
 "$PY" -m dc_eval run --eval-dir "$W" --arms "$ARMS" --reps "$REPS" --model sonnet --max-budget-usd "$BUDGET" \
   --timeout 1800 --resume
-"$PY" -m dc_eval report --eval-dir "$W"
+# shellcheck disable=SC2086
+"$PY" -m dc_eval report --eval-dir "$W" --tasks $IDS
 
 cd "$REPO_DIR"
 mkdir -p "$OUTDIR"
 cp "$W/results.jsonl" "$W/report.md" "$OUTDIR/"
 "$PY" research/agent/inspect_runs.py "$W" > "$OUTDIR/inspect.txt" 2>&1 || echo "== inspect_runs failed (run it by hand later)"
-python3 - "$OUTDIR/results.jsonl" <<'PYEOF'
+python3 - "$OUTDIR/results.jsonl" $IDS <<'PYEOF'
 import json, sys
+ids = set(sys.argv[2:])
 rows = {}
-for l in open(sys.argv[1]):  # a regraded run appears twice: keep its last row
+for l in open(sys.argv[1]):  # a regraded run appears more than once: keep its last row
     if l.strip():
         r = json.loads(l)
-        rows[(r.get("task"), r.get("arm"), r.get("rep"))] = r
+        if r.get("task") in ids:
+            rows[(r.get("task"), str(r.get("arm")), str(r.get("rep")))] = r
 rows = list(rows.values())
 err = sum(r.get("status") in ("grading_error", "setup_error", "agent_error") for r in rows)
 print(f"== {len(rows)} runs ({err} with errors), total cost ${sum(r.get('cost_usd') or 0 for r in rows):.2f}")
