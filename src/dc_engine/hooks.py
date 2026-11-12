@@ -521,7 +521,7 @@ def _run_logged(
     if fmt == "cursor":
         cwd = _cursor_root(payload, root)
     else:
-        cwd = root or payload.get("cwd") or os.getcwd()
+        cwd = root or _project_root(str(payload.get("cwd") or os.getcwd()))
         cwd = os.path.abspath(str(cwd))
     error = None
     tb = None
@@ -543,6 +543,19 @@ def _run_logged(
         message="\n".join(_HOOK_NOTES) if _HOOK_NOTES else None,
     )
     return out
+
+
+def _project_root(path: str) -> str:
+    """The repository the agent works in: Claude Code reports the shell's current directory, which is a subdirectory
+    after the agent runs `cd pkg/sub`; the project's state (.dc-engine, the dependency map) lives at the top."""
+    p = os.path.abspath(path)
+    while True:
+        if os.path.exists(os.path.join(p, ".git")):
+            return p
+        parent = os.path.dirname(p)
+        if parent == p:
+            return os.path.abspath(path)
+        p = parent
 
 
 def _cursor_root(payload: dict[str, Any], root: str | None) -> str:

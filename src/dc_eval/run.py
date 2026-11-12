@@ -1023,7 +1023,10 @@ def agent_finished(slot: str) -> bool:
     if st == "grading_error":
         return True
     if st == "agent_error":
-        return True
+        # an agent that never reached the model (an invalid API key, a network failure) did no work: run it again
+        spent = (metrics.get("cost_usd") or 0) > 0 or (metrics.get("model_requests") or 0) > 0 \
+            or (metrics.get("output_tokens") or 0) > 0
+        return spent
     rc = metrics.get("returncode")
     if stream_n == 0 and rc not in (0, None):
         return False
