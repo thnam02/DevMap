@@ -21,6 +21,7 @@ Layout, in EVAL_DIR:
   tasks/<case>.json     dc_eval task: id <instance>__c<k>, start_patch (the agent's patch, normalised to apply with
                         git apply), start_broken, hidden and regression tests, test_patch_only
   rejected/<case>/      reason.txt
+  checks/               the grading logs of the reference-fix and start-state checks (their work folders are deleted)
   cases.jsonl           one row per case: kept or rejected, and the start-state grading
 
   python3 research/agent/replay_tasks.py EVAL_DIR [--limit N] [--workers W]"""
@@ -123,9 +124,18 @@ def start_check(c: dict, inst: dict, task: dict, eval_dir: str) -> dict:
     G.install_test_env(py, repo, env=env)
     R.run_setup(repo, t.setup, env=env)
     g = G.grade_repo(t, repo, python=py, src_repo=tree, run_dir=work)
+    log = keep_log(eval_dir, os.path.join(work, G.GRADING_LOG), c["id"] + ".start.log")
+    shutil.rmtree(work, ignore_errors=True)  # a checkout and a venv per case: keep only the grading log
     return {"resolved": g["resolved"], "hidden": f"{g['hidden_checks_passed']}/{g['hidden_checks_total']}",
-            "regression_failed": g["regression_failed"], "n_regression": len(g["regression"]),
-            "log": os.path.join(work, G.GRADING_LOG)}
+            "regression_failed": g["regression_failed"], "n_regression": len(g["regression"]), "log": log}
+
+
+def keep_log(eval_dir: str, src: str, name: str) -> str:
+    dest = os.path.join(eval_dir, "checks", name)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    if os.path.isfile(src):
+        shutil.copyfile(src, dest)
+    return dest
 
 
 def main():
@@ -166,8 +176,12 @@ def main():
                         and not os.path.isfile(os.path.join(inst_dir, "rejected", iid, "reason.txt")):
                     print("  " + S.build(c["x"], inst, inst_dir, a.workers), flush=True)
                     why = S.gold_check(c["x"], inst, inst_dir)
+                    gold_work = os.path.join(P.WORK, "gold", iid)
+                    keep_log(eval_dir, os.path.join(gold_work, "grading.log"), iid + ".reference-fix.log")
+                    shutil.rmtree(gold_work, ignore_errors=True)
                     if why:
-                        S.reject(inst_dir, iid, why)
+                        S.reject(inst_dir, iid, why.replace(os.path.join(gold_work, "grading.log"),
+                                                            os.path.join(eval_dir, "checks", iid + ".reference-fix.log")))
                 why_path = os.path.join(inst_dir, "rejected", iid, "reason.txt")
                 gold[iid] = open(why_path).read().strip() if os.path.isfile(why_path) else None
                 if gold[iid] is None and not os.path.isdir(os.path.join(eval_dir, "impact", iid)):

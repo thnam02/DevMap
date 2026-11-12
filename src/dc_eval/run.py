@@ -1213,6 +1213,8 @@ def regrade_slot(
 ) -> dict[str, Any]:
     """Re-run grading on a saved run copy. Never launches an agent."""
     repo_dir = os.path.join(slot, "repo")
+    if not os.path.isdir(repo_dir) and os.path.isfile(os.path.join(slot, FINAL_DIFF)):
+        rebuild_slot(task, slot, src_repo)
     if not os.path.isdir(repo_dir):
         raise RuntimeError(f"no saved repo copy at {repo_dir}")
     row = _load_metrics(slot) or {
@@ -1247,6 +1249,7 @@ def regrade_slot(
     row = _mark_contaminated(row)
     row["run_dir"] = slot
     _write_metrics(slot, row)
+    compact_slot(slot)
     return row
 
 
@@ -1522,6 +1525,10 @@ def execute_run(
         _write_metrics(slot, row)
         return row
     try:
+        save_final_diff(repo_dir, slot)
+    except Exception as exc:  # noqa: BLE001  (only needed to regrade a compacted run)
+        row["final_diff_error"] = repr(exc)[:300]
+    try:
         grade = grade_repo(
             task, repo_dir, python=py,
             src_repo=src_repo, run_dir=slot,
@@ -1533,7 +1540,62 @@ def execute_run(
         row = _grade_error_row(row, exc, arm)
     row = _mark_contaminated(row)
     _write_metrics(slot, row)
+    compact_slot(slot)
     return row
+
+
+FINAL_DIFF = "final.diff"
+
+
+def save_final_diff(repo_dir: str, slot: str) -> str:
+    """The run copy as the agent left it, as one binary git diff against the base commit (new files included), taken
+    before grading changes anything. With it a compacted run can be regraded. The copy's own index is not touched."""
+    idx = os.path.join(slot, ".final-index")
+    env = {**os.environ, "GIT_INDEX_FILE": idx}
+    try:
+        for args in (["read-tree", "HEAD"], ["add", "-A"]):
+            r = subprocess.run(["git", *args], cwd=repo_dir, env=env, capture_output=True, text=True)
+            if r.returncode:
+                raise RuntimeError(f"git {' '.join(args)}: {r.stderr.strip()[-300:]}")
+        r = subprocess.run(["git", "diff", "--cached", "--binary", "--no-color", "--no-ext-diff", "HEAD"],
+                           cwd=repo_dir, env=env, capture_output=True)
+        if r.returncode:
+            raise RuntimeError(f"git diff: {r.stderr.decode(errors='replace').strip()[-300:]}")
+    finally:
+        if os.path.exists(idx):
+            os.remove(idx)
+    path = os.path.join(slot, FINAL_DIFF)
+    with open(path, "wb") as fh:
+        fh.write(r.stdout)
+    return path
+
+
+def compact_slot(slot: str) -> None:
+    """DC_EVAL_COMPACT=1: once a run is graded, delete its repository copy and venv (keeping final.diff, the logs and
+    the metrics), so that hundreds of runs fit on one disk. regrade_slot rebuilds the copy from final.diff."""
+    if os.environ.get("DC_EVAL_COMPACT") != "1" or not os.path.isfile(os.path.join(slot, FINAL_DIFF)):
+        return
+    for name in ("repo", "venv"):
+        shutil.rmtree(os.path.join(slot, name), ignore_errors=True)
+
+
+def rebuild_slot(task: Task, slot: str, src_repo: str) -> None:
+    """A compacted run's copy again: the base commit, the task's generated files, the agent's final diff, a run venv."""
+    repo_dir = os.path.join(slot, "repo")
+    _fresh_copy(src_repo, task.commit, repo_dir)
+    write_task_files(repo_dir, task.files)
+    diff = os.path.join(slot, FINAL_DIFF)
+    if os.path.getsize(diff):
+        r = subprocess.run(["git", "apply", "--binary", "--whitespace=nowarn", diff], cwd=repo_dir,
+                           capture_output=True, text=True)
+        if r.returncode:
+            raise RuntimeError(f"final.diff does not apply: {(r.stderr or r.stdout)[-300:]}")
+    venv = create_run_venv(slot, task.python)
+    env = venv_env(venv)
+    if task.python:
+        env["DC_EVAL_OFFLINE"] = "1"
+    install_test_env(venv_python(venv), repo_dir, env=env)
+    run_setup(repo_dir, task.setup, env=env)
 
 
 def run_eval(
@@ -1770,7 +1832,7 @@ def grade_runs(
             for name in sorted(os.listdir(arm_dir)):
                 slot = os.path.join(arm_dir, name)
                 repo_dir = os.path.join(slot, "repo")
-                if not os.path.isdir(repo_dir):
+                if not os.path.isdir(repo_dir) and not os.path.isfile(os.path.join(slot, FINAL_DIFF)):
                     continue
                 print(f"grade {task.id} {arm} {name}", flush=True)
                 try:

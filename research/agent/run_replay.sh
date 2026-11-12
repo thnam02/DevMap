@@ -108,6 +108,8 @@ fi
 
 [ -n "${ANTHROPIC_API_KEY:-}" ] || { echo "ANTHROPIC_API_KEY is not set in this shell (export it; do not save it to a file)."; exit 1; }
 export DC_EVAL_CLAUDE_HOST_AUTH=1
+# graded runs keep final.diff, logs and metrics, not their repository copy and venv (regrading rebuilds them)
+export DC_EVAL_COMPACT=1
 
 PF=$(mktemp -d)
 printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"touch %s/fired"}]}]}}' "$PF" > "$PF/settings.json"
