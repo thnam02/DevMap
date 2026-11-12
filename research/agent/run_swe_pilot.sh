@@ -42,8 +42,9 @@ fi
 [ -n "$HPY" ] || { echo "Python 3.12+ needed: e.g. uv python install 3.12, then PROVISO_AGENT_PYTHON=\$(uv python find 3.12)"; exit 1; }
 python3() { "$HPY" "$@"; }
 # `timeout` is GNU coreutils (absent on macOS): fall back to gtimeout, else a perl alarm
-if command -v timeout >/dev/null; then TO=timeout; elif command -v gtimeout >/dev/null; then TO=gtimeout
-else TO="perl -e 'alarm shift; exec @ARGV'"; fi
+# (an array, so it runs as a command after `env`; `eval` is a shell builtin that env cannot run)
+if command -v timeout >/dev/null; then TO=(timeout); elif command -v gtimeout >/dev/null; then TO=(gtimeout)
+else TO=(perl -e 'alarm shift; exec @ARGV'); fi
 [ -d "$SRC/tasks" ] && [ -d "$SRC/impact" ] || { echo "no tasks/ and impact/ in $SRC: run swe_tasks.py first"; exit 1; }
 
 NT=$(ls "$SRC"/tasks/*.json | wc -l)
@@ -90,7 +91,7 @@ export DC_EVAL_CLAUDE_HOST_AUTH=1
 PF=$(mktemp -d)
 printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"touch %s/fired"}]}]}}' "$PF" > "$PF/settings.json"
 (cd "$PF" && env -i PATH="$PATH" HOME="$PF" ANTHROPIC_API_KEY=invalid-preflight-key \
-   eval "$TO" 60 claude -p "hi" --settings "$PF/settings.json" --output-format stream-json --verbose >/dev/null 2>&1 || true)
+   "${TO[@]}" 60 claude -p "hi" --settings "$PF/settings.json" --output-format stream-json --verbose >/dev/null 2>&1 || true)
 if [ ! -f "$PF/fired" ]; then
   echo "Pre-flight failed: Claude Code did not run a hook from --settings. Proviso would be inactive; not starting."
   rm -rf "$PF"; exit 1
@@ -113,10 +114,13 @@ import json, sys
 rows = [json.loads(l) for l in open(sys.argv[1]) if l.strip()]
 print(f"== {len(rows)} runs, total cost ${sum(r.get('cost_usd') or 0 for r in rows):.2f}")
 PYEOF
-git add "$OUTDIR"
-if ! git diff --cached --quiet; then
-  git commit -qm "Agent study, SWE-bench pilot results ($(hostname), $(date +%F))"
-  if git pull -q --rebase && git push -q; then echo "== results pushed"
-  else echo "== results committed locally; push them as your normal user: cd $REPO_DIR && git push"; fi
+# the isolated agent user usually has no git identity or credentials: then the results stay in $OUTDIR to copy
+if git add "$OUTDIR" && ! git diff --cached --quiet \
+   && git commit -qm "Agent study, SWE-bench pilot results ($(hostname), $(date +%F))" 2>/dev/null; then
+  if git pull -q --rebase 2>/dev/null && git push -q 2>/dev/null; then echo "== results pushed"
+  else echo "== results committed locally only; copy $OUTDIR to your own clone and push from there"; fi
+else
+  git reset -q 2>/dev/null || true
+  echo "== results not committed (no git identity here): copy $OUTDIR to your own clone and push from there"
 fi
 echo "== done ($(date +%T))"
