@@ -176,7 +176,7 @@ def agent_tree(inst: dict, files: dict[str, str] | None = None) -> str:
 
 def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     iid, repo = x["instance"], x["repo"]
-    py = ensure_env(x, P.load_instances())
+    py = env_python(x) if os.path.isfile(env_python(x)) else ensure_env(x, P.load_instances())
     dest = os.path.join(eval_dir, "impact", iid)
     os.makedirs(dest, exist_ok=True)
     os.makedirs(os.path.join(eval_dir, "tasks"), exist_ok=True)

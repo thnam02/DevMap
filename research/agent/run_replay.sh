@@ -16,6 +16,8 @@
 #   PROVISO_AGENT_SHARD=1/2 ... and PROVISO_AGENT_SHARD=2/2 ... in two terminals: two runs at a time
 #   PROVISO_AGENT_DRY=1 ... prints the plan and calls no model (free)
 #   PROVISO_AGENT_MODEL=haiku ... another model (its own work folder and results folder)
+#   PROVISO_AGENT_STUDY=nocode PROVISO_REPLAY_FROM=<nocode_tasks.py dir> ... the NoCode-bench feature tasks (no start
+#   patch; same arms, outcomes and folders named agent-nocode / results-nocode)
 #   PROVISO_AGENT_CASES=20 PROVISO_AGENT_REPS=1 PROVISO_AGENT_TOTAL_USD=15 ... the early check: 20 cases spread over the
 #   repositories, one repetition (40 runs)
 set -euo pipefail
@@ -26,7 +28,8 @@ SHARD=${PROVISO_AGENT_SHARD:-1/1}
 SI=${SHARD%/*}; SN=${SHARD#*/}
 [ "$SI" -ge 1 ] && [ "$SI" -le "$SN" ] || { echo "PROVISO_AGENT_SHARD must be i/n with 1 <= i <= n"; exit 1; }
 SUFFIX=$([ "$SN" -gt 1 ] && echo "-s$SI" || echo "")
-W=${PROVISO_AGENT_WORK:-$HOME/proviso-work/agent-replay${PROVISO_AGENT_MODEL:+-$PROVISO_AGENT_MODEL}$SUFFIX}
+STUDY=${PROVISO_AGENT_STUDY:-replay}   # replay (replay_tasks.py) or nocode (nocode_tasks.py): names the folders
+W=${PROVISO_AGENT_WORK:-$HOME/proviso-work/agent-$STUDY${PROVISO_AGENT_MODEL:+-$PROVISO_AGENT_MODEL}$SUFFIX}
 VENV=${PROVISO_AGENT_VENV:-$HOME/proviso-work/agent-venv}
 BUDGET=${PROVISO_AGENT_BUDGET_USD:-1.00}
 TOTAL=${PROVISO_AGENT_TOTAL_USD:-200}
@@ -34,7 +37,7 @@ REPS=${PROVISO_AGENT_REPS:-2}
 MODEL=${PROVISO_AGENT_MODEL:-sonnet}
 MSUF=$([ "$MODEL" = sonnet ] && echo "" || echo "-$MODEL")
 ARMS=baseline,impact-noreport
-OUTDIR="$REPO_DIR/research/agent/results-replay$MSUF$SUFFIX"
+OUTDIR="$REPO_DIR/research/agent/results-$STUDY$MSUF$SUFFIX"
 
 command -v claude >/dev/null || { echo "Claude Code CLI not found: npm install -g @anthropic-ai/claude-code"; exit 1; }
 HPY=${PROVISO_AGENT_PYTHON:-}
@@ -143,6 +146,7 @@ mkdir -p "$OUTDIR"
 cp "$W/results.jsonl" "$OUTDIR/"
 [ -f "$W/report.md" ] && cp "$W/report.md" "$OUTDIR/"
 cp "$SRC/cases.jsonl" "$OUTDIR/cases.jsonl" 2>/dev/null || true
+[ -d "$SRC/rejected" ] && (cd "$SRC/rejected" && for d in */; do printf '%s\t%s\n' "${d%/}" "$(head -c 300 "$d/reason.txt" | tr '\n' ' ')"; done) > "$OUTDIR/rejected.tsv" 2>/dev/null || true
 "$PY" research/agent/inspect_runs.py "$W" > "$OUTDIR/inspect.txt" 2>&1 || echo "== inspect_runs failed (run it by hand later)"
 python3 - "$OUTDIR/results.jsonl" <<'PYEOF'
 import json, sys

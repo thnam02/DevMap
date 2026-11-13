@@ -102,9 +102,14 @@ def main():
     if pairs:
         b = sum(1 for x, y in pairs if x["repaired"] and not y["repaired"])
         c = sum(1 for x, y in pairs if y["repaired"] and not x["repaired"])
-        lines += ["", f"Paired (case, repetition): {len(pairs)}", "",
-                  f"- Regression repaired only by baseline: {b}; only with Proviso: {c}; "
-                  f"McNemar exact p = {mcnemar_exact(b, c):.3g}",
+        bb = sum(1 for x, y in pairs if not x["any_p2p_broken"] and y["any_p2p_broken"])
+        cc = sum(1 for x, y in pairs if not y["any_p2p_broken"] and x["any_p2p_broken"])
+        lines += ["", f"Paired (case, repetition): {len(pairs)}", ""]
+        if any(t.get("start_broken") for t in tasks.values()):
+            lines.append(f"- Regression repaired only by baseline: {b}; only with Proviso: {c}; "
+                         f"McNemar exact p = {mcnemar_exact(b, c):.3g}")
+        lines += [f"- Finished with no PASS_TO_PASS test broken only by baseline: {bb}; only with Proviso: {cc}; "
+                  f"McNemar exact p = {mcnemar_exact(bb, cc):.3g}",
                   f"- Wall time, baseline vs Proviso: median {statistics.median(x['time'] for x, _ in pairs):.0f} s vs "
                   f"{statistics.median(y['time'] for _, y in pairs):.0f} s; "
                   + wilcoxon([x['time'] for x, _ in pairs], [y['time'] for _, y in pairs]),
