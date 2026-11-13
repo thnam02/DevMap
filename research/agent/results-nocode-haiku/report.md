@@ -6,14 +6,14 @@ Runs grouped by dc-engine commit:
 
 | commit | dirty | path | runs |
 |---|---|---|---:|
-| c2bf5f483020 | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 28 |
+| e7cdaff3d95a | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 28 |
 
 ## Per-arm summary
 
 | arm | runs | resolved | hidden checks | requests | tokens | tokens/request | time | read calls | dc-engine calls | contracts created | contract retries |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| baseline | 14 | 1 | 12% | 14.429 | 2525562 | 10977.566 | 823.2 | 7 | 0 | 0 | 0 |
-| impact-noreport | 14 | 0 | 4% | 14.857 | 2649505 | 10826.025 | 501.4 | 17 | 0 | 0 | 0 |
+| baseline | 14 | 7 | 71% | 34.429 | 9693024 | 16365.714 | 1821.1 | 21 | 0 | 0 | 0 |
+| impact-noreport | 14 | 8 | 77% | 32.786 | 8172708 | 15424.868 | 1433.0 | 27 | 0 | 0 | 0 |
 
 ## Tool result sizes
 
@@ -21,27 +21,27 @@ Size of the result text returned to the agent for each completed tool call (char
 
 ### baseline
 
-Total returned chars: **94157** (~23540 tokens).
+Total returned chars: **307331** (~76833 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Bash | 83445 | 20862 |
-| Grep | 6599 | 1650 |
-| Edit | 2460 | 615 |
-| Read | 1210 | 303 |
-| Write | 443 | 111 |
+| Bash | 261807 | 65452 |
+| Read | 32587 | 8147 |
+| Grep | 9109 | 2278 |
+| Edit | 3062 | 766 |
+| Write | 766 | 192 |
 
 ### impact-noreport
 
-Total returned chars: **101204** (~25301 tokens).
+Total returned chars: **323089** (~80773 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Bash | 62988 | 15747 |
-| Read | 26388 | 6597 |
-| Grep | 6913 | 1729 |
-| Edit | 4458 | 1115 |
-| Write | 457 | 115 |
+| Bash | 225857 | 56465 |
+| Read | 62980 | 15745 |
+| Grep | 27946 | 6987 |
+| Edit | 5735 | 1434 |
+| Write | 571 | 143 |
 
 ### Layer: largest dc-engine responses
 
@@ -53,39 +53,39 @@ A request is a distinct `model_call_id` when the stream has one, otherwise an as
 
 | task | arm | rep | requests | tokens | tokens/request |
 |---|---|---:|---:|---:|---:|
-| mwaskom__seaborn-2443 | baseline | 1 | 53 | 895294 | 16892.340 |
-| mwaskom__seaborn-2443 | impact-noreport | 1 | 68 | 1140266.000 | 16768.618 |
-| mwaskom__seaborn-2643 | baseline | 1 | 41 | 543371 | 13252.951 |
-| mwaskom__seaborn-2643 | impact-noreport | 1 | 15 | 157641 | 10509.400 |
-| mwaskom__seaborn-2853 | impact-noreport | 1 | 7 | 82629 | 11804.143 |
-| mwaskom__seaborn-2853 | baseline | 1 | 15 | 136733 | 9115.533 |
-| mwaskom__seaborn-2866 | baseline | 1 | 2 | 32433 | 16216.500 |
-| mwaskom__seaborn-2866 | impact-noreport | 1 | 2 | 33848 | 16924 |
-| mwaskom__seaborn-3066 | baseline | 1 | 6 | 46654 | 7775.667 |
-| mwaskom__seaborn-3066 | impact-noreport | 1 | 6 | 46480 | 7746.667 |
-| mwaskom__seaborn-3069 | baseline | 1 | 14 | 164959 | 11782.786 |
-| mwaskom__seaborn-3069 | impact-noreport | 1 | 9 | 65673 | 7297 |
-| mwaskom__seaborn-3087 | baseline | 1 | 6 | 65120 | 10853.333 |
-| mwaskom__seaborn-3087 | impact-noreport | 1 | 8 | 65742 | 8217.750 |
-| pydata__xarray-4248 | baseline | 1 | 5 | 41986 | 8397.200 |
-| pydata__xarray-4248 | impact-noreport | 1 | 12 | 139208 | 11600.667 |
-| pydata__xarray-5126 | baseline | 1 | 4 | 40172 | 10043 |
-| pydata__xarray-5126 | impact-noreport | 1 | 4 | 40660 | 10165 |
-| pydata__xarray-7052 | impact-noreport | 1 | 5 | 51030 | 10206 |
-| pydata__xarray-7052 | baseline | 1 | 7 | 76732 | 10961.714 |
-| pydata__xarray-7147 | impact-noreport | 1 | 6 | 61493 | 10248.833 |
-| pydata__xarray-7147 | baseline | 1 | 7 | 60598 | 8656.857 |
-| pydata__xarray-7739 | baseline | 1 | 7 | 65616 | 9373.714 |
-| pydata__xarray-7739 | impact-noreport | 1 | 8 | 63081 | 7885.125 |
-| pylint-dev__pylint-5372 | impact-noreport | 1 | 12 | 112602 | 9383.500 |
-| pylint-dev__pylint-5372 | baseline | 1 | 4 | 40800 | 10200 |
-| pylint-dev__pylint-5610 | impact-noreport | 1 | 46 | 589152 | 12807.652 |
-| pylint-dev__pylint-5610 | baseline | 1 | 31 | 315094 | 10164.323 |
+| mwaskom__seaborn-2443 | baseline | 1 | 57 | 1217295.000 | 21356.053 |
+| mwaskom__seaborn-2443 | impact-noreport | 1 | 56 | 1183469.000 | 21133.375 |
+| mwaskom__seaborn-2643 | baseline | 1 | 40 | 667848 | 16696.200 |
+| mwaskom__seaborn-2643 | impact-noreport | 1 | 46 | 677901 | 14736.978 |
+| mwaskom__seaborn-2853 | impact-noreport | 1 | 14 | 185529 | 13252.071 |
+| mwaskom__seaborn-2853 | baseline | 1 | 13 | 135899 | 10453.769 |
+| mwaskom__seaborn-2866 | baseline | 1 | 89 | 2362366.000 | 26543.438 |
+| mwaskom__seaborn-2866 | impact-noreport | 1 | 58 | 1313891.000 | 22653.293 |
+| mwaskom__seaborn-3066 | baseline | 1 | 16 | 238530 | 14908.125 |
+| mwaskom__seaborn-3066 | impact-noreport | 1 | 13 | 206815 | 15908.846 |
+| mwaskom__seaborn-3069 | baseline | 1 | 27 | 430135 | 15930.926 |
+| mwaskom__seaborn-3069 | impact-noreport | 1 | 35 | 476646 | 13618.457 |
+| mwaskom__seaborn-3087 | baseline | 1 | 20 | 232329 | 11616.450 |
+| mwaskom__seaborn-3087 | impact-noreport | 1 | 27 | 424561 | 15724.481 |
+| pydata__xarray-4248 | baseline | 1 | 10 | 112995 | 11299.500 |
+| pydata__xarray-4248 | impact-noreport | 1 | 10 | 90473 | 9047.300 |
+| pydata__xarray-5126 | baseline | 1 | 36 | 535300 | 14869.444 |
+| pydata__xarray-5126 | impact-noreport | 1 | 26 | 325349 | 12513.423 |
+| pydata__xarray-7052 | impact-noreport | 1 | 90 | 2222323.000 | 24692.478 |
+| pydata__xarray-7052 | baseline | 1 | 101 | 2651148.000 | 26248.990 |
+| pydata__xarray-7147 | impact-noreport | 1 | 19 | 287797 | 15147.211 |
+| pydata__xarray-7147 | baseline | 1 | 10 | 131531 | 13153.100 |
+| pydata__xarray-7739 | baseline | 1 | 28 | 438437 | 15658.464 |
+| pydata__xarray-7739 | impact-noreport | 1 | 23 | 328775 | 14294.565 |
+| pylint-dev__pylint-5372 | impact-noreport | 1 | 28 | 248039 | 8858.536 |
+| pylint-dev__pylint-5372 | baseline | 1 | 20 | 333712 | 16685.600 |
+| pylint-dev__pylint-5610 | impact-noreport | 1 | 14 | 201140 | 14367.143 |
+| pylint-dev__pylint-5610 | baseline | 1 | 15 | 205499 | 13699.933 |
 
 | arm | mean requests | mean tokens | mean tokens/request |
 |---|---:|---:|---:|
-| baseline | 14.429 | 180397.286 | 10977.566 |
-| impact-noreport | 14.857 | 189250.357 | 10826.025 |
+| baseline | 34.429 | 692358.857 | 16365.714 |
+| impact-noreport | 32.786 | 583764.857 | 15424.868 |
 
 ## Tool surface (static)
 
@@ -443,20 +443,20 @@ Resolved rate is the fraction of runs where every hidden test passed. Other per-
 
 | task | resolved B | resolved L | regr B | regr L | tokens B | tokens L | cost B | cost L | time B | time L |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| mwaskom__seaborn-2443 | 0 | — | 0 | — | 895294 | — | $0.0229 | — | 261.851 | — |
-| mwaskom__seaborn-2643 | 0 | — | 0 | — | 543371 | — | $0.0175 | — | 379.144 | — |
-| mwaskom__seaborn-2853 | 1 | — | 0 | — | 136733 | — | $0.0043 | — | 35.262 | — |
-| mwaskom__seaborn-2866 | 0 | — | 0 | — | 32433 | — | $0.0029 | — | 5.183 | — |
-| mwaskom__seaborn-3066 | 0 | — | 0 | — | 46654 | — | $0.0023 | — | 7.993 | — |
-| mwaskom__seaborn-3069 | 0 | — | 0 | — | 164959 | — | $0.0045 | — | 17.029 | — |
-| mwaskom__seaborn-3087 | 0 | — | 0 | — | 65120 | — | $0.0024 | — | 9.685 | — |
-| pydata__xarray-4248 | 0 | — | 0 | — | 41986 | — | $0.0020 | — | 15.615 | — |
-| pydata__xarray-5126 | 0 | — | 0 | — | 40172 | — | $0.0016 | — | 6.269 | — |
-| pydata__xarray-7052 | 0 | — | 0 | — | 76732 | — | $0.0032 | — | 11.716 | — |
-| pydata__xarray-7147 | 0 | — | 0 | — | 60598 | — | $0.0020 | — | 6.724 | — |
-| pydata__xarray-7739 | 0 | — | 0 | — | 65616 | — | $0.0026 | — | 10.456 | — |
-| pylint-dev__pylint-5372 | 0 | — | 0 | — | 40800 | — | $0.0017 | — | 6.773 | — |
-| pylint-dev__pylint-5610 | 0 | — | 0 | — | 315094 | — | $0.0093 | — | 49.534 | — |
+| mwaskom__seaborn-2443 | 0 | — | 0 | — | 1217295.000 | — | $0.0354 | — | 224.986 | — |
+| mwaskom__seaborn-2643 | 0 | — | 0 | — | 667848 | — | $0.0181 | — | 269.790 | — |
+| mwaskom__seaborn-2853 | 1 | — | 0 | — | 135899 | — | $0.0040 | — | 24.548 | — |
+| mwaskom__seaborn-2866 | 1 | — | 0 | — | 2362366.000 | — | $0.0473 | — | 509.739 | — |
+| mwaskom__seaborn-3066 | 1 | — | 0 | — | 238530 | — | $0.0065 | — | 29.439 | — |
+| mwaskom__seaborn-3069 | 1 | — | 0 | — | 430135 | — | $0.0122 | — | 118.040 | — |
+| mwaskom__seaborn-3087 | 1 | — | 0 | — | 232329 | — | $0.0068 | — | 29.974 | — |
+| pydata__xarray-4248 | 1 | — | 0 | — | 112995 | — | $0.0038 | — | 18.059 | — |
+| pydata__xarray-5126 | 0 | — | 0 | — | 535300 | — | $0.0163 | — | 79.613 | — |
+| pydata__xarray-7052 | 0 | — | 0 | — | 2651148.000 | — | $0.0562 | — | 322.643 | — |
+| pydata__xarray-7147 | 1 | — | 0 | — | 131531 | — | $0.0037 | — | 15.443 | — |
+| pydata__xarray-7739 | 0 | — | 0 | — | 438437 | — | $0.0112 | — | 97.608 | — |
+| pylint-dev__pylint-5372 | 0 | — | 0 | — | 333712 | — | $0.0076 | — | 49.027 | — |
+| pylint-dev__pylint-5610 | 0 | — | 0 | — | 205499 | — | $0.0066 | — | 32.153 | — |
 
 ## Paired difference (impact-noreport − baseline) with 95% bootstrap CI
 
@@ -464,17 +464,17 @@ Resamples: 10000 with `random.choices`, seed 0. Each observation is one task (me
 
 | metric | n | mean(L−B) | 95% CI low | 95% CI high |
 |---|---:|---:|---:|---:|
-| resolved rate | 14 | -0.0714 | -0.2143 | 0.0000 |
-| hidden checks passed | 14 | -0.0810 | -0.2381 | 0.0286 |
+| resolved rate | 14 | 0.0714 | 0.0000 | 0.2143 |
+| hidden checks passed | 14 | 0.0607 | -0.0024 | 0.1571 |
 | regressions | 14 | 0.0000 | 0.0000 | 0.0000 |
-| tokens (all-in, incl. cache) | 14 | 8853.0714 | -71804.6429 | 84008.0000 |
-| requests | 14 | 0.4286 | -4.9286 | 5.2857 |
-| tokens/request | 14 | -151.5403 | -1314.2044 | 949.4769 |
-| cost (USD) | 14 | -0.0000 | -0.0022 | 0.0018 |
-| wall time (s) | 14 | -22.9849 | -76.2718 | 7.3686 |
-| read chars | 14 | 1798.4286 | 116.1429 | 4474.8571 |
-| read calls | 14 | 0.7143 | 0.0000 | 1.4286 |
+| tokens (all-in, incl. cache) | 14 | -108594.0000 | -286344.7143 | 19002.9286 |
+| requests | 14 | -1.6429 | -7.5714 | 3.0714 |
+| tokens/request | 14 | -940.8454 | -2489.7979 | 538.7729 |
+| cost (USD) | 14 | -0.0006 | -0.0031 | 0.0017 |
+| wall time (s) | 14 | -27.7154 | -92.4820 | 30.0020 |
+| read chars | 14 | 2170.9286 | -460.7857 | 5172.3571 |
+| read calls | 14 | 0.4286 | -1.0714 | 1.7857 |
 | dc-engine calls | 14 | 0.0000 | 0.0000 | 0.0000 |
 | contracts created | 14 | 0.0000 | 0.0000 | 0.0000 |
 | contract retries | 14 | 0.0000 | 0.0000 | 0.0000 |
-| turns | 14 | 0.4286 | -2.2143 | 3.0714 |
+| turns | 14 | -1.2143 | -4.5714 | 1.4286 |
