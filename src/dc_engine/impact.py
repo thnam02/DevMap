@@ -1826,7 +1826,10 @@ def run_selected(root: str, python: str, targets: list[str] | None = None, maxfa
     if not res or rc in (2, 3, 4) and not any(res.values()):
         # pytest ran none of the tests: it was interrupted, could not load (a broken conftest, plugin or pytest
         # itself) or was given a path that does not exist. Never report that as "no new failures".
-        tail = "\n".join(stdout.strip().splitlines()[-30:])
+        lines = stdout.strip().splitlines()
+        errs = [l for l in lines if re.match(r"\s*(E\s|ERROR|error:|ImportError|ModuleNotFoundError|INTERNALERROR)",
+                                            l)][:15]
+        tail = "\n".join((errs + ["..."] if errs else []) + lines[-30:])
         _log_run(root, 0, n_scope, secs, ["<pytest did not run>"], why)
         return (f"[Proviso] pytest did not run the tests in {where} (exit code {rc}); no test result was produced, "
                 "so nothing is known about whether your change broke anything. pytest's output:\n" + tail)

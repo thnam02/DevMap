@@ -11,7 +11,11 @@ Python 3.12 (seaborn, xarray, pylint, sphinx, pytest; not django, scikit-learn, 
 dataset order, kept if it passes the reference-fix check (swe_tasks.gold_check: the instance's own feature patch
 passes every FAIL2PASS test here; PASS2PASS tests failing with it are environment failures and are dropped; more
 than 10% failing rejects the instance). An instance whose environment cannot be built here, or whose tests record
-nothing, is rejected too. Rejected instances go to rejected/ with the reason, decided before any run.
+nothing, is rejected too, and so is one whose hidden tests already pass on the unchanged base (graded as a run is).
+Rejected instances go to rejected/ with the reason, decided before any run.
+
+Prompt: an instruction to implement the feature the documentation describes, then NoCode-bench's problem_statement
+(the documentation diff), the same for both arms and every model.
 
 Environments: one per (repository, version), Python 3.12, the project's dependencies as of 60 days after the newest
 base commit of that version's tasks (as swe_probe.build_env does for SWE-bench), shared with the SWE-bench
@@ -36,6 +40,10 @@ sys.path.insert(0, HERE)
 import swe_tasks as S  # noqa: E402
 from swe_tasks import P  # noqa: E402
 
+# NoCode-bench's problem_statement is the documentation diff alone; without a request, Haiku asked what to do in 13 of
+# 28 pilot runs. The same instruction for both arms and every model:
+INSTRUCTION = ("The documentation changes below describe a new feature of this repository. Implement the feature in "
+               "the code so that it behaves as the changed documentation says.\n\n")
 REPOS = ["mwaskom__seaborn", "pydata__xarray", "pylint-dev__pylint", "sphinx-doc__sphinx", "pytest-dev__pytest"]
 
 
@@ -110,6 +118,20 @@ def ensure_env(repo: str, version: str, rows: list[dict]) -> str:
     return py
 
 
+def finish(x: dict, inst: dict, task: dict, path: str, eval_dir: str) -> str | None:
+    """The instruction in the prompt, then the base check: graded exactly as a run is, the unchanged base must not
+    already pass the hidden tests (pilot: pylint-5610 counted as resolved with an empty diff). Returns why the task is
+    rejected, or None."""
+    import replay_tasks as RT
+    task["prompt"] = INSTRUCTION + inst["problem_statement"]
+    st = RT.start_check({"x": x, "id": x["instance"]}, inst, {**task, "start_patch": ""}, eval_dir)
+    if st["resolved"]:
+        return f"the hidden tests already pass before any change (hidden {st['hidden']}; grading log {st['log']})"
+    task.update(base_checked=True, base_hidden=st["hidden"], base_regression_failed=st["regression_failed"])
+    json.dump(task, open(path, "w"), indent=1)
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("eval_dir")
@@ -131,8 +153,22 @@ def main():
     for r in rows:
         iid = r["instance_id"]
         repo, version = r["repo"].replace("/", "__"), str(r["version"])
-        if os.path.isfile(os.path.join(eval_dir, "tasks", iid + ".json")):
-            kept += 1
+        path = os.path.join(eval_dir, "tasks", iid + ".json")
+        if os.path.isfile(path):
+            task = json.load(open(path))
+            if task.get("base_checked"):
+                kept += 1
+                continue
+            # built before the instruction and the base check: finish it below without recording again
+            inst, x = as_instance(r), {"instance": iid, "repo": repo, "version": version, "core": True}
+            print(f"- {iid}: instruction and base check", flush=True)
+            why = finish(x, inst, task, path, eval_dir)
+            if why:
+                S.reject(eval_dir, iid, why)
+                rejected.append(iid)
+                print(f"  REJECTED: {why}"[:400], flush=True)
+            else:
+                kept += 1
             continue
         if os.path.isfile(os.path.join(eval_dir, "rejected", iid, "reason.txt")):
             rejected.append(iid)
@@ -153,6 +189,8 @@ def main():
             if os.path.isfile(os.path.join(gold_work, "grading.log")):
                 shutil.copyfile(os.path.join(gold_work, "grading.log"), log)
             shutil.rmtree(gold_work, ignore_errors=True)
+            if not why:
+                why = finish(x, inst, json.load(open(path)), path, eval_dir)
         except Exception as e:  # noqa: BLE001
             msg = repr(e)
             if ("environment" in msg and "failed" in msg) or "recorded no tests" in msg:
