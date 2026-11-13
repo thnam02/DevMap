@@ -35,8 +35,13 @@ def commands_and_results(stream):
     """Bash commands the agent issued, and the text of every tool result it received."""
     cmds, results = [], []
     for ev in stream_events(stream):
-        msg = ev.get("message") or {}
-        for c in msg.get("content") or []:
+        if not isinstance(ev, dict):
+            continue
+        msg = ev.get("message")
+        if not isinstance(msg, dict):  # some events carry a plain-text message
+            continue
+        content = msg.get("content")
+        for c in content if isinstance(content, list) else []:
             if not isinstance(c, dict):
                 continue
             if c.get("type") == "tool_use" and c.get("name") in ("Bash", "bash"):
