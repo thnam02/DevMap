@@ -367,6 +367,7 @@ def working_tree_stats(repo: str) -> dict[str, Any]:
     if r.returncode == 0:
         names = [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
     untracked = git(["ls-files", "--others", "--exclude-standard"], cwd=repo, check=False)
+    new_lines = 0
     if untracked.returncode == 0:
         for ln in untracked.stdout.splitlines():
             s = ln.strip()
@@ -374,6 +375,14 @@ def working_tree_stats(repo: str) -> dict[str, Any]:
                 continue  # byte code of a test run (the agent's or an earlier grading's), not a change
             if s and s not in names:
                 names.append(s)
+                # a new file's lines count as added, as git diff counts them for a tracked file
+                try:
+                    with open(os.path.join(repo, s), "rb") as fh:
+                        data = fh.read(2_000_000)
+                    if b"\0" not in data:
+                        new_lines += data.count(b"\n") + (1 if data and not data.endswith(b"\n") else 0)
+                except OSError:
+                    pass
     modified_tests = any(is_test_path(n) for n in names)
     diff_size = 0
     numstat = git(["diff", "--numstat", "HEAD"], cwd=repo, check=False)
@@ -389,6 +398,7 @@ def working_tree_stats(repo: str) -> dict[str, Any]:
                 diff_size += int(a) + int(d)
             except ValueError:
                 continue
+    diff_size += new_lines
     return {
         "modified_tests": modified_tests,
         "diff_size": diff_size,

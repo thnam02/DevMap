@@ -1672,9 +1672,10 @@ def _pytest(root: str, python: str, args: list[str], argfile_name: str) -> tuple
            "-rN", "--continue-on-collection-errors"]
     env = dict(os.environ)
     env.pop("DC_SELECT", None)
-    if len(args) > 200:
-        # a long selection goes in a file the outcome plugin reads, with pytest given only the test files: pytest
-        # before 8.2 has no @argfile (it took "@file" for a path, ran nothing and exited 4)
+    if any("::" in a for a in args):
+        # selected test ids go in a file the outcome plugin reads, with pytest given only the test files. pytest
+        # before 8.2 has no @argfile (it took "@file" for a path, ran nothing and exited 4), and one id pytest cannot
+        # find (a parametrized id the agent's edit renamed) stops pytest from running any of them (exit 4)
         argfile = os.path.join(d, argfile_name)
         ids = [a for a in args if not a.startswith("-")]
         with open(argfile, "w", encoding="utf-8") as fh:

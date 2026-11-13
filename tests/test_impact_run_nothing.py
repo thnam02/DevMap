@@ -55,6 +55,12 @@ class RunNothing(unittest.TestCase):
         self.assertTrue(all(res.values()))
         self.assertNotIn("tests/test_p.py::test_p[299]", res)
 
+    def test_an_id_that_no_longer_exists(self):
+        """A selected id the agent's edit renamed (seaborn-2866: parametrize ids changed) must not stop the others."""
+        ids = ["tests/test_a.py::test_a", "tests/test_a.py::test_gone[orient0-data_type0]"]
+        res, out = I._pytest(self.d, sys.executable, ids, "impact-args.txt")
+        self.assertEqual(res, {"tests/test_a.py::test_a": True}, out[-500:])
+
 
 if __name__ == "__main__":
     unittest.main()
