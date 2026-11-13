@@ -1505,21 +1505,47 @@ def _broad_targets(seg: str) -> list[str] | None:
         # directories and whole test files; explicit test ids (file::test) are the agent's own choice
         return "::" not in t and not t.startswith(("2>", ">", "|")) and t != "2>&1"
 
-    if "pytest" in " ".join(toks[:4]):
-        i = next(i for i, t in enumerate(toks) if "pytest" in t)
+    # the program the segment runs: past VAR=value assignments and wrappers (timeout 600, env, uv run, ...). It must be
+    # pytest itself (pytest, .../bin/pytest, python -m pytest); a path that merely contains "pytest" is not
+    # (`git -C .../pytest diff --stat` once gave the targets "diff" and "status")
+    k = 0
+    while k < len(toks):
+        t = toks[k]
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", t) or t in ("env", "time", "nice", "caffeinate", "command"):
+            k += 1
+        elif t in ("timeout", "gtimeout") and k + 1 < len(toks):
+            k += 2
+        elif t in ("uv", "poetry", "pdm", "hatch", "conda") and k + 1 < len(toks) and toks[k + 1] == "run":
+            k += 2
+        else:
+            break
+    start = None
+    if k < len(toks):
+        prog = os.path.basename(toks[k])
+        if prog in ("pytest", "py.test"):
+            start = k
+        elif (prog.startswith("python") and k + 2 < len(toks) and toks[k + 1] == "-m"
+              and toks[k + 2] in ("pytest", "py.test")):
+            start = k + 1
+    if start is not None:
+        i = start + 1 if toks[start] == "-m" else start
         rest = toks[i + 1:]
         targets, skip = [], False
         for t in rest:
             if skip:
                 skip = False
                 continue
+            if t in (">", ">>", "<", "&>", "|", "|&") or t.startswith((">", "1>", "2>", "&>", "<", "|")):
+                break  # a redirection or pipe: what follows is not a test target
+            if any(c in t for c in "$`*?{}~"):
+                return None  # left for the shell to expand: not rewritten, the agent's command runs as written
             if t in ("-k", "--deselect", "-m"):
                 return None  # filtered runs are already narrow
             if t in ("-p", "-c", "--ignore", "-n", "--tb", "--maxfail", "-o", "--junitxml", "-W", "--rootdir",
                      "--durations", "--timeout"):
                 skip = True
                 continue
-            if t.startswith("-") or t.startswith(("2>", ">", "|")) or t == "2>&1":
+            if t.startswith("-"):
                 continue
             targets.append(t)
         return targets if all(dir_like(t) for t in targets) else None
@@ -2079,6 +2105,14 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     root = a.root or _git(os.getcwd(), "rev-parse", "--show-toplevel").strip() or os.getcwd()
     rel = [os.path.relpath(os.path.join(os.getcwd(), t), root) for t in a.targets]
+    if any(r.startswith("..") or not os.path.exists(os.path.join(root, r)) for r in rel):
+        # a target outside the project, or one that does not exist here: Proviso steps aside and pytest runs the
+        # agent's targets as written, so the agent sees pytest's own answer
+        cmd = [a.python or sys.executable, "-m", "pytest", *a.targets]
+        if a.maxfail:
+            cmd.insert(3, f"--maxfail={a.maxfail}")
+        sys.stdout.flush()
+        os.execv(cmd[0], cmd)
     rel = [t for t in rel if t != "."]
     text = run_selected(root, a.python, rel, a.maxfail)
     print(text)

@@ -43,7 +43,7 @@ from swe_tasks import E, P  # noqa: E402
 
 REPOS = ["sphinx-doc__sphinx", "pydata__xarray", "pylint-dev__pylint", "mwaskom__seaborn", "pytest-dev__pytest"]
 NOTE = ("\n\n---\nAn earlier attempt at this issue has already been made in this repository: its changes are in the "
-        "working tree, uncommitted (`git diff` shows them). Continue from there and finish the task.")
+        "working tree, uncommitted (`git status` and `git diff` show them). Continue from there and finish the task.")
 
 
 def candidates() -> list[dict]:
