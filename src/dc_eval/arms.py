@@ -69,6 +69,19 @@ ARM_CONFIG: dict[str, dict[str, Any]] = {
         "mcp": False, "hooks": False, "tools": None, "contract_policy": None, "hook_mode": "proviso",
         "proviso": {"context": False, "trajectory": False, "tests": False, "impact": True, "ripple": True},
     },
+    # The check when the agent finishes (Stop hook): new failures go back to the agent, at most twice. The agent's own
+    # test commands are left alone. gate-full runs the whole suite (what a careful team does); gate-proviso runs only
+    # the tests the change can affect, anywhere in the project.
+    "gate-full": {
+        "mcp": False, "hooks": False, "tools": None, "contract_policy": None, "hook_mode": "proviso",
+        "proviso": {"context": False, "trajectory": False, "tests": False, "impact": False, "gate": "full",
+                    "report": False},
+    },
+    "gate-proviso": {
+        "mcp": False, "hooks": False, "tools": None, "contract_policy": None, "hook_mode": "proviso",
+        "proviso": {"context": False, "trajectory": False, "tests": False, "impact": False, "gate": "proviso",
+                    "report": False},
+    },
     "intercept-only": {
         "mcp": False, "hooks": False, "tools": None, "contract_policy": None, "hook_mode": "proviso",
         "proviso": {"context": False, "trajectory": False, "tests": False, "impact": True, "ripple": False},
@@ -237,6 +250,8 @@ def proviso_settings(python: str | None = None, probe_python: str | None = None,
         hooks["Stop"] = [group("hook proviso-verify", timeout=600)]
     if flags and flags.get("impact"):
         hooks["PreToolUse"] = [group("hook proviso-pretool", "Bash", timeout=60)]
+    if flags and flags.get("gate"):
+        hooks["Stop"] = [group("hook proviso-gate", timeout=3600)]
     return {"hooks": hooks}
 
 
@@ -260,7 +275,7 @@ def write_proviso_files(
         if not brief or not os.path.isfile(brief):
             raise FileNotFoundError(f"arm needs a brief file and none was found: {brief}")
         shutil.copyfile(brief, os.path.join(folder, "brief.md"))
-    if flags.get("impact") or flags.get("ripple"):
+    if flags.get("impact") or flags.get("ripple") or flags.get("gate"):
         if not assets or not os.path.isdir(assets):
             raise FileNotFoundError(f"arm needs change-impact assets and none were found: {assets}")
         for name in os.listdir(assets):

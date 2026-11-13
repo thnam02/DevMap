@@ -16,6 +16,8 @@
 #   PROVISO_AGENT_SHARD=1/2 ... and PROVISO_AGENT_SHARD=2/2 ... in two terminals: two runs at a time
 #   PROVISO_AGENT_DRY=1 ... prints the plan and calls no model (free)
 #   PROVISO_AGENT_MODEL=haiku ... another model (its own work folder and results folder)
+#   PROVISO_AGENT_ARMS=baseline,gate-full,gate-proviso PROVISO_AGENT_STUDY=gate ... the check when the agent finishes:
+#   no check / the whole suite / Proviso's affected tests, new failures sent back to the agent (folders agent-gate)
 #   PROVISO_AGENT_STUDY=nocode PROVISO_REPLAY_FROM=<nocode_tasks.py dir> ... the NoCode-bench feature tasks (no start
 #   patch; same arms, outcomes and folders named agent-nocode / results-nocode)
 #   PROVISO_AGENT_CASES=20 PROVISO_AGENT_REPS=1 PROVISO_AGENT_TOTAL_USD=15 ... the early check: 20 cases spread over the
@@ -36,7 +38,7 @@ TOTAL=${PROVISO_AGENT_TOTAL_USD:-200}
 REPS=${PROVISO_AGENT_REPS:-2}
 MODEL=${PROVISO_AGENT_MODEL:-sonnet}
 MSUF=$([ "$MODEL" = sonnet ] && echo "" || echo "-$MODEL")
-ARMS=baseline,impact-noreport
+ARMS=${PROVISO_AGENT_ARMS:-baseline,impact-noreport}   # the finish-check study: baseline,gate-full,gate-proviso
 OUTDIR="$REPO_DIR/research/agent/results-$STUDY$MSUF$SUFFIX"
 
 command -v claude >/dev/null || { echo "Claude Code CLI not found: npm install -g @anthropic-ai/claude-code"; exit 1; }
@@ -87,7 +89,8 @@ for t in $ALL; do
 done
 NT=$(ls "$W"/tasks/*.json | wc -l | tr -d ' ')
 LIMIT=$(python3 -c "import sys; print(f'{float(sys.argv[1]) / int(sys.argv[2]):.2f}')" "$TOTAL" "$SN")
-echo "== shard $SHARD: $NT cases x 2 arms x $REPS reps = $(( NT * 2 * REPS )) runs; at most \$$BUDGET each; this shard stops at \$$LIMIT"
+NA=$(echo "$ARMS" | tr ',' '\n' | wc -l | tr -d ' ')
+echo "== shard $SHARD: $NT cases x $NA arms ($ARMS) x $REPS reps = $(( NT * NA * REPS )) runs; at most \$$BUDGET each; this shard stops at \$$LIMIT"
 
 for t in "$W"/tasks/*.json; do
   py=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("python",""))' "$t")

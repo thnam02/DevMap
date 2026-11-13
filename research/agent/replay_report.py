@@ -15,7 +15,6 @@ import math
 import os
 import statistics
 
-ARMS = ("baseline", "impact-noreport")
 
 
 def load(tasks_dir: str, results: list[str]):
@@ -42,8 +41,11 @@ def outcome(r: dict, t: dict) -> dict | None:
     any_broken = (r.get("regressions") or 0) > 0
     return {"repaired": not still, "still_broken": len(still), "any_p2p_broken": any_broken,
             # dc_eval's "resolved" is the hidden tests alone; SWE-bench also requires every PASS_TO_PASS test to pass
-            "resolved": bool(r.get("resolved")) and not any_broken, "time": r.get("wall_time_s") or 0.0, "cost": r.get("cost_usd") or 0.0,
-            "turns": r.get("turns") or 0}
+            "resolved": bool(r.get("resolved")) and not any_broken, "time": r.get("wall_time_s") or 0.0,
+            "cost": r.get("cost_usd") or 0.0, "turns": r.get("turns") or 0,
+            # the check when the agent finishes (gate arms): runs, times it sent failures back, seconds spent
+            "gate_runs": r.get("proviso_gate_runs") or 0, "gate_blocks": r.get("proviso_gate_blocks") or 0,
+            "gate_secs": r.get("proviso_gate_secs") or 0.0}
 
 
 def mcnemar_exact(b: int, c: int) -> float:
@@ -66,6 +68,32 @@ def wilcoxon(xs: list[float], ys: list[float]) -> str:
         return "scipy not installed"
 
 
+def compare(lines: list[str], per: dict, a: str, b: str, with_repair: bool):
+    pairs = [(v[a], v[b]) for v in per.values() if a in v and b in v]
+    if not pairs:
+        return
+    rb = sum(1 for x, y in pairs if x["repaired"] and not y["repaired"])
+    rc = sum(1 for x, y in pairs if y["repaired"] and not x["repaired"])
+    cb = sum(1 for x, y in pairs if not x["any_p2p_broken"] and y["any_p2p_broken"])
+    cc = sum(1 for x, y in pairs if not y["any_p2p_broken"] and x["any_p2p_broken"])
+    lines += ["", f"### {a} vs {b} (paired runs: {len(pairs)})", ""]
+    if with_repair:
+        lines.append(f"- Regression repaired only by {a}: {rb}; only by {b}: {rc}; McNemar exact p = "
+                     f"{mcnemar_exact(rb, rc):.3g}")
+    lines += [f"- Finished with no PASS_TO_PASS test broken only with {a}: {cb}; only with {b}: {cc}; McNemar exact "
+              f"p = {mcnemar_exact(cb, cc):.3g}",
+              f"- Wall time: median {statistics.median(x['time'] for x, _ in pairs):.0f} s vs "
+              f"{statistics.median(y['time'] for _, y in pairs):.0f} s; "
+              + wilcoxon([x['time'] for x, _ in pairs], [y['time'] for _, y in pairs]),
+              f"- Cost: ${sum(x['cost'] for x, _ in pairs):.2f} vs ${sum(y['cost'] for _, y in pairs):.2f}; "
+              + wilcoxon([x['cost'] for x, _ in pairs], [y['cost'] for _, y in pairs])]
+    if any(x["gate_runs"] for x, _ in pairs) and any(y["gate_runs"] for _, y in pairs):
+        lines.append(f"- Time in the finish check: median {statistics.median(x['gate_secs'] for x, _ in pairs):.0f} s "
+                     f"vs {statistics.median(y['gate_secs'] for _, y in pairs):.0f} s; total "
+                     f"{sum(x['gate_secs'] for x, _ in pairs):.0f} s vs {sum(y['gate_secs'] for _, y in pairs):.0f} s; "
+                     + wilcoxon([x['gate_secs'] for x, _ in pairs], [y['gate_secs'] for _, y in pairs]))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("tasks_dir")
@@ -73,11 +101,11 @@ def main():
     ap.add_argument("--out")
     a = ap.parse_args()
     tasks, rows = load(a.tasks_dir, a.results)
-    out = {arm: [] for arm in ARMS}
+    out = collections.defaultdict(list)
     per = collections.defaultdict(dict)
     errors = collections.Counter()
     for (task, arm, rep), r in rows.items():
-        if task not in tasks or arm not in ARMS:
+        if task not in tasks:
             continue
         o = outcome(r, tasks[task])
         if o is None:
@@ -85,42 +113,33 @@ def main():
             continue
         out[arm].append(o)
         per[(task, rep)][arm] = o
-    lines = ["# Replay study", "", f"Cases with tasks: {len(tasks)}; runs counted: "
-             f"{sum(len(v) for v in out.values())}; runs with errors (left out): {dict(errors) or 0}", "",
-             "| Arm | Runs | Regression repaired | Any PASS_TO_PASS broken at the end | Resolved (SWE-bench) | Median time | "
-             "Mean time | Cost |", "|---|---|---|---|---|---|---|---|"]
-    for arm in ARMS:
+    arms = sorted(out, key=lambda x: (x != "baseline", x))
+    with_repair = any(t.get("start_broken") for t in tasks.values())
+    lines = ["# Agent study", "", f"Tasks: {len(tasks)}; runs counted: {sum(len(v) for v in out.values())}; runs with "
+             f"errors (left out): {dict(errors) or 0}", "",
+             "| Arm | Runs | Regression repaired | Any PASS_TO_PASS broken at the end | Resolved (SWE-bench) | "
+             "Median time | Mean time | Cost | Finish checks (sent back) | Check time (median / total) |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
+    for arm in arms:
         o = out[arm]
-        if not o:
-            continue
         n = len(o)
-        lines.append(f"| {arm} | {n} | {sum(x['repaired'] for x in o)} ({100 * sum(x['repaired'] for x in o) / n:.1f}%)"
-                     f" | {sum(x['any_p2p_broken'] for x in o)} | {sum(x['resolved'] for x in o)} | "
+        rep = f"{sum(x['repaired'] for x in o)} ({100 * sum(x['repaired'] for x in o) / n:.1f}%)" if with_repair else "-"
+        gate = (f"{sum(x['gate_runs'] for x in o)} ({sum(x['gate_blocks'] for x in o)})"
+                if any(x["gate_runs"] for x in o) else "-")
+        gsecs = (f"{statistics.median(x['gate_secs'] for x in o):.0f} s / {sum(x['gate_secs'] for x in o):.0f} s"
+                 if any(x["gate_runs"] for x in o) else "-")
+        lines.append(f"| {arm} | {n} | {rep} | {sum(x['any_p2p_broken'] for x in o)} | {sum(x['resolved'] for x in o)} | "
                      f"{statistics.median(x['time'] for x in o):.0f} s | {statistics.mean(x['time'] for x in o):.0f} s | "
-                     f"${sum(x['cost'] for x in o):.2f} |")
-    pairs = [(v["baseline"], v["impact-noreport"]) for v in per.values() if len(v) == 2]
-    if pairs:
-        b = sum(1 for x, y in pairs if x["repaired"] and not y["repaired"])
-        c = sum(1 for x, y in pairs if y["repaired"] and not x["repaired"])
-        bb = sum(1 for x, y in pairs if not x["any_p2p_broken"] and y["any_p2p_broken"])
-        cc = sum(1 for x, y in pairs if not y["any_p2p_broken"] and x["any_p2p_broken"])
-        lines += ["", f"Paired (case, repetition): {len(pairs)}", ""]
-        if any(t.get("start_broken") for t in tasks.values()):
-            lines.append(f"- Regression repaired only by baseline: {b}; only with Proviso: {c}; "
-                         f"McNemar exact p = {mcnemar_exact(b, c):.3g}")
-        lines += [f"- Finished with no PASS_TO_PASS test broken only by baseline: {bb}; only with Proviso: {cc}; "
-                  f"McNemar exact p = {mcnemar_exact(bb, cc):.3g}",
-                  f"- Wall time, baseline vs Proviso: median {statistics.median(x['time'] for x, _ in pairs):.0f} s vs "
-                  f"{statistics.median(y['time'] for _, y in pairs):.0f} s; "
-                  + wilcoxon([x['time'] for x, _ in pairs], [y['time'] for _, y in pairs]),
-                  f"- Cost, baseline vs Proviso: ${sum(x['cost'] for x, _ in pairs):.2f} vs "
-                  f"${sum(y['cost'] for _, y in pairs):.2f}; "
-                  + wilcoxon([x['cost'] for x, _ in pairs], [y['cost'] for _, y in pairs])]
+                     f"${sum(x['cost'] for x in o):.2f} | {gate} | {gsecs} |")
+    lines += ["", "## Paired comparisons"]
+    for other in arms[1:]:
+        compare(lines, per, "baseline", other, with_repair)
+    if "gate-full" in out and "gate-proviso" in out:
+        compare(lines, per, "gate-full", "gate-proviso", with_repair)
     text = "\n".join(lines) + "\n"
     print(text)
     if a.out:
         open(a.out, "w").write(text)
-
 
 if __name__ == "__main__":
     main()

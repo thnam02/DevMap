@@ -46,6 +46,10 @@ NOTE = ("\n\n---\nAn earlier attempt at this issue has already been made in this
         "working tree, uncommitted (`git status` and `git diff` show them). Continue from there and finish the task.")
 
 
+OLD_NOTE = ("\n\n---\nAn earlier attempt at this issue has already been made in this repository: its changes are in "
+            "the working tree, uncommitted (`git diff` shows them). Continue from there and finish the task.")
+
+
 def candidates() -> list[dict]:
     """The case rule in the module docstring, in sample order."""
     sample = json.load(open(os.path.join(P.OUT, "sample.json")))["instances"]
@@ -165,6 +169,10 @@ def main():
         case_path = os.path.join(eval_dir, "tasks", c["id"] + ".json")
         rej_path = os.path.join(eval_dir, "rejected", c["id"], "reason.txt")
         if os.path.isfile(case_path):
+            t = json.load(open(case_path))
+            if OLD_NOTE in t.get("prompt", ""):  # built before the note named git status: bring it up to date
+                t["prompt"] = t["prompt"].replace(OLD_NOTE, NOTE)
+                json.dump(t, open(case_path, "w"), indent=1)
             kept += 1
             continue
         if os.path.isfile(rej_path):

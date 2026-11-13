@@ -1794,14 +1794,20 @@ def _report_enabled(root: str) -> bool:
         return True
 
 
-def run_selected(root: str, python: str, targets: list[str] | None = None, maxfail: int | None = None) -> str:
+def run_selected(root: str, python: str, targets: list[str] | None = None, maxfail: int | None = None,
+                 force_full: bool = False) -> str:
     """Run what the agent asked for (targets: directories relative to the repository root; [] = the default suite),
-    restricted to the tests the change can affect. Tests the coverage map does not know always run."""
+    restricted to the tests the change can affect. Tests the coverage map does not know always run.
+    force_full: run everything in scope (the full-suite check the agent study compares against), reported the same
+    way."""
     targets = targets or []
     covmap = _asset(root, "covmap.json") or {}
     base_fail = set(_asset(root, "base_failures.json") or [])
     t0 = time.time()
-    sel, why = selection(root, covmap, python) if covmap else (None, {"reason": "no coverage map"})
+    if force_full:
+        sel, why = None, {"reason": "the full suite (check when the agent finishes)"}
+    else:
+        sel, why = selection(root, covmap, python) if covmap else (None, {"reason": "no coverage map"})
     where = " ".join(targets) if targets else "the test suite"
     collected = _collect(root, python, targets) if sel is not None else None
     if sel is not None and collected is None:
@@ -1885,6 +1891,41 @@ def _failure_details(out: str, new: list[str]) -> str:
     if cur and buf:
         keep.append("\n".join(buf[:25]))
     return "\n".join(keep[:5])[:6000]
+
+
+GATE_MAX_BLOCKS = 2
+GATE_HEAD = ("Before you finish, the project's tests were run to check that your changes did not break anything "
+             "that worked before. Fix the new failures below (or, if a test's expectation is now wrong, explain why), "
+             "then finish.\n\n")
+
+
+def gate(payload: dict[str, Any], root: str, cfg: dict[str, Any]) -> dict[str, Any]:
+    """The check when the agent finishes (Claude Code Stop hook). cfg["gate"]: "full" runs the whole suite,
+    "proviso" only the tests the change can affect, anywhere in the project. New failures (not failing at the base)
+    block the stop and go back to the agent, at most GATE_MAX_BLOCKS times; anything else lets it finish."""
+    from .proviso import load_state, log_event, save_state
+    mode = cfg.get("gate")
+    if mode not in ("full", "proviso"):
+        return {}
+    st = load_state(root)
+    blocks = int(st.get("gate_blocks", 0))
+    dirty = [l for l in _git(root, "status", "--porcelain").splitlines() if ".dc-engine" not in l]
+    if not dirty:
+        log_event(root, {"event": "gate", "mode": mode, "result": "no-change", "secs": 0})
+        return {}
+    if blocks >= GATE_MAX_BLOCKS:
+        log_event(root, {"event": "gate", "mode": mode, "result": "block-limit", "secs": 0})
+        return {}
+    t0 = time.time()
+    text = run_selected(root, cfg.get("python") or sys.executable, [], None, force_full=(mode == "full"))
+    secs = round(time.time() - t0, 1)
+    failed = "NEW failures" in text or "did not run the tests" in text
+    log_event(root, {"event": "gate", "mode": mode, "result": "block" if failed else "pass", "secs": secs})
+    if not failed:
+        return {}
+    st["gate_blocks"] = blocks + 1
+    save_state(root, st)
+    return {"decision": "block", "reason": GATE_HEAD + text}
 
 
 def _log_run(root, ran, total, secs, new, why):

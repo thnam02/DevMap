@@ -736,6 +736,9 @@ def handle_event(event: str, payload: dict[str, Any], root: str) -> dict[str, An
         return pretool(payload, root, cfg)
     if event == "proviso-verify":
         return verify(payload, root, cfg)
+    if event == "proviso-gate":
+        from .impact import gate
+        return gate(payload, root, cfg)
     return {}
 
 
@@ -745,7 +748,8 @@ def summarize_log(root: str) -> dict[str, Any]:
            "proviso_blocks": 0, "proviso_hard": 0, "proviso_soft": 0, "proviso_verify_ms": 0,
            "proviso_context_chars": 0, "proviso_test_regressions": 0, "proviso_flaky": 0,
            "proviso_intercepts": 0, "proviso_impact_tests_run": 0, "proviso_impact_suite": 0,
-           "proviso_impact_secs": 0.0, "proviso_ripple_reported": 0}
+           "proviso_impact_secs": 0.0, "proviso_ripple_reported": 0,
+           "proviso_gate_runs": 0, "proviso_gate_blocks": 0, "proviso_gate_secs": 0.0}
     try:
         with open(os.path.join(root, STATE_DIR, "proviso.log"), encoding="utf-8") as fh:
             for line in fh:
@@ -775,6 +779,10 @@ def summarize_log(root: str) -> dict[str, Any]:
                     out["proviso_impact_secs"] += float(r.get("secs") or 0)
                 elif ev == "context":
                     out["proviso_context_chars"] = int(r.get("chars") or 0)
+                elif ev == "gate" and r.get("result") in ("pass", "block"):
+                    out["proviso_gate_runs"] += 1
+                    out["proviso_gate_blocks"] += int(r.get("result") == "block")
+                    out["proviso_gate_secs"] += float(r.get("secs") or 0)
     except OSError:
         pass
     return out
