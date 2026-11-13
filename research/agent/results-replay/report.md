@@ -6,14 +6,17 @@ Runs grouped by dc-engine commit:
 
 | commit | dirty | path | runs |
 |---|---|---|---:|
-| 1b55c692ade9 | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 40 |
+| 1b55c692ade9 | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 20 |
+| 3daf84345989 | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 20 |
+
+**Warning:** this comparison mixes dc-engine versions (commits: 1b55c692ade97de6a33b15fc9dcc452ca3ef9d45, 3daf84345989bec34cc8761ee000897752ee653f). Do not treat arm differences as an ablation of one engine.
 
 ## Per-arm summary
 
 | arm | runs | resolved | hidden checks | requests | tokens | tokens/request | time | read calls | dc-engine calls | contracts created | contract retries |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | baseline | 20 | 8 | 60% | 17.150 | 5758036 | 15591.885 | 1890.4 | 1 | 0 | 0 | 0 |
-| impact-noreport | 20 | 9 | 63% | 18 | 5951028 | 15467.903 | 2039.3 | 5 | 0 | 0 | 0 |
+| impact-noreport | 20 | 7 | 56% | 17.550 | 3622914 | 12332.020 | 2756.3 | 7 | 0 | 0 | 0 |
 
 ## Tool result sizes
 
@@ -33,17 +36,17 @@ Total returned chars: **322562** (~80641 tokens).
 
 ### impact-noreport
 
-Total returned chars: **364845** (~91212 tokens).
+Total returned chars: **377196** (~94299 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Bash | 358185 | 89547 |
-| Edit | 1974 | 494 |
-| Read | 1751 | 438 |
-| Monitor | 1576 | 394 |
-| bash | 1071 | 268 |
+| Bash | 368197 | 92050 |
+| Read | 3127 | 782 |
+| Edit | 2469 | 618 |
+| Monitor | 2106 | 527 |
+| bash | 595 | 149 |
+| Grep | 471 | 118 |
 | Write | 231 | 58 |
-| Grep | 57 | 15 |
 
 ### Layer: largest dc-engine responses
 
@@ -56,50 +59,50 @@ A request is a distinct `model_call_id` when the stream has one, otherwise an as
 | task | arm | rep | requests | tokens | tokens/request |
 |---|---|---:|---:|---:|---:|
 | mwaskom__seaborn-2813__c0 | baseline | 1 | 14 | 228053 | 16289.500 |
-| mwaskom__seaborn-2813__c0 | impact-noreport | 1 | 8 | 106232 | 13279 |
+| mwaskom__seaborn-2813__c0 | impact-noreport | 1 | 10 | 131292 | 13129.200 |
 | mwaskom__seaborn-2846__c0 | baseline | 1 | 8 | 112115 | 14014.375 |
-| mwaskom__seaborn-2846__c0 | impact-noreport | 1 | 12 | 157632 | 13136 |
-| mwaskom__seaborn-2846__c1 | impact-noreport | 1 | 9 | 135114 | 15012.667 |
+| mwaskom__seaborn-2846__c0 | impact-noreport | 1 | 14 | 187120 | 13365.714 |
+| mwaskom__seaborn-2846__c1 | impact-noreport | 1 | 8 | 108342 | 13542.750 |
 | mwaskom__seaborn-2846__c1 | baseline | 1 | 8 | 113337 | 14167.125 |
 | mwaskom__seaborn-2848__c0 | baseline | 1 | 21 | 307959 | 14664.714 |
-| mwaskom__seaborn-2848__c0 | impact-noreport | 1 | 12 | 182886 | 15240.500 |
+| mwaskom__seaborn-2848__c0 | impact-noreport | 1 | 14 | 161694 | 11549.571 |
 | pydata__xarray-4759__c0 | baseline | 1 | 38 | 675621 | 17779.500 |
-| pydata__xarray-4759__c0 | impact-noreport | 1 | 38 | 675477 | 17775.711 |
+| pydata__xarray-4759__c0 | impact-noreport | 1 | 43 | 41919 | 974.860 |
 | pydata__xarray-4759__c1 | baseline | 1 | 50 | 961908 | 19238.160 |
-| pydata__xarray-4759__c1 | impact-noreport | 1 | 48 | 949625 | 19783.854 |
+| pydata__xarray-4759__c1 | impact-noreport | 1 | 40 | 42241 | 1056.025 |
 | pydata__xarray-4759__c2 | baseline | 1 | 40 | 683185 | 17079.625 |
-| pydata__xarray-4759__c2 | impact-noreport | 1 | 37 | 615771 | 16642.459 |
+| pydata__xarray-4759__c2 | impact-noreport | 1 | 36 | 613176 | 17032.667 |
 | pydata__xarray-4759__c3 | baseline | 1 | 40 | 816359 | 20408.975 |
-| pydata__xarray-4759__c3 | impact-noreport | 1 | 39 | 881547 | 22603.769 |
+| pydata__xarray-4759__c3 | impact-noreport | 1 | 36 | 202066 | 5612.944 |
 | pylint-dev__pylint-4339__c1 | baseline | 1 | 8 | 105969 | 13246.125 |
-| pylint-dev__pylint-4339__c1 | impact-noreport | 1 | 9 | 122986 | 13665.111 |
-| pylint-dev__pylint-4339__c2 | impact-noreport | 1 | 10 | 141276 | 14127.600 |
+| pylint-dev__pylint-4339__c1 | impact-noreport | 1 | 9 | 123797 | 13755.222 |
+| pylint-dev__pylint-4339__c2 | impact-noreport | 1 | 10 | 115936 | 11593.600 |
 | pylint-dev__pylint-4339__c2 | baseline | 1 | 11 | 162450 | 14768.182 |
-| pylint-dev__pylint-4339__c3 | impact-noreport | 1 | 19 | 291943 | 15365.421 |
+| pylint-dev__pylint-4339__c3 | impact-noreport | 1 | 22 | 264251 | 12011.409 |
 | pylint-dev__pylint-4339__c3 | baseline | 1 | 10 | 164268 | 16426.800 |
 | pylint-dev__pylint-4492__c1 | baseline | 1 | 20 | 309552 | 15477.600 |
-| pylint-dev__pylint-4492__c1 | impact-noreport | 1 | 14 | 207259 | 14804.214 |
-| pytest-dev__pytest-11148__c0 | impact-noreport | 1 | 12 | 177647 | 14803.917 |
+| pylint-dev__pylint-4492__c1 | impact-noreport | 1 | 9 | 143454 | 15939.333 |
+| pytest-dev__pytest-11148__c0 | impact-noreport | 1 | 16 | 249105 | 15569.062 |
 | pytest-dev__pytest-11148__c0 | baseline | 1 | 7 | 107753 | 15393.286 |
-| pytest-dev__pytest-11148__c2 | impact-noreport | 1 | 20 | 309656 | 15482.800 |
+| pytest-dev__pytest-11148__c2 | impact-noreport | 1 | 14 | 232265 | 16590.357 |
 | pytest-dev__pytest-11148__c2 | baseline | 1 | 11 | 157685 | 14335 |
 | pytest-dev__pytest-11148__c3 | baseline | 1 | 12 | 181570 | 15130.833 |
-| pytest-dev__pytest-11148__c3 | impact-noreport | 1 | 10 | 139978 | 13997.800 |
-| pytest-dev__pytest-11148__c4 | impact-noreport | 1 | 34 | 419386 | 12334.882 |
+| pytest-dev__pytest-11148__c3 | impact-noreport | 1 | 13 | 165954 | 12765.692 |
+| pytest-dev__pytest-11148__c4 | impact-noreport | 1 | 30 | 460593 | 15353.100 |
 | pytest-dev__pytest-11148__c4 | baseline | 1 | 12 | 176754 | 14729.500 |
 | sphinx-doc__sphinx-10021__c0 | baseline | 1 | 10 | 146614 | 14661.400 |
-| sphinx-doc__sphinx-10021__c0 | impact-noreport | 1 | 10 | 121540 | 12154 |
-| sphinx-doc__sphinx-10021__c1 | impact-noreport | 1 | 8 | 145081 | 18135.125 |
+| sphinx-doc__sphinx-10021__c0 | impact-noreport | 1 | 7 | 94030 | 13432.857 |
+| sphinx-doc__sphinx-10021__c1 | impact-noreport | 1 | 6 | 93535 | 15589.167 |
 | sphinx-doc__sphinx-10021__c1 | baseline | 1 | 10 | 174415 | 17441.500 |
-| sphinx-doc__sphinx-10137__c1 | impact-noreport | 1 | 5 | 80437 | 16087.400 |
+| sphinx-doc__sphinx-10137__c1 | impact-noreport | 1 | 8 | 101931 | 12741.375 |
 | sphinx-doc__sphinx-10137__c1 | baseline | 1 | 6 | 81777 | 13629.500 |
 | sphinx-doc__sphinx-10207__c1 | baseline | 1 | 7 | 90692 | 12956 |
-| sphinx-doc__sphinx-10207__c1 | impact-noreport | 1 | 6 | 89555 | 14925.833 |
+| sphinx-doc__sphinx-10207__c1 | impact-noreport | 1 | 6 | 90213 | 15035.500 |
 
 | arm | mean requests | mean tokens | mean tokens/request |
 |---|---:|---:|---:|
 | baseline | 17.150 | 287901.800 | 15591.885 |
-| impact-noreport | 18 | 297551.400 | 15467.903 |
+| impact-noreport | 17.550 | 181145.700 | 12332.020 |
 
 ## Tool surface (static)
 
@@ -484,17 +487,17 @@ Resamples: 10000 with `random.choices`, seed 0. Each observation is one task (me
 
 | metric | n | mean(L−B) | 95% CI low | 95% CI high |
 |---|---:|---:|---:|---:|
-| resolved rate | 20 | 0.0500 | -0.1500 | 0.2500 |
-| hidden checks passed | 20 | 0.0254 | -0.1298 | 0.1825 |
-| regressions | 20 | -0.0500 | -0.1500 | 0.0000 |
-| tokens (all-in, incl. cache) | 20 | 9649.6000 | -26875.0500 | 50273.6500 |
-| requests | 20 | 0.8500 | -1.7000 | 3.9000 |
-| tokens/request | 20 | -123.9818 | -784.3290 | 520.4812 |
-| cost (USD) | 20 | 0.0087 | -0.0025 | 0.0214 |
-| wall time (s) | 20 | 7.4461 | -52.0926 | 72.5933 |
-| read chars | 20 | 15.1000 | -217.3500 | 262.6500 |
-| read calls | 20 | 0.2000 | -0.0500 | 0.5500 |
+| resolved rate | 20 | -0.0500 | -0.3000 | 0.2000 |
+| hidden checks passed | 20 | -0.0412 | -0.2579 | 0.1833 |
+| regressions | 20 | -0.1000 | -0.2500 | 0.0000 |
+| tokens (all-in, incl. cache) | 20 | -106756.1000 | -240526.0500 | 5123.9500 |
+| requests | 20 | 0.4000 | -2.5500 | 3.5500 |
+| tokens/request | 20 | -3259.8646 | -6063.3626 | -937.6748 |
+| cost (USD) | 20 | 0.0072 | -0.0068 | 0.0224 |
+| wall time (s) | 20 | 43.2927 | -19.8128 | 118.9999 |
+| read chars | 20 | 83.9000 | -165.0500 | 370.2500 |
+| read calls | 20 | 0.3000 | -0.0500 | 0.7500 |
 | dc-engine calls | 20 | 0.0000 | 0.0000 | 0.0000 |
 | contracts created | 20 | 0.0000 | 0.0000 | 0.0000 |
 | contract retries | 20 | 0.0000 | 0.0000 | 0.0000 |
-| turns | 20 | 0.5500 | -1.0000 | 2.3000 |
+| turns | 20 | -3.0500 | -7.3500 | 0.6500 |
