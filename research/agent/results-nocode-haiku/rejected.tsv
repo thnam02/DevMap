@@ -1,0 +1,40 @@
+mwaskom__seaborn-2125	the reference fix does not pass the hidden tests here: ['seaborn/tests/test_distributions.py::TestHistPlotBivariate::test_mesh_with_hue_unique_bins', 'seaborn/tests/test_distributions.py::TestHistPlotBivariate::test_mesh_common_norm', 'seaborn/tests/test_distributions.py::TestHistPlotBivariate::test
+mwaskom__seaborn-2157	the reference fix does not pass the hidden tests here: ['seaborn/tests/test_distributions.py::TestHistPlotBivariate::test_mesh_with_hue_unique_bins', 'seaborn/tests/test_distributions.py::TestHistPlotBivariate::test_mesh_common_norm', 'seaborn/tests/test_distributions.py::TestHistPlotBivariate::test
+mwaskom__seaborn-2639	the reference fix does not pass the hidden tests here: ['seaborn/tests/test_axisgrid.py::TestPairGrid::test_corner'] (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/mwaskom__seaborn-2639.reference-fix.log) 
+mwaskom__seaborn-2850	the reference fix does not pass the hidden tests here: ['tests/test_axisgrid.py::TestPairGrid::test_corner'] (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/mwaskom__seaborn-2850.reference-fix.log) 
+mwaskom__seaborn-2928	7 of 65 PASS_TO_PASS tests fail with the reference fix: the environment does not run this task's tests (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/mwaskom__seaborn-2928.reference-fix.log) 
+mwaskom__seaborn-2944	7 of 67 PASS_TO_PASS tests fail with the reference fix: the environment does not run this task's tests (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/mwaskom__seaborn-2944.reference-fix.log) 
+pydata__xarray-3421	setup: RuntimeError('pydata__xarray-3421: the dependency map recorded no tests') 
+pydata__xarray-3475	setup: RuntimeError('environment pydata__xarray 0014 failed: install: code, locals())\n           File "<string>", line 93, in <module>\n           File "/private/tmp/swe-env-pydata__xarray__0014-6g97r6ui/versioneer.py", line 1526, in get_version\n             return get_versions()["version"]\n     
+pydata__xarray-3733	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dataarray.py::TestDataArray::test_polyfit[True-False]', 'xarray/tests/test_computation.py::test_polyval[False-False]', 'xarray/tests/test_dataarray.py::TestDataArray::test_polyfit[False-False]', 'xarray/tests/test_computation
+pydata__xarray-4343	the reference fix does not pass the hidden tests here: ['xarray/tests/test_cftimeindex.py::test_parse_iso8601_like[month]', 'xarray/tests/test_cftimeindex.py::test_parse_iso8601_like[minute]', 'xarray/tests/test_cftimeindex.py::test_parse_iso8601_like[hour-dash]', 'xarray/tests/test_cftimeindex.py::
+pydata__xarray-4534	the reference fix does not pass the hidden tests here: ['xarray/tests/test_accessor_dt.py::TestDatetimeAccessor::test_isocalendar[week-week]', 'xarray/tests/test_accessor_dt.py::TestDatetimeAccessor::test_isocalendar[year-year]', 'xarray/tests/test_accessor_dt.py::TestDatetimeAccessor::test_isocalen
+pydata__xarray-4849	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dataarray.py::TestDataArray::test_curvefit_helpers'] (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/pydata__xarray-4849.reference-fix.log) 
+pydata__xarray-4984	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dataarray.py::TestDataArray::test_query[numpy-None-python]', 'xarray/tests/test_dataset.py::TestDataset::test_query[numpy-python-python]', 'xarray/tests/test_dataarray.py::TestDataArray::test_query[numpy-python-pandas]', 'xar
+pydata__xarray-5174	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dask.py::TestVariable::test_indexing'] (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/pydata__xarray-5174.reference-fix.log) 
+pydata__xarray-5233	the reference fix does not pass the hidden tests here: ['xarray/tests/test_coding_times.py::test_decode_cf_datetime_overflow', 'xarray/tests/test_coding_times.py::test_cf_datetime[164374.5-days since 1850-01-01 00:00:00-gregorian]', 'xarray/tests/test_coding_times.py::test_cf_datetime[num_dates81-da
+pydata__xarray-6635	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dataarray.py::TestDataArray::test_to_and_from_dict[False]', 'xarray/tests/test_dataarray.py::TestDataArray::test_to_and_from_dict[True]'] (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/pydata__xarray-6635.
+pydata__xarray-6706	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dataset.py::TestDataset::test_coords_properties', 'xarray/tests/test_dataarray.py::TestDataArray::test_coords', 'xarray/tests/test_dataset.py::TestDataset::test_data_vars_properties', 'xarray/tests/test_dataset.py::TestDatase
+pydata__xarray-7368	the reference fix does not pass the hidden tests here: ['xarray/tests/test_dataarray.py::TestDataArray::test_to_dask_dataframe'] (grading log: /Users/agentrun/proviso-work/agent-nocode-src/checks/pydata__xarray-7368.reference-fix.log) 
+pylint-dev__pylint-7869	setup: RuntimeError('environment pylint-dev__pylint 2.16 failed: install: error: Failed to build `pylint @ file:///tmp/swe-env-pylint-dev__pylint__2.16-d2xxg75n`\n  cause: Failed to resolve requirements from `build-system.requires`\n  cause: No solution found when resolving: `setuptools~=62.6`, `whe
+pylint-dev__pylint-8153	setup: RuntimeError('pylint-dev__pylint-8153: the dependency map recorded no tests') 
+pylint-dev__pylint-8190	setup: RuntimeError('pylint-dev__pylint-8190: the dependency map recorded no tests') 
+pylint-dev__pylint-8312	setup: RuntimeError('environment pylint-dev__pylint 2.17 failed: install: error: Failed to build `pylint @ file:///tmp/swe-env-pylint-dev__pylint__2.17-54licon4`\n  cause: Failed to resolve requirements from `build-system.requires`\n  cause: No solution found when resolving: `setuptools~=62.6`, `whe
+pytest-dev__pytest-2794	setup: RuntimeError('pytest-dev__pytest-2794: the dependency map recorded no tests') 
+sphinx-doc__sphinx-5390	setup: RuntimeError('sphinx-doc__sphinx-5390: the dependency map recorded no tests') 
+sphinx-doc__sphinx-5533	setup: RuntimeError('sphinx-doc__sphinx-5533: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6053	setup: RuntimeError('sphinx-doc__sphinx-6053: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6212	setup: RuntimeError('sphinx-doc__sphinx-6212: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6289	setup: RuntimeError('sphinx-doc__sphinx-6289: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6295	setup: RuntimeError('sphinx-doc__sphinx-6295: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6397	setup: RuntimeError('sphinx-doc__sphinx-6397: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6422	setup: RuntimeError('sphinx-doc__sphinx-6422: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6775	setup: RuntimeError('sphinx-doc__sphinx-6775: the dependency map recorded no tests') 
+sphinx-doc__sphinx-6816	setup: RuntimeError('sphinx-doc__sphinx-6816: the dependency map recorded no tests') 
+sphinx-doc__sphinx-7268	setup: RuntimeError('sphinx-doc__sphinx-7268: the dependency map recorded no tests') 
+sphinx-doc__sphinx-7463	setup: RuntimeError('sphinx-doc__sphinx-7463: the dependency map recorded no tests') 
+sphinx-doc__sphinx-7473	setup: RuntimeError('sphinx-doc__sphinx-7473: the dependency map recorded no tests') 
+sphinx-doc__sphinx-7546	setup: RuntimeError('sphinx-doc__sphinx-7546: the dependency map recorded no tests') 
+sphinx-doc__sphinx-7762	setup: RuntimeError('sphinx-doc__sphinx-7762: the dependency map recorded no tests') 
+sphinx-doc__sphinx-7979	setup: RuntimeError('sphinx-doc__sphinx-7979: the dependency map recorded no tests') 
+sphinx-doc__sphinx-8026	setup: RuntimeError('sphinx-doc__sphinx-8026: the dependency map recorded no tests') 
