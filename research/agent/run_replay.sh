@@ -15,6 +15,7 @@
 #   PROVISO_REPLAY_FROM=REPLAY_DIR bash research/agent/run_replay.sh
 #   PROVISO_AGENT_SHARD=1/2 ... and PROVISO_AGENT_SHARD=2/2 ... in two terminals: two runs at a time
 #   PROVISO_AGENT_DRY=1 ... prints the plan and calls no model (free)
+#   PROVISO_AGENT_MODEL=haiku ... another model (its own work folder and results folder)
 #   PROVISO_AGENT_CASES=20 PROVISO_AGENT_REPS=1 PROVISO_AGENT_TOTAL_USD=15 ... the early check: 20 cases spread over the
 #   repositories, one repetition (40 runs)
 set -euo pipefail
@@ -25,13 +26,15 @@ SHARD=${PROVISO_AGENT_SHARD:-1/1}
 SI=${SHARD%/*}; SN=${SHARD#*/}
 [ "$SI" -ge 1 ] && [ "$SI" -le "$SN" ] || { echo "PROVISO_AGENT_SHARD must be i/n with 1 <= i <= n"; exit 1; }
 SUFFIX=$([ "$SN" -gt 1 ] && echo "-s$SI" || echo "")
-W=${PROVISO_AGENT_WORK:-$HOME/proviso-work/agent-replay$SUFFIX}
+W=${PROVISO_AGENT_WORK:-$HOME/proviso-work/agent-replay${PROVISO_AGENT_MODEL:+-$PROVISO_AGENT_MODEL}$SUFFIX}
 VENV=${PROVISO_AGENT_VENV:-$HOME/proviso-work/agent-venv}
 BUDGET=${PROVISO_AGENT_BUDGET_USD:-1.00}
 TOTAL=${PROVISO_AGENT_TOTAL_USD:-200}
 REPS=${PROVISO_AGENT_REPS:-2}
+MODEL=${PROVISO_AGENT_MODEL:-sonnet}
+MSUF=$([ "$MODEL" = sonnet ] && echo "" || echo "-$MODEL")
 ARMS=baseline,impact-noreport
-OUTDIR="$REPO_DIR/research/agent/results-replay$SUFFIX"
+OUTDIR="$REPO_DIR/research/agent/results-replay$MSUF$SUFFIX"
 
 command -v claude >/dev/null || { echo "Claude Code CLI not found: npm install -g @anthropic-ai/claude-code"; exit 1; }
 HPY=${PROVISO_AGENT_PYTHON:-}
@@ -101,7 +104,7 @@ PY="$VENV/bin/python"
 
 if [ -n "${PROVISO_AGENT_DRY:-}" ]; then
   cd "$W"
-  "$PY" -m dc_eval run --eval-dir "$W" --arms "$ARMS" --reps "$REPS" --model sonnet --max-budget-usd "$BUDGET" \
+  "$PY" -m dc_eval run --eval-dir "$W" --arms "$ARMS" --reps "$REPS" --model "$MODEL" --max-budget-usd "$BUDGET" \
     --max-total-usd "$LIMIT" --timeout 1800 --dry-run | tail -25
   exit 0
 fi
@@ -126,7 +129,7 @@ cd "$W"
 for r in $(seq 1 "$REPS"); do
   echo "== repetition $r of every case ($(date +%T))"
   set +e
-  "$PY" -m dc_eval run --eval-dir "$W" --arms "$ARMS" --reps "$r" --model sonnet --max-budget-usd "$BUDGET" \
+  "$PY" -m dc_eval run --eval-dir "$W" --arms "$ARMS" --reps "$r" --model "$MODEL" --max-budget-usd "$BUDGET" \
     --max-total-usd "$LIMIT" --timeout 1800 --resume
   rc=$?
   set -e
