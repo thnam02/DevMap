@@ -1575,6 +1575,9 @@ def compact_slot(slot: str) -> None:
     the metrics), so that hundreds of runs fit on one disk. regrade_slot rebuilds the copy from final.diff."""
     if os.environ.get("DC_EVAL_COMPACT") != "1" or not os.path.isfile(os.path.join(slot, FINAL_DIFF)):
         return
+    log = os.path.join(slot, "repo", ".dc-engine", "proviso.log")  # what the hooks did: kept for inspect_runs
+    if os.path.isfile(log):
+        shutil.copyfile(log, os.path.join(slot, "proviso.log"))
     for name in ("repo", "venv"):
         shutil.rmtree(os.path.join(slot, name), ignore_errors=True)
 

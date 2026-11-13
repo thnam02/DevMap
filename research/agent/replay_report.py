@@ -39,8 +39,10 @@ def outcome(r: dict, t: dict) -> dict | None:
     reg = r.get("regression") or {}
     broken = t.get("start_broken") or []
     still = [b for b in broken if reg.get(b) is False]
-    return {"repaired": not still, "still_broken": len(still), "any_p2p_broken": (r.get("regressions") or 0) > 0,
-            "resolved": bool(r.get("resolved")), "time": r.get("wall_time_s") or 0.0, "cost": r.get("cost_usd") or 0.0,
+    any_broken = (r.get("regressions") or 0) > 0
+    return {"repaired": not still, "still_broken": len(still), "any_p2p_broken": any_broken,
+            # dc_eval's "resolved" is the hidden tests alone; SWE-bench also requires every PASS_TO_PASS test to pass
+            "resolved": bool(r.get("resolved")) and not any_broken, "time": r.get("wall_time_s") or 0.0, "cost": r.get("cost_usd") or 0.0,
             "turns": r.get("turns") or 0}
 
 
@@ -85,7 +87,7 @@ def main():
         per[(task, rep)][arm] = o
     lines = ["# Replay study", "", f"Cases with tasks: {len(tasks)}; runs counted: "
              f"{sum(len(v) for v in out.values())}; runs with errors (left out): {dict(errors) or 0}", "",
-             "| Arm | Runs | Regression repaired | Any PASS_TO_PASS broken at the end | Resolved | Median time | "
+             "| Arm | Runs | Regression repaired | Any PASS_TO_PASS broken at the end | Resolved (SWE-bench) | Median time | "
              "Mean time | Cost |", "|---|---|---|---|---|---|---|---|"]
     for arm in ARMS:
         o = out[arm]

@@ -1617,6 +1617,17 @@ def pytest_runtest_logreport(report):
 def pytest_collectreport(report):
     if report.failed:
         _res[report.nodeid] = False
+def pytest_collection_modifyitems(config, items):
+    path = os.environ.get("DC_SELECT")
+    if not path:
+        return
+    want = set(open(path, encoding="utf-8").read().splitlines())
+    keep = [i for i in items if i.nodeid in want or i.nodeid.split("::")[0] in want]
+    kept = {id(i) for i in keep}
+    gone = [i for i in items if id(i) not in kept]
+    if gone:
+        config.hook.pytest_deselected(items=gone)
+    items[:] = keep
 def pytest_sessionfinish(session, exitstatus):
     json.dump(_res, open(os.environ["DC_OUTCOMES"], "w"))
 '''
@@ -1633,14 +1644,19 @@ def _pytest(root: str, python: str, args: list[str], argfile_name: str) -> tuple
         os.remove(out)
     cmd = [python, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-p", "dc_outcomes", "--tb=short", "--no-header",
            "-rN", "--continue-on-collection-errors"]
+    env = dict(os.environ)
+    env.pop("DC_SELECT", None)
     if len(args) > 200:
+        # a long selection goes in a file the outcome plugin reads, with pytest given only the test files: pytest
+        # before 8.2 has no @argfile (it took "@file" for a path, ran nothing and exited 4)
         argfile = os.path.join(d, argfile_name)
+        ids = [a for a in args if not a.startswith("-")]
         with open(argfile, "w", encoding="utf-8") as fh:
-            fh.write("\n".join(args))
-        cmd.append(f"@{argfile}")
+            fh.write("\n".join(ids))
+        env["DC_SELECT"] = argfile
+        cmd += [a for a in args if a.startswith("-")] + sorted({a.split("::", 1)[0] for a in ids})
     else:
         cmd += args
-    env = dict(os.environ)
     env["PYTHONPATH"] = d + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     env["DC_OUTCOMES"] = out
     r = subprocess.run(cmd, cwd=root, capture_output=True, text=True, env=env)
@@ -1648,7 +1664,11 @@ def _pytest(root: str, python: str, args: list[str], argfile_name: str) -> tuple
         res = json.load(open(out))
     except (OSError, ValueError):
         res = {}
-    return res, r.stdout
+    _pytest.returncode = r.returncode
+    return res, r.stdout + (("\n" + r.stderr) if r.stderr.strip() else "")
+
+
+_pytest.returncode = 0
 
 
 def _collect(root: str, python: str, targets: list[str]) -> list[str] | None:
@@ -1776,6 +1796,14 @@ def run_selected(root: str, python: str, targets: list[str] | None = None, maxfa
                     "none of them can change outcome; nothing to run.")
         res, stdout = _pytest(root, python, ([f"--maxfail={maxfail}"] if maxfail else []) + run, "impact-args.txt")
     secs = time.time() - t0
+    rc = _pytest.returncode
+    if not res or rc in (2, 3, 4) and not any(res.values()):
+        # pytest ran none of the tests: it was interrupted, could not load (a broken conftest, plugin or pytest
+        # itself) or was given a path that does not exist. Never report that as "no new failures".
+        tail = "\n".join(stdout.strip().splitlines()[-30:])
+        _log_run(root, 0, n_scope, secs, ["<pytest did not run>"], why)
+        return (f"[Proviso] pytest did not run the tests in {where} (exit code {rc}); no test result was produced, "
+                "so nothing is known about whether your change broke anything. pytest's output:\n" + tail)
     failing = sorted(n for n, ok in res.items() if not ok)
     new = [n for n in failing if n not in base_fail and n.split("::")[0] not in base_fail]
     old = [n for n in failing if n not in new]
@@ -1794,7 +1822,10 @@ def run_selected(root: str, python: str, targets: list[str] | None = None, maxfa
         pass
     if new:
         lines.append(f"NEW failures ({len(new)}), not failing before your change:")
-        lines += [f"  - {n}" for n in new[:15]]
+        lines += [f"  - {n or '(the test session itself: a conftest.py, plugin or pytest configuration failed to load)'}"
+                  for n in new[:15]]
+        if "" in new:
+            lines.append("pytest's output:\n" + "\n".join(stdout.strip().splitlines()[-30:]))
         details = _failure_details(stdout, new)
         if details:
             lines.append(details)

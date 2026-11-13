@@ -49,9 +49,12 @@ def commands_and_results(stream):
     return cmds, results
 
 
-def proviso_log(repo):
+def proviso_log(slot):
+    """Proviso's event log: in the run's copy, or kept beside it when the run was compacted (DC_EVAL_COMPACT)."""
     ev = collections.Counter()
-    path = os.path.join(repo, ".dc-engine", "proviso.log")
+    path = os.path.join(slot, "repo", ".dc-engine", "proviso.log")
+    if not os.path.isfile(path):
+        path = os.path.join(slot, "proviso.log")
     for e in stream_events(path):
         ev[e.get("event", "?")] += 1
     return ev
@@ -65,7 +68,7 @@ def main():
         cmds, results = commands_and_results(os.path.join(slot, "stream.jsonl"))
         tests = [c for c in cmds if TEST_CMD.search(c)]
         broad = [c for c in tests if any(_broad_targets(s) is not None for s in _SEG_SPLIT.split(c))]
-        log = proviso_log(os.path.join(slot, "repo"))
+        log = proviso_log(slot)
         rows.append({"task": task, "arm": arm, "rep": rep, "bash_cmds": len(cmds), "test_cmds": len(tests),
                      "broad_test_cmds": len(broad), "intercepts": log.get("intercept", 0),
                      "impact_runs": log.get("impact_run", 0),
