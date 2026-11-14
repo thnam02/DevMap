@@ -174,6 +174,56 @@ def agent_tree(inst: dict, files: dict[str, str] | None = None) -> str:
     return tree
 
 
+COLLECT_PLUGIN = '''"""pytest plugin written by the agent study: node ids of collectors that fail (a test module that
+cannot be imported, a broken conftest), which never enter the dependency map because none of their tests run."""
+import json, os
+_bad = set()
+def pytest_collectreport(report):
+    if report.failed and report.nodeid:
+        _bad.add(report.nodeid)
+def pytest_sessionfinish(session, exitstatus):
+    json.dump(sorted(_bad), open(os.environ["DC_COLLECT_ERRORS"], "w"))
+'''
+
+
+def record_env(tree: str, py: str) -> dict:
+    """The environment the dependency map is recorded in (the plain base tree first on the path)."""
+    extra = [os.path.join(tree, "src")] if os.path.isdir(os.path.join(tree, "src")) else []
+    return {**os.environ, "PYTHONPATH": os.pathsep.join([tree, *extra]), "PYTHONDONTWRITEBYTECODE": "1",
+            "PATH": os.path.dirname(py) + os.pathsep + os.environ.get("PATH", "")}
+
+
+def base_collection_errors(tree: str, py: str, targets: list[str], env: dict) -> list[str]:
+    """Collectors that fail at the base: they fail at every later test run too, and Proviso's runner must count them
+    as failing before the change (base_failures.json), or every check reports them as new failures."""
+    import tempfile
+    d = tempfile.mkdtemp(prefix="dc-collect-")
+    try:
+        open(os.path.join(d, "dc_collect_errors.py"), "w").write(COLLECT_PLUGIN)
+        out = os.path.join(d, "errors.json")
+        e = {**env, "DC_COLLECT_ERRORS": out,
+             "PYTHONPATH": d + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")}
+        r = subprocess.run([py, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider", "-p", "no:randomly",
+                            "-p", "dc_collect_errors", "--continue-on-collection-errors", *targets],
+                           cwd=tree, env=e, capture_output=True, text=True, timeout=1800)
+        try:
+            return json.load(open(out))
+        except (OSError, ValueError):
+            raise RuntimeError(f"pytest --collect-only did not finish in {tree} (exit {r.returncode}): "
+                               + (r.stdout + r.stderr).strip()[-800:])
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def write_base_failures(dest: str, cov: dict, collect_errors: list[str]) -> list[str]:
+    """base_failures.json: tests the map recorded as failing, plus collectors that fail at the base."""
+    tests = [n for n in cov if not n.startswith("__")]
+    out = sorted({n for n in tests if not cov[n].get("ok", True)} | set(collect_errors))
+    json.dump(out, open(os.path.join(dest, "base_failures.json"), "w"))
+    json.dump(sorted(collect_errors), open(os.path.join(dest, "base_collection_errors.json"), "w"))
+    return out
+
+
 def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     iid, repo = x["instance"], x["repo"]
     py = env_python(x) if os.path.isfile(env_python(x)) else ensure_env(x, P.load_instances())
@@ -183,12 +233,10 @@ def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     gen = generated_files(x)
     tree = agent_tree(inst, gen)
     cov_path = os.path.join(dest, "covmap.json")
+    pkg, targets = E.LAYOUT[repo]
+    targets = [t for t in targets if os.path.exists(os.path.join(tree, t))]
+    env = record_env(tree, py)
     if not os.path.isfile(cov_path):
-        pkg, targets = E.LAYOUT[repo]
-        targets = [t for t in targets if os.path.exists(os.path.join(tree, t))]
-        extra = [os.path.join(tree, "src")] if os.path.isdir(os.path.join(tree, "src")) else []
-        env = {**os.environ, "PYTHONPATH": os.pathsep.join([tree, *extra]), "PYTHONDONTWRITEBYTECODE": "1",
-               "PATH": os.path.dirname(py) + os.pathsep + os.environ.get("PATH", "")}
         REC.FILE_TIMEOUT = int(os.environ.get("PROVISO_RECORD_FILE_TIMEOUT", "900"))
         REC.record(tree, pkg, cov_path, py, targets, workers, "", ["-p", "no:randomly"], env)
     cov = json.load(open(cov_path))
@@ -196,7 +244,7 @@ def build(x: dict, inst: dict, eval_dir: str, workers: int) -> str:
     if not tests:
         os.remove(cov_path)
         raise RuntimeError(f"{iid}: the dependency map recorded no tests")
-    json.dump(sorted(n for n in tests if not cov[n].get("ok", True)), open(os.path.join(dest, "base_failures.json"), "w"))
+    write_base_failures(dest, cov, base_collection_errors(tree, py, targets, env))
     files = sorted(f for f in I.map_files(cov) if not I._is_test_path(f))
     if IS.base_snapshot(tree, files, py, os.path.join(dest, "importstate_base.json")) is None:
         raise RuntimeError(f"{iid}: import-time snapshot failed")

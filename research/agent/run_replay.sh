@@ -11,6 +11,8 @@
 #
 # Before this script (as the agent user, free):
 #   python3 research/agent/replay_tasks.py REPLAY_DIR        (cases, Proviso assets, start-state checks; prints OK)
+#   python3 research/agent/base_collect_errors.py REPLAY_DIR (only for a REPLAY_DIR built before this script existed: adds the
+#                                                             test files that fail to load at the base to base failures)
 # Then, as the isolated agent user, with ANTHROPIC_API_KEY exported in this shell (never written to a file):
 #   PROVISO_REPLAY_FROM=REPLAY_DIR bash research/agent/run_replay.sh
 #   PROVISO_AGENT_SHARD=1/2 ... and PROVISO_AGENT_SHARD=2/2 ... in two terminals: two runs at a time
