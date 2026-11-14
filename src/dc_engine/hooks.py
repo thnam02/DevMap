@@ -100,10 +100,16 @@ def run_cli(event: str, argv_root: str | None = None, fmt: str = "claude") -> in
             traceback_s=traceback.format_exc(),
         )
         payload = {}
-    if fmt == "cursor":
-        out = handle_cursor(event, payload, argv_root)
-    else:
-        out = handle(event, payload, argv_root)
+    try:
+        if fmt == "cursor":
+            out = handle_cursor(event, payload, argv_root)
+        else:
+            out = handle(event, payload, argv_root)
+    except Exception as exc:  # noqa: BLE001  (a crash in a hook must never block or derail the agent)
+        _append_invocation_log(argv_root or os.getcwd(), fmt, event, payload, decision="none", duration_ms=0,
+                               error=f"{type(exc).__name__}: {exc}", traceback_s=traceback.format_exc())
+        sys.stderr.write(f"dc-engine: hook {event} failed ({type(exc).__name__}); ignored\n")
+        out = {}
     sys.stdout.write(json.dumps(out, ensure_ascii=False) + "\n")
     return 0
 

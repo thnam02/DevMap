@@ -135,6 +135,13 @@ class Gate(unittest.TestCase):
         self.assertTrue(events)
         self.assertEqual(events - HOOK_EVENTS, set())
 
+    def test_a_crashing_check_never_blocks(self):
+        open(os.path.join(self.root, ".dc-engine", "proviso.json"), "w").write("{not json")  # broken config
+        self.break_colors()
+        r = self.run_hook("proviso-gate")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn(json.loads(r.stdout).get("decision"), (None, "block"))
+
     def test_an_unknown_event_never_blocks(self):
         r = self.run_hook("proviso-no-such-event")
         self.assertEqual(r.returncode, 0)
