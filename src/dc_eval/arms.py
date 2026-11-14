@@ -251,7 +251,11 @@ def proviso_settings(python: str | None = None, probe_python: str | None = None,
     if flags and flags.get("impact"):
         hooks["PreToolUse"] = [group("hook proviso-pretool", "Bash", timeout=60)]
     if flags and flags.get("gate"):
-        hooks["Stop"] = [group("hook proviso-gate", timeout=3600)]
+        g = group("hook proviso-gate", timeout=3600)
+        # the mode also travels with the command: the check must not depend on finding .dc-engine/proviso.json (one
+        # Sonnet run skipped its check silently, its settings not found after the agent's last command)
+        g["hooks"][0]["command"] = f"DC_GATE={shlex.quote(str(flags['gate']))} " + g["hooks"][0]["command"]
+        hooks["Stop"] = [g]
     return {"hooks": hooks}
 
 

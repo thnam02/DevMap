@@ -142,6 +142,23 @@ class Gate(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn(json.loads(r.stdout).get("decision"), (None, "block"))
 
+    def test_the_check_runs_without_its_settings_file(self):
+        """Settings missing where the check looks (pilot: one run skipped its check silently): the mode comes with
+        the command, the check still runs and says the settings were missing."""
+        os.remove(os.path.join(self.root, ".dc-engine", "proviso.json")) if os.path.exists(
+            os.path.join(self.root, ".dc-engine", "proviso.json")) else None
+        self.break_colors()
+        from dc_eval.arms import proviso_settings
+        cmd = proviso_settings(sys.executable, sys.executable, {"gate": "proviso"})["hooks"]["Stop"][0]["hooks"][0]["command"]
+        self.assertTrue(cmd.startswith("DC_GATE=proviso "), cmd)
+        r = subprocess.run(cmd, shell=True, cwd=os.path.join(self.root, "tests"), input=json.dumps(
+            {"hook_event_name": "Stop", "cwd": os.path.join(self.root, "tests")}), capture_output=True, text=True,
+            env={**os.environ, "PYTHONPATH": os.path.join(os.path.dirname(HERE), "src")})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout).get("decision"), "block", r.stdout)
+        log = open(os.path.join(self.root, ".dc-engine", "proviso.log")).read()
+        self.assertIn("gate_settings_missing", log)
+
     def test_an_unknown_event_never_blocks(self):
         r = self.run_hook("proviso-no-such-event")
         self.assertEqual(r.returncode, 0)

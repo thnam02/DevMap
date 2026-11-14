@@ -44,6 +44,19 @@ class HookRoot(unittest.TestCase):
         out = self.pretool(self.d, "python -m pytest tests/test_a.py")
         self.assertIn("dc_engine.impact run", out["hookSpecificOutput"]["updatedInput"]["command"])
 
+    def test_the_installed_command_from_a_subdirectory(self):
+        """The CLI as Claude Code runs it, its process started in the agent's subdirectory: the earlier fix only
+        reached hooks.handle, while the CLI passed its own cwd as the root."""
+        sub = os.path.join(self.d, "pkg", "sub")
+        src = os.path.join(os.path.dirname(HERE), "src")
+        r = subprocess.run([sys.executable, "-m", "dc_engine", "hook", "proviso-pretool"], cwd=sub, input=json.dumps(
+            {"tool_name": "Bash", "tool_input": {"command": "cd ../.. && python -m pytest tests/test_a.py"},
+             "cwd": sub}), capture_output=True, text=True, env={**os.environ, "PYTHONPATH": src})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = json.loads(r.stdout)
+        self.assertIn("dc_engine.impact run", out["hookSpecificOutput"]["updatedInput"]["command"])
+        self.assertFalse(os.path.exists(os.path.join(sub, ".dc-engine")))
+
     def test_root_resolution(self):
         self.assertEqual(hooks._project_root(os.path.join(self.d, "pkg", "sub")), os.path.abspath(self.d))
         outside = tempfile.mkdtemp()

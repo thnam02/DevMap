@@ -69,7 +69,7 @@ def _bench(engine: Engine, targets: list[str], depth: int, max_tokens: int) -> s
 
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="dc-engine", description="Symbol-level code context for agents.")
-    p.add_argument("--root", default=os.environ.get("DC_ROOT", os.getcwd()))
+    p.add_argument("--root", default=os.environ.get("DC_ROOT"))
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status")
     m = sub.add_parser("map"); m.add_argument("--prefix", default=""); m.add_argument("--max-tokens", type=int, default=800)
@@ -110,8 +110,13 @@ def main(argv: list[str] | None = None) -> None:
     a = p.parse_args(argv)
 
     if a.cmd == "hook":
+        # no --root: the hook finds the project from Claude Code's payload (the repository top above the shell's
+        # current directory). Defaulting to os.getcwd() here made every hook use the agent's subdirectory after a
+        # `cd`, so Proviso found no settings or map there (a skipped finish check; an unrewritten pytest).
         from .hooks import run_cli
         return run_cli(a.event, a.root, a.hook_format)
+    if a.root is None:
+        a.root = os.getcwd()
     if a.cmd == "install":
         from . import install as inst
         do_cursor = bool(a.cursor)

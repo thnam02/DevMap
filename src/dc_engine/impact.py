@@ -1907,7 +1907,14 @@ def gate(payload: dict[str, Any], root: str, cfg: dict[str, Any]) -> dict[str, A
     from .proviso import load_state, log_event, save_state
     mode = cfg.get("gate")
     if mode not in ("full", "proviso"):
-        return {}
+        mode = os.environ.get("DC_GATE", "")
+        if mode not in ("full", "proviso"):
+            return {}
+        # the settings file was not found where the check looked: say so, and check anyway (with no dependency map
+        # Proviso's selection falls back to the full suite, so the check stays safe)
+        log_event(root, {"event": "gate_settings_missing", "mode": mode, "root": root,
+                         "cwd": str(payload.get("cwd") or ""),
+                         "state_dir": os.path.isdir(os.path.join(root, STATE_DIR))})
     st = load_state(root)
     blocks = int(st.get("gate_blocks", 0))
     dirty = [l for l in _git(root, "status", "--porcelain").splitlines() if ".dc-engine" not in l]
