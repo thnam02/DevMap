@@ -73,7 +73,20 @@ def _handle_body(event: str, payload: dict[str, Any], cwd: str) -> dict[str, Any
     return {}
 
 
+HOOK_EVENTS = {
+    "pre-edit", "post-edit", "stop",
+    "proviso-context", "proviso-capture", "proviso-verify", "proviso-pretool", "proviso-gate",
+    "proviso-brief-1", "proviso-brief-2", "proviso-brief-3", "proviso-brief-4", "proviso-brief-5",
+    "preToolUse", "beforeShellExecution", "beforeMCPExecution", "afterFileEdit",
+}
+
+
 def run_cli(event: str, argv_root: str | None = None, fmt: str = "claude") -> int:
+    if event not in HOOK_EVENTS:
+        # never exit non-zero from a hook: exit 2 blocks the agent with this text (Stop, PreToolUse)
+        sys.stderr.write(f"dc-engine: unknown hook event {event!r}; ignored\n")
+        sys.stdout.write("{}\n")
+        return 0
     try:
         raw = sys.stdin.read()
         payload = json.loads(raw) if raw.strip() else {}

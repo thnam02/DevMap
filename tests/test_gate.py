@@ -103,6 +103,43 @@ class Gate(unittest.TestCase):
         self.assertEqual(self.gate("proviso").get("decision"), "block")
         self.assertEqual(self.gate("proviso"), {})  # the agent may finish now
 
+    def run_hook(self, event):
+        """The command exactly as dc_eval installs it for Claude Code, a Stop payload on stdin."""
+        from dc_eval.arms import hook_command
+        src = os.path.join(os.path.dirname(HERE), "src")
+        cmd = hook_command(f"hook {event}", sys.executable)
+        return subprocess.run(cmd, shell=True, cwd=self.root, input=json.dumps(
+            {"hook_event_name": "Stop", "cwd": self.root, "stop_hook_active": False}), capture_output=True, text=True,
+            env={**os.environ, "PYTHONPATH": src})
+
+    def test_the_installed_hook_command_end_to_end(self):
+        """The first pilot's check never ran: the CLI rejected the event (exit 2), which Claude Code turns into a block."""
+        cfg = {"gate": "proviso", "python": sys.executable, "report": False}
+        json.dump(cfg, open(os.path.join(self.root, ".dc-engine", "proviso.json"), "w"))
+        r = self.run_hook("proviso-gate")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(json.loads(r.stdout), {})  # nothing changed: silent
+        self.break_colors()
+        r = self.run_hook("proviso-gate")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = json.loads(r.stdout)
+        self.assertEqual(out.get("decision"), "block", out)
+        self.assertIn("test_plot_red", out["reason"])
+
+    def test_every_event_dc_eval_installs_is_known(self):
+        import re
+        from dc_engine.hooks import HOOK_EVENTS
+        src = open(os.path.join(os.path.dirname(HERE), "src", "dc_eval", "arms.py")).read()
+        events = set(re.findall(r'"hook ([a-z0-9-]+)', src))
+        events = {e for e in events if not e.endswith("-")} | {f"proviso-brief-{i}" for i in range(1, 6)}
+        self.assertTrue(events)
+        self.assertEqual(events - HOOK_EVENTS, set())
+
+    def test_an_unknown_event_never_blocks(self):
+        r = self.run_hook("proviso-no-such-event")
+        self.assertEqual(r.returncode, 0)
+        self.assertEqual(json.loads(r.stdout), {})
+
 
 if __name__ == "__main__":
     unittest.main()

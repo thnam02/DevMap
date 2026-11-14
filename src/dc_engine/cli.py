@@ -91,12 +91,10 @@ def main(argv: list[str] | None = None) -> None:
     cp = sub.add_parser("checkpoints"); cp.add_argument("id")
     rs = sub.add_parser("restore"); rs.add_argument("id"); rs.add_argument("n", type=int)
     hk = sub.add_parser("hook")
-    hk.add_argument("event", choices=[
-        "pre-edit", "post-edit", "stop",
-        "proviso-context", "proviso-capture", "proviso-verify", "proviso-pretool",
-        "proviso-brief-1", "proviso-brief-2", "proviso-brief-3", "proviso-brief-4", "proviso-brief-5",
-        "preToolUse", "beforeShellExecution", "beforeMCPExecution", "afterFileEdit",
-    ])
+    # no argparse `choices`: an unknown event would exit 2, which Claude Code treats as a Stop-hook BLOCK and feeds the
+    # usage text back to the agent (the first finish-check pilot: 'proviso-gate' was missing here, 9-115 blocks per run).
+    # run_cli answers an event it does not know with {} and exit 0.
+    hk.add_argument("event")
     hk.add_argument("--format", choices=["claude", "cursor"], default="claude",
                     dest="hook_format")
     ins = sub.add_parser("install")
