@@ -6,15 +6,18 @@ Runs grouped by dc-engine commit:
 
 | commit | dirty | path | runs |
 |---|---|---|---:|
-| 87f8ac63846d | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 60 |
+| 87f8ac63846d | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 20 |
+| 30898c15ce1d | e3b0c44298fc | /Users/agentrun/DevMap/src/dc_engine | 40 |
+
+**Warning:** this comparison mixes dc-engine versions (commits: 30898c15ce1d4971a00ff6c92dd4ceef9f5d064d, 87f8ac63846dfc9e2a2f2a02c7e4080b84579c16). Do not treat arm differences as an ablation of one engine.
 
 ## Per-arm summary
 
 | arm | runs | resolved | hidden checks | requests | tokens | tokens/request | time | read calls | dc-engine calls | contracts created | contract retries |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | baseline | 20 | 9 | 64% | 17.450 | 5702464 | 15479.244 | 1841.7 | 0 | 0 | 0 | 0 |
-| gate-full | 20 | 7 | 55% | 24.150 | 10502477 | 21075.361 | 1565.5 | 1 | 0 | 0 | 0 |
-| gate-proviso | 20 | 7 | 56% | 29.350 | 13043465 | 21160.954 | 2700.9 | 0 | 0 | 0 | 0 |
+| gate-full | 20 | 5 | 49% | 18.400 | 6810637 | 16817.424 | 4904.9 | 0 | 0 | 0 | 0 |
+| gate-proviso | 20 | 7 | 56% | 19 | 6951391 | 16220.201 | 3691.3 | 0 | 0 | 0 | 0 |
 
 ## Tool result sizes
 
@@ -32,26 +35,24 @@ Total returned chars: **317904** (~79476 tokens).
 
 ### gate-full
 
-Total returned chars: **287815** (~71954 tokens).
+Total returned chars: **317077** (~79270 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Bash | 285322 | 71331 |
-| Read | 1100 | 275 |
-| bash | 714 | 179 |
-| Edit | 459 | 115 |
+| Bash | 316228 | 79057 |
+| bash | 476 | 119 |
 | Write | 220 | 55 |
+| Edit | 153 | 39 |
 
 ### gate-proviso
 
-Total returned chars: **343022** (~85756 tokens).
+Total returned chars: **331321** (~82831 tokens).
 
 | tool | chars | ~tokens |
 |---|---:|---:|
-| Bash | 340474 | 85119 |
-| Edit | 1730 | 433 |
-| bash | 595 | 149 |
-| Write | 223 | 56 |
+| Bash | 330588 | 82647 |
+| Edit | 495 | 124 |
+| bash | 238 | 60 |
 
 ### Layer: largest dc-engine responses
 
@@ -64,71 +65,71 @@ A request is a distinct `model_call_id` when the stream has one, otherwise an as
 | task | arm | rep | requests | tokens | tokens/request |
 |---|---|---:|---:|---:|---:|
 | mwaskom__seaborn-2813__c0 | baseline | 1 | 15 | 207675 | 13845 |
-| mwaskom__seaborn-2813__c0 | gate-proviso | 1 | 19 | 344052 | 18108 |
-| mwaskom__seaborn-2813__c0 | gate-full | 1 | 17 | 322241 | 18955.353 |
-| mwaskom__seaborn-2846__c0 | gate-proviso | 1 | 17 | 379126 | 22301.529 |
-| mwaskom__seaborn-2846__c0 | gate-full | 1 | 17 | 344466 | 20262.706 |
+| mwaskom__seaborn-2813__c0 | gate-proviso | 1 | 8 | 130549 | 16318.625 |
+| mwaskom__seaborn-2813__c0 | gate-full | 1 | 8 | 106568 | 13321 |
+| mwaskom__seaborn-2846__c0 | gate-proviso | 1 | 6 | 87130 | 14521.667 |
+| mwaskom__seaborn-2846__c0 | gate-full | 1 | 8 | 109366 | 13670.750 |
 | mwaskom__seaborn-2846__c0 | baseline | 1 | 16 | 212218 | 13263.625 |
 | mwaskom__seaborn-2846__c1 | baseline | 1 | 9 | 135903 | 15100.333 |
-| mwaskom__seaborn-2846__c1 | gate-full | 1 | 19 | 386765 | 20356.053 |
-| mwaskom__seaborn-2846__c1 | gate-proviso | 1 | 19 | 366444 | 19286.526 |
+| mwaskom__seaborn-2846__c1 | gate-full | 1 | 8 | 116351 | 14543.875 |
+| mwaskom__seaborn-2846__c1 | gate-proviso | 1 | 8 | 116182 | 14522.750 |
 | mwaskom__seaborn-2848__c0 | baseline | 1 | 19 | 275961 | 14524.263 |
-| mwaskom__seaborn-2848__c0 | gate-proviso | 1 | 30 | 580893 | 19363.100 |
-| mwaskom__seaborn-2848__c0 | gate-full | 1 | 31 | 593221 | 19136.161 |
+| mwaskom__seaborn-2848__c0 | gate-proviso | 1 | 17 | 221022 | 13001.294 |
+| mwaskom__seaborn-2848__c0 | gate-full | 1 | 11 | 155615 | 14146.818 |
 | pydata__xarray-4759__c0 | baseline | 1 | 38 | 594295 | 15639.342 |
-| pydata__xarray-4759__c0 | gate-proviso | 1 | 67 | 1609550.000 | 24023.134 |
-| pydata__xarray-4759__c0 | gate-full | 1 | 61 | 1496181.000 | 24527.557 |
-| pydata__xarray-4759__c1 | gate-full | 1 | 53 | 1222503.000 | 23066.094 |
+| pydata__xarray-4759__c0 | gate-proviso | 1 | 55 | 1073113.000 | 19511.145 |
+| pydata__xarray-4759__c0 | gate-full | 1 | 39 | 760880 | 19509.744 |
+| pydata__xarray-4759__c1 | gate-full | 1 | 43 | 875007 | 20349 |
 | pydata__xarray-4759__c1 | baseline | 1 | 46 | 878980 | 19108.261 |
-| pydata__xarray-4759__c1 | gate-proviso | 1 | 61 | 1373701.000 | 22519.689 |
-| pydata__xarray-4759__c2 | gate-full | 1 | 24 | 473458 | 19727.417 |
+| pydata__xarray-4759__c1 | gate-proviso | 1 | 45 | 989627 | 21991.711 |
+| pydata__xarray-4759__c2 | gate-full | 1 | 35 | 735562 | 21016.057 |
 | pydata__xarray-4759__c2 | baseline | 1 | 35 | 608196 | 17377.029 |
-| pydata__xarray-4759__c2 | gate-proviso | 1 | 81 | 2144886.000 | 26480.074 |
-| pydata__xarray-4759__c3 | gate-proviso | 1 | 58 | 1425504.000 | 24577.655 |
+| pydata__xarray-4759__c2 | gate-proviso | 1 | 35 | 632903 | 18082.943 |
+| pydata__xarray-4759__c3 | gate-proviso | 1 | 59 | 1369586.000 | 23213.322 |
 | pydata__xarray-4759__c3 | baseline | 1 | 40 | 791137 | 19778.425 |
-| pydata__xarray-4759__c3 | gate-full | 1 | 43 | 1138390.000 | 26474.186 |
-| pylint-dev__pylint-4339__c1 | gate-proviso | 1 | 16 | 321791 | 20111.938 |
-| pylint-dev__pylint-4339__c1 | gate-full | 1 | 16 | 320525 | 20032.812 |
+| pydata__xarray-4759__c3 | gate-full | 1 | 48 | 1111784.000 | 23162.167 |
+| pylint-dev__pylint-4339__c1 | gate-proviso | 1 | 20 | 390052 | 19502.600 |
+| pylint-dev__pylint-4339__c1 | gate-full | 1 | 21 | 379459 | 18069.476 |
 | pylint-dev__pylint-4339__c1 | baseline | 1 | 12 | 188172 | 15681 |
-| pylint-dev__pylint-4339__c2 | gate-full | 1 | 15 | 303807 | 20253.800 |
+| pylint-dev__pylint-4339__c2 | gate-full | 1 | 22 | 403943 | 18361.045 |
 | pylint-dev__pylint-4339__c2 | baseline | 1 | 8 | 115034 | 14379.250 |
-| pylint-dev__pylint-4339__c2 | gate-proviso | 1 | 18 | 362936 | 20163.111 |
-| pylint-dev__pylint-4339__c3 | gate-proviso | 1 | 22 | 482518 | 21932.636 |
+| pylint-dev__pylint-4339__c2 | gate-proviso | 1 | 10 | 142505 | 14250.500 |
+| pylint-dev__pylint-4339__c3 | gate-proviso | 1 | 18 | 342658 | 19036.556 |
 | pylint-dev__pylint-4339__c3 | baseline | 1 | 8 | 116834 | 14604.250 |
-| pylint-dev__pylint-4339__c3 | gate-full | 1 | 18 | 377174 | 20954.111 |
-| pylint-dev__pylint-4492__c1 | gate-full | 1 | 26 | 568985 | 21884.038 |
+| pylint-dev__pylint-4339__c3 | gate-full | 1 | 19 | 414860 | 21834.737 |
+| pylint-dev__pylint-4492__c1 | gate-full | 1 | 26 | 414566 | 15944.846 |
 | pylint-dev__pylint-4492__c1 | baseline | 1 | 22 | 379799 | 17263.591 |
-| pylint-dev__pylint-4492__c1 | gate-proviso | 1 | 34 | 704301 | 20714.735 |
+| pylint-dev__pylint-4492__c1 | gate-proviso | 1 | 24 | 346849 | 14452.042 |
 | pytest-dev__pytest-11148__c0 | baseline | 1 | 10 | 138430 | 13843 |
-| pytest-dev__pytest-11148__c0 | gate-full | 1 | 20 | 371517 | 18575.850 |
-| pytest-dev__pytest-11148__c0 | gate-proviso | 1 | 15 | 313481 | 20898.733 |
-| pytest-dev__pytest-11148__c2 | gate-proviso | 1 | 17 | 353793 | 20811.353 |
+| pytest-dev__pytest-11148__c0 | gate-full | 1 | 10 | 153450 | 15345 |
+| pytest-dev__pytest-11148__c0 | gate-proviso | 1 | 9 | 130170 | 14463.333 |
+| pytest-dev__pytest-11148__c2 | gate-proviso | 1 | 10 | 133302 | 13330.200 |
 | pytest-dev__pytest-11148__c2 | baseline | 1 | 7 | 112355 | 16050.714 |
-| pytest-dev__pytest-11148__c2 | gate-full | 1 | 17 | 360136 | 21184.471 |
+| pytest-dev__pytest-11148__c2 | gate-full | 1 | 8 | 134658 | 16832.250 |
 | pytest-dev__pytest-11148__c3 | baseline | 1 | 10 | 157953 | 15795.300 |
-| pytest-dev__pytest-11148__c3 | gate-proviso | 1 | 22 | 431343 | 19606.500 |
-| pytest-dev__pytest-11148__c3 | gate-full | 1 | 19 | 383641 | 20191.632 |
-| pytest-dev__pytest-11148__c4 | gate-proviso | 1 | 17 | 355317 | 20901 |
+| pytest-dev__pytest-11148__c3 | gate-proviso | 1 | 15 | 244378 | 16291.867 |
+| pytest-dev__pytest-11148__c3 | gate-full | 1 | 17 | 264916 | 15583.294 |
+| pytest-dev__pytest-11148__c4 | gate-proviso | 1 | 9 | 134491 | 14943.444 |
 | pytest-dev__pytest-11148__c4 | baseline | 1 | 10 | 138646 | 13864.600 |
-| pytest-dev__pytest-11148__c4 | gate-full | 1 | 18 | 348406 | 19355.889 |
+| pytest-dev__pytest-11148__c4 | gate-full | 1 | 10 | 134176 | 13417.600 |
 | sphinx-doc__sphinx-10021__c0 | baseline | 1 | 10 | 173764 | 17376.400 |
-| sphinx-doc__sphinx-10021__c0 | gate-full | 1 | 18 | 390111 | 21672.833 |
-| sphinx-doc__sphinx-10021__c0 | gate-proviso | 1 | 18 | 389172 | 21620.667 |
+| sphinx-doc__sphinx-10021__c0 | gate-full | 1 | 12 | 177014 | 14751.167 |
+| sphinx-doc__sphinx-10021__c0 | gate-proviso | 1 | 8 | 119952 | 14994 |
 | sphinx-doc__sphinx-10021__c1 | baseline | 1 | 19 | 264758 | 13934.632 |
-| sphinx-doc__sphinx-10021__c1 | gate-proviso | 1 | 24 | 443633 | 18484.708 |
-| sphinx-doc__sphinx-10021__c1 | gate-full | 1 | 19 | 437742 | 23039.053 |
-| sphinx-doc__sphinx-10137__c1 | gate-full | 1 | 18 | 347432 | 19301.778 |
-| sphinx-doc__sphinx-10137__c1 | gate-proviso | 1 | 16 | 314274 | 19642.125 |
+| sphinx-doc__sphinx-10021__c1 | gate-proviso | 1 | 10 | 172234 | 17223.400 |
+| sphinx-doc__sphinx-10021__c1 | gate-full | 1 | 10 | 172743 | 17274.300 |
+| sphinx-doc__sphinx-10137__c1 | gate-full | 1 | 7 | 100988 | 14426.857 |
+| sphinx-doc__sphinx-10137__c1 | gate-proviso | 1 | 5 | 60107 | 12021.400 |
 | sphinx-doc__sphinx-10137__c1 | baseline | 1 | 8 | 122103 | 15262.875 |
-| sphinx-doc__sphinx-10207__c1 | gate-proviso | 1 | 16 | 346750 | 21671.875 |
-| sphinx-doc__sphinx-10207__c1 | gate-full | 1 | 14 | 315776 | 22555.429 |
+| sphinx-doc__sphinx-10207__c1 | gate-proviso | 1 | 9 | 114581 | 12731.222 |
+| sphinx-doc__sphinx-10207__c1 | gate-full | 1 | 6 | 88731 | 14788.500 |
 | sphinx-doc__sphinx-10207__c1 | baseline | 1 | 7 | 90251 | 12893 |
 
 | arm | mean requests | mean tokens | mean tokens/request |
 |---|---:|---:|---:|
 | baseline | 17.450 | 285123.200 | 15479.244 |
-| gate-full | 24.150 | 525123.850 | 21075.361 |
-| gate-proviso | 29.350 | 652173.250 | 21160.954 |
+| gate-full | 18.400 | 340531.850 | 16817.424 |
+| gate-proviso | 19 | 347569.550 | 16220.201 |
 
 ## Tool surface (static)
 
@@ -513,20 +514,20 @@ Resamples: 10000 with `random.choices`, seed 0. Each observation is one task (me
 
 | metric | n | mean(L−B) | 95% CI low | 95% CI high |
 |---|---:|---:|---:|---:|
-| resolved rate | 20 | -0.1000 | -0.2500 | 0.0000 |
-| hidden checks passed | 20 | -0.0851 | -0.2096 | 0.0079 |
+| resolved rate | 20 | -0.2000 | -0.4000 | -0.0500 |
+| hidden checks passed | 20 | -0.1439 | -0.2930 | -0.0237 |
 | regressions | 20 | -0.0500 | -0.1500 | 0.0000 |
-| tokens (all-in, incl. cache) | 20 | 240000.6500 | 168387.9000 | 326754.4000 |
-| requests | 20 | 6.7000 | 3.8500 | 9.4000 |
-| tokens/request | 20 | 5596.1166 | 4828.0715 | 6429.0563 |
-| cost (USD) | 20 | 0.0503 | 0.0332 | 0.0684 |
-| wall time (s) | 20 | -13.8121 | -56.3170 | 15.6543 |
-| read chars | 20 | 55.0000 | 0.0000 | 165.0000 |
-| read calls | 20 | 0.0500 | 0.0000 | 0.1500 |
+| tokens (all-in, incl. cache) | 20 | 55408.6500 | -973.7000 | 115491.3000 |
+| requests | 20 | 0.9500 | -1.7500 | 3.7000 |
+| tokens/request | 20 | 1338.1797 | 348.9457 | 2383.0093 |
+| cost (USD) | 20 | 0.0140 | -0.0021 | 0.0308 |
+| wall time (s) | 20 | 153.1576 | 95.1947 | 218.1904 |
+| read chars | 20 | 0.0000 | 0.0000 | 0.0000 |
+| read calls | 20 | 0.0000 | 0.0000 | 0.0000 |
 | dc-engine calls | 20 | 0.0000 | 0.0000 | 0.0000 |
 | contracts created | 20 | 0.0000 | 0.0000 | 0.0000 |
 | contract retries | 20 | 0.0000 | 0.0000 | 0.0000 |
-| turns | 20 | 8.5000 | 6.8000 | 10.2500 |
+| turns | 20 | 1.3000 | -0.3000 | 2.9500 |
 
 ## Paired difference (gate-proviso − baseline) with 95% bootstrap CI
 
@@ -534,17 +535,17 @@ Resamples: 10000 with `random.choices`, seed 0. Each observation is one task (me
 
 | metric | n | mean(L−B) | 95% CI low | 95% CI high |
 |---|---:|---:|---:|---:|
-| resolved rate | 20 | -0.1000 | -0.2500 | 0.0000 |
-| hidden checks passed | 20 | -0.0727 | -0.1917 | 0.0071 |
+| resolved rate | 20 | -0.1000 | -0.3500 | 0.1500 |
+| hidden checks passed | 20 | -0.0741 | -0.2246 | 0.0842 |
 | regressions | 20 | 0.0000 | 0.0000 | 0.0000 |
-| tokens (all-in, incl. cache) | 20 | 367050.0500 | 241644.7000 | 531271.7500 |
-| requests | 20 | 11.9000 | 8.2000 | 16.6500 |
-| tokens/request | 20 | 5681.7100 | 4882.9022 | 6545.8873 |
-| cost (USD) | 20 | 0.0790 | 0.0561 | 0.1100 |
-| wall time (s) | 20 | 42.9577 | 7.9115 | 87.4462 |
+| tokens (all-in, incl. cache) | 20 | 62446.3500 | -7907.8500 | 147396.0500 |
+| requests | 20 | 1.5500 | -1.5000 | 4.8500 |
+| tokens/request | 20 | 740.9566 | -341.2130 | 1793.6204 |
+| cost (USD) | 20 | 0.0164 | 0.0018 | 0.0319 |
+| wall time (s) | 20 | 92.4780 | 24.4844 | 181.6295 |
 | read chars | 20 | 0.0000 | 0.0000 | 0.0000 |
 | read calls | 20 | 0.0000 | 0.0000 | 0.0000 |
 | dc-engine calls | 20 | 0.0000 | 0.0000 | 0.0000 |
 | contracts created | 20 | 0.0000 | 0.0000 | 0.0000 |
 | contract retries | 20 | 0.0000 | 0.0000 | 0.0000 |
-| turns | 20 | 11.3000 | 9.0500 | 14.1000 |
+| turns | 20 | 1.1500 | -0.6000 | 3.1000 |
