@@ -1012,8 +1012,11 @@ def classic_worker(i, n):
     jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in real_set()
                                                                         if r["id"] in merged("realeval")]
     jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
-    cov0, db0 = covmap(), testmon()
+    cov0 = covmap()
     uni0 = universe_of(cov0, failing(base))
+    # the base testmon database as classic() left it (workers never record: two workers would share the base tree)
+    db0 = os.path.join(WORK, "testmondata.base")
+    db0 = db0 if os.path.isfile(db0) and _testmon_ok(db0) else None
     nr0 = os.path.join(WORK, "nr-cache") if os.path.isfile(os.path.join(WORK, "nr-cache", "nbdp_cache.json")) else None
     bug_by_id = {b["id"]: b for b in bugs()}
     real = {r["id"]: r for r in merged("mine").values()}
@@ -1064,6 +1067,7 @@ def classic_worker(i, n):
 def classic():
     """Classic safety measure on the main benchmark -> results/<repo>/classic.w*.jsonl (summary: classic_report.py)."""
     require_importable()
+    baseline(), covmap(), testmon()   # shared base files, once, before the workers read them
     jobs = list(merged("select").values()) + [r for r in real_set() if r["id"] in merged("realeval")]
     parallel("classic", jobs, NR_WORKERS)
 

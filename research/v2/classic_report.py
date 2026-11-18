@@ -34,8 +34,8 @@ def rows_of(repo):
 
 
 def table(rows, ref):
-    lines = [f"| Selector | Changes scored | Changes with a {ref} test skipped (classically unsafe) | {ref} tests skipped "
-             f"(of all {ref} tests) | Test files skipped (NameRTS-style) | Changes with a missed failure |",
+    lines = [f"| Selector | Changes scored | Changes skipping a test that runs changed code (classically unsafe) | Such tests skipped "
+             f"(of all such tests) | Test files skipped (NameRTS-style) | Changes with a missed failure |",
              "|---|---|---|---|---|---|"]
     for k in NAMES:
         have = [r for r in rows if r["classic"] and k in r["classic"]["selectors"]
