@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The classic safety measure on the main benchmark (650 changes): which tests that run changed code each selector
 # (Proviso, testmon, NameRTS, TDAD) skips. Uses the maps, testmon databases and NameRTS caches already recorded; no
-# test is run, no API cost. Resumable. Run on the machine that holds $PROVISO_WORK.
+# test is run, no API cost. Resumable. Also classifies the SWE-bench agent patches by whether they edit import-time
+# code (importtime_changes.py; the patch files are only on this machine). Run on the machine that holds $PROVISO_WORK.
 #   bash research/v2/run_classic.sh                 # all five repositories, then results/classic.md; pushed at the end
 #   CLASSIC_SELECTORS=proviso,tdad bash research/v2/run_classic.sh   # a subset of selectors
 set -uo pipefail
@@ -17,6 +18,9 @@ for r in sqlglot pygments datasette sqlalchemy sympy; do
   grep -h "ERROR" "$PROVISO_WORK/$r"/classic.w*.log 2>/dev/null | tail -5
 done
 python research/v2/classic_report.py --md research/v2/results/classic.md
+# how many agent patches edit code that runs at import (static, no tests run; needs the patches under $PROVISO_WORK/swe)
+python research/v2/importtime_changes.py agent | tail -25
+python research/v2/importtime_changes.py agent --all | tail -15
 git add research/v2/results
 git commit -qm "Main benchmark: classic safety measure ($(hostname), $(date +%F))" && \
   git pull -q --rebase && git push -q && echo "== pushed"
