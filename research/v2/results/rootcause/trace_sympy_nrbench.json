@@ -1,0 +1,285 @@
+[
+ {
+  "project": "sympy",
+  "current": "1bc499bbceab1b3f58ad4ab64454d3bf01441258",
+  "files": [
+   "sympy/physics/mechanics/tests/test_system.py",
+   "sympy/physics/optics/tests/test_gaussopt.py",
+   "sympy/stats/tests/test_symbolic_multivariate.py"
+  ],
+  "default": {
+   "edited": [
+    "sympy/core/function.py::Derivative.__new__"
+   ],
+   "env": {},
+   "tests_run": 9,
+   "outcomes": {
+    "passed": 9
+   },
+   "before_tests": [
+    "sympy/core/function.py::Derivative.__new__"
+   ],
+   "between_tests": [],
+   "tests_running_edited": 2,
+   "examples": {
+    "sympy/physics/optics/tests/test_gaussopt.py::test_gauss_opt": [
+     "sympy/core/function.py::Derivative.__new__"
+    ],
+    "sympy/stats/tests/test_symbolic_multivariate.py::test_multivariate_expectation": [
+     "sympy/core/function.py::Derivative.__new__"
+    ]
+   }
+  },
+  "nocache": {
+   "error": "timeout"
+  }
+ },
+ {
+  "project": "sympy",
+  "current": "13bb6ab638b2c81a47c3f588130993730d54dd2b",
+  "files": [
+   "sympy/combinatorics/tests/test_group_numbers.py"
+  ],
+  "default": {
+   "edited": [
+    "sympy/core/evalf.py::get_integer_part",
+    "sympy/functions/elementary/integers.py::RoundFunction.eval",
+    "sympy/functions/elementary/integers.py::floor._eval_number",
+    "sympy/functions/elementary/integers.py::ceiling._eval_number",
+    "sympy/physics/wigner.py::wigner_d_small"
+   ],
+   "env": {},
+   "tests_run": 5,
+   "outcomes": {
+    "passed": 5
+   },
+   "before_tests": [],
+   "between_tests": [],
+   "tests_running_edited": 1,
+   "examples": {
+    "sympy/combinatorics/tests/test_group_numbers.py::test_is_nilpotent_number": [
+     "sympy/functions/elementary/integers.py::RoundFunction.eval",
+     "sympy/functions/elementary/integers.py::ceiling._eval_number"
+    ]
+   }
+  },
+  "nocache": {
+   "edited": [
+    "sympy/core/evalf.py::get_integer_part",
+    "sympy/functions/elementary/integers.py::RoundFunction.eval",
+    "sympy/functions/elementary/integers.py::floor._eval_number",
+    "sympy/functions/elementary/integers.py::ceiling._eval_number",
+    "sympy/physics/wigner.py::wigner_d_small"
+   ],
+   "env": {
+    "SYMPY_USE_CACHE": "no"
+   },
+   "tests_run": 5,
+   "outcomes": {
+    "passed": 5
+   },
+   "before_tests": [],
+   "between_tests": [],
+   "tests_running_edited": 1,
+   "examples": {
+    "sympy/combinatorics/tests/test_group_numbers.py::test_is_nilpotent_number": [
+     "sympy/functions/elementary/integers.py::RoundFunction.eval",
+     "sympy/functions/elementary/integers.py::ceiling._eval_number"
+    ]
+   }
+  }
+ },
+ {
+  "project": "sympy",
+  "current": "8fcd3ac17435863ffe007ee62e7e8aca997e082b",
+  "files": [
+   "sympy/physics/optics/tests/test_gaussopt.py",
+   "sympy/physics/optics/tests/test_medium.py",
+   "sympy/physics/optics/tests/test_polarization.py",
+   "sympy/physics/optics/tests/test_utils.py",
+   "sympy/physics/optics/tests/test_waves.py"
+  ],
+  "default": {
+   "edited": [
+    "sympy/physics/units/util.py::convert_to",
+    "sympy/physics/wigner.py::wigner_d_small"
+   ],
+   "env": {},
+   "tests_run": 16,
+   "outcomes": {
+    "passed": 16
+   },
+   "before_tests": [
+    "sympy/physics/units/util.py::convert_to"
+   ],
+   "between_tests": [],
+   "tests_running_edited": 0,
+   "examples": {}
+  },
+  "nocache": {
+   "edited": [
+    "sympy/physics/units/util.py::convert_to",
+    "sympy/physics/wigner.py::wigner_d_small"
+   ],
+   "env": {
+    "SYMPY_USE_CACHE": "no"
+   },
+   "tests_run": 16,
+   "outcomes": {
+    "passed": 16
+   },
+   "before_tests": [
+    "sympy/physics/units/util.py::convert_to"
+   ],
+   "between_tests": [],
+   "tests_running_edited": 0,
+   "examples": {}
+  }
+ },
+ {
+  "project": "sympy",
+  "current": "4e6ac53cf8e283ebd4ae773956f882a5b6d2020b",
+  "files": [
+   "sympy/physics/optics/tests/test_gaussopt.py",
+   "sympy/physics/optics/tests/test_medium.py",
+   "sympy/physics/optics/tests/test_polarization.py",
+   "sympy/physics/optics/tests/test_utils.py",
+   "sympy/physics/optics/tests/test_waves.py"
+  ],
+  "default": {
+   "edited": [
+    "sympy/physics/units/util.py::convert_to"
+   ],
+   "env": {},
+   "tests_run": 16,
+   "outcomes": {
+    "passed": 16
+   },
+   "before_tests": [
+    "sympy/physics/units/util.py::convert_to"
+   ],
+   "between_tests": [],
+   "tests_running_edited": 0,
+   "examples": {}
+  },
+  "nocache": {
+   "edited": [
+    "sympy/physics/units/util.py::convert_to"
+   ],
+   "env": {
+    "SYMPY_USE_CACHE": "no"
+   },
+   "tests_run": 16,
+   "outcomes": {
+    "passed": 16
+   },
+   "before_tests": [
+    "sympy/physics/units/util.py::convert_to"
+   ],
+   "between_tests": [],
+   "tests_running_edited": 0,
+   "examples": {}
+  }
+ },
+ {
+  "project": "sympy",
+  "current": "f08d10cd2d8810851c9db2f3a866bd2716684daf",
+  "files": [
+   "sympy/core/tests/test_power.py"
+  ],
+  "default": {
+   "edited": [
+    "sympy/core/mod.py::Mod.eval",
+    "sympy/core/mod.py::Mod.eval.<locals>.number_eval",
+    "sympy/polys/monomials.py::itermonomials",
+    "sympy/polys/numberfields/subfield.py::primitive_element"
+   ],
+   "env": {},
+   "tests_run": 43,
+   "outcomes": {
+    "passed": 43
+   },
+   "before_tests": [],
+   "between_tests": [],
+   "tests_running_edited": 1,
+   "examples": {
+    "sympy/core/tests/test_power.py::test_issue_17450": [
+     "sympy/core/mod.py::Mod.eval",
+     "sympy/core/mod.py::Mod.eval.<locals>.number_eval"
+    ]
+   }
+  },
+  "nocache": {
+   "edited": [
+    "sympy/core/mod.py::Mod.eval",
+    "sympy/core/mod.py::Mod.eval.<locals>.number_eval",
+    "sympy/polys/monomials.py::itermonomials",
+    "sympy/polys/numberfields/subfield.py::primitive_element"
+   ],
+   "env": {
+    "SYMPY_USE_CACHE": "no"
+   },
+   "tests_run": 43,
+   "outcomes": {
+    "passed": 43
+   },
+   "before_tests": [],
+   "between_tests": [],
+   "tests_running_edited": 1,
+   "examples": {
+    "sympy/core/tests/test_power.py::test_issue_17450": [
+     "sympy/core/mod.py::Mod.eval",
+     "sympy/core/mod.py::Mod.eval.<locals>.number_eval"
+    ]
+   }
+  }
+ },
+ {
+  "project": "sympy",
+  "current": "a9129a848fa7a1520467305b23c13c88386d875a",
+  "files": [
+   "sympy/core/tests/test_power.py"
+  ],
+  "default": {
+   "edited": [
+    "sympy/core/mod.py::Mod.eval",
+    "sympy/core/mod.py::Mod.eval.<locals>.number_eval",
+    "sympy/polys/monomials.py::itermonomials",
+    "sympy/polys/numberfields/subfield.py::primitive_element"
+   ],
+   "env": {},
+   "tests_run": 43,
+   "outcomes": {
+    "passed": 43
+   },
+   "before_tests": [],
+   "between_tests": [],
+   "tests_running_edited": 0,
+   "examples": {}
+  },
+  "nocache": {
+   "edited": [
+    "sympy/core/mod.py::Mod.eval",
+    "sympy/core/mod.py::Mod.eval.<locals>.number_eval",
+    "sympy/polys/monomials.py::itermonomials",
+    "sympy/polys/numberfields/subfield.py::primitive_element"
+   ],
+   "env": {
+    "SYMPY_USE_CACHE": "no"
+   },
+   "tests_run": 43,
+   "outcomes": {
+    "passed": 43
+   },
+   "before_tests": [],
+   "between_tests": [],
+   "tests_running_edited": 1,
+   "examples": {
+    "sympy/core/tests/test_power.py::test_issue_17450": [
+     "sympy/core/mod.py::Mod.eval",
+     "sympy/core/mod.py::Mod.eval.<locals>.number_eval"
+    ]
+   }
+  }
+ }
+]
