@@ -41,3 +41,6 @@ research/agent/eval/runs/
 research/agent/eval/runs_archive/
 research/agent/eval/cache/
 research/agent/eval/impact/
+
+# V2_SMOKE=1 runs (set-up checks, not results)
+research/v2/results_smoke/
