@@ -928,6 +928,146 @@ def ablate_worker(i, n):
             reset(tree)
 
 
+# ---------------------------------------------------------------------------------------------------- classic safety
+
+CLASSIC_SELECTORS = [s for s in os.environ.get("CLASSIC_SELECTORS", "proviso,testmon,namerts,tdad").split(",") if s]
+
+
+def _traditional_selection(tree, cov):
+    """Every test that executes changed code (PROVISO_MODE=traditional: code that runs at import counts as executed by
+    every test); None = the whole suite. Set only for this call, so the other selections run normally."""
+    old = os.environ.get("PROVISO_MODE")
+    os.environ["PROVISO_MODE"] = "traditional"
+    try:
+        I.selection(tree, cov, PY)              # warm, as _proviso_row does
+        return I.selection(tree, cov, PY)
+    finally:
+        if old is None:
+            os.environ.pop("PROVISO_MODE", None)
+        else:
+            os.environ["PROVISO_MODE"] = old
+
+
+def _classic_row(tree, cov, universe, db, nr_cache, nr_tree, tdad_tree, files):
+    """The classic safety measure: which tests that run changed code each selector skips. Two reference sets, both from
+    Proviso's per-test recording: 'exec' = every test that executes changed code, import-time code counting as executed
+    by every test (Ekstazi's rule for static initialisers; Proviso's 'traditional' variant), and 'func' = the tests
+    that ran a modified function (NameRTS's SafeR reference). Counts per test and per test file (a file is covered if
+    any of its tests is selected, as NameRTS's metric counts files)."""
+    ch = SEL.Change(tree, [CFG["pkg"]])
+    tsel, twhy = _traditional_selection(tree, cov)
+    ref = {"exec": set(universe) if tsel is None else set(tsel) & universe}
+    if not ch.new_files:
+        funcs, _ = ch.units()
+        ref["func"] = {n for n in universe if I.test_funcs(cov, n) & funcs}
+    sets = {}
+    if "proviso" in CLASSIC_SELECTORS:
+        I.selection(tree, cov, PY)
+        p, _ = I.selection(tree, cov, PY)
+        sets["proviso"] = set(universe) if p is None else set(p) & universe
+    always = {n for n in universe if n.split("::", 1)[0] in set(_noext_test_files(tree))}
+    if "testmon" in CLASSIC_SELECTORS and db:
+        try:
+            sets["testmon"] = (set(testmon_select(tree, db)) & universe) | always
+        except Exception as e:  # noqa: BLE001
+            sets["testmon"] = repr(e)[:200]
+    if "namerts" in CLASSIC_SELECTORS and nr_cache:
+        try:
+            reset(nr_tree)
+            diff = subprocess.run(["git", "diff", "HEAD"], cwd=tree, capture_output=True).stdout
+            if diff:
+                subprocess.run(["git", "apply", "--whitespace=nowarn"], cwd=nr_tree, input=diff, check=True)
+            nf = set(namerts("select", nr_tree, nr_cache))
+            sets["namerts"] = {n for n in universe if n.split("::", 1)[0] in nf}
+        except Exception as e:  # noqa: BLE001
+            sets["namerts"] = repr(e)[:200]
+        finally:
+            reset(nr_tree)
+    if "tdad" in CLASSIC_SELECTORS and tdad_tree and REPO not in TDAD_SKIP:
+        import tdad_select as T
+        sets["tdad"] = T.expand(T.select(tdad_tree, files, 50), universe)
+    fof = lambda ns: {n.split("::", 1)[0] for n in ns}
+    row = {"universe": len(universe), "ref": {k: len(v) for k, v in ref.items()},
+           "ref_files": {k: len(fof(v)) for k, v in ref.items()}, "exec_reason": twhy.get("reason"),
+           "exec_all": len(ref["exec"]) == len(universe), "selectors": {}}
+    for name, s in sets.items():
+        if isinstance(s, str):
+            row["selectors"][name] = {"error": s}
+            continue
+        r = {"selected": len(s)}
+        for k, v in ref.items():
+            skipped = v - s
+            r[f"skipped_{k}"] = len(skipped)
+            r[f"skipped_{k}_files"] = len(fof(v) - fof(s))
+            r[f"skipped_{k}_sample"] = sorted(skipped)[:5]
+        row["selectors"][name] = r
+    return row
+
+
+def classic_worker(i, n):
+    """Rows {"id": "<stage>:<change id>", ...} in classic.w*.jsonl for every scored planted bug and real commit, on
+    the same maps, testmon databases and NameRTS caches the main benchmark used (nothing is re-recorded)."""
+    done = set(merged("classic"))
+    base = baseline()
+    jobs = [("select", r["id"]) for r in merged("select").values()] + [("realeval", r["id"]) for r in real_set()
+                                                                        if r["id"] in merged("realeval")]
+    jobs = [j for j in jobs if f"{j[0]}:{j[1]}" not in done][i::n]
+    cov0, db0 = covmap(), testmon()
+    uni0 = universe_of(cov0, failing(base))
+    nr0 = os.path.join(WORK, "nr-cache") if os.path.isfile(os.path.join(WORK, "nr-cache", "nbdp_cache.json")) else None
+    bug_by_id = {b["id"]: b for b in bugs()}
+    real = {r["id"]: r for r in merged("mine").values()}
+    use_tdad = "tdad" in CLASSIC_SELECTORS and REPO not in TDAD_SKIP
+    if use_tdad:
+        import tdad_select as T
+    tdad0 = None
+    for st_, cid in jobs:
+        tree = nr_tree = None
+        try:
+            if st_ == "select":
+                b = bug_by_id[cid]
+                if use_tdad and tdad0 is None:
+                    tdad0 = make_tree(f"tdad-w{i}", CFG["commit"])
+                    T.index(tdad0)
+                tree = make_tree(f"w{i}", CFG["commit"])
+                nr_tree = make_tree(f"nr-w{i}", CFG["commit"]) if nr0 else None
+                apply_bug(tree, b)
+                row = _classic_row(tree, cov0, uni0, db0, nr0, nr_tree, tdad0, [b["file"]])
+            else:
+                r, d = real[cid], os.path.join(WORK, "real", cid)
+                parent = r["commit"] + "^"
+                b0 = jload(os.path.join(d, "base_outcomes.json")) or {}
+                cov = jload(os.path.join(d, "covmap.json")) or {}
+                if not cov or not b0:
+                    raise RuntimeError("no coverage map or baseline recorded for this commit")
+                db = os.path.join(d, "testmondata") if os.path.isfile(os.path.join(d, "testmondata")) else None
+                nrc = os.path.join(d, "nr-cache") if os.path.isfile(os.path.join(d, "nr-cache", "nbdp_cache.json")) else None
+                tdt = None
+                if use_tdad:
+                    tdt = make_tree(f"tdad-real-w{i}", parent)
+                    shutil.rmtree(os.path.join(tdt, ".tdad"), ignore_errors=True)
+                    T.index(tdt)
+                    tdad0 = None   # the planted-bug tree must be re-indexed at the base commit if needed again
+                tree = make_tree(f"w{i}", parent)
+                nr_tree = make_tree(f"nr-w{i}", parent) if nrc else None
+                reset(tree)
+                apply_commit_src(tree, r)
+                row = _classic_row(tree, cov, universe_of(cov, failing(b0)), db, nrc, nr_tree, tdt, r["src"])
+            append("classic", i, {"id": f"{st_}:{cid}", **row, "format": ROW_FORMAT})
+        except Exception as e:  # noqa: BLE001
+            print(st_, cid, "ERROR", repr(e)[:300], flush=True)
+        finally:
+            if tree:
+                reset(tree)
+
+
+def classic():
+    """Classic safety measure on the main benchmark -> results/<repo>/classic.w*.jsonl (summary: classic_report.py)."""
+    require_importable()
+    jobs = list(merged("select").values()) + [r for r in real_set() if r["id"] in merged("realeval")]
+    parallel("classic", jobs, NR_WORKERS)
+
+
 def ablate():
     """Run ablate_worker for the switches in the environment and compare with the current Proviso rows (same maps):
     breaking changes with a missed failure, new misses, and the time share. -> results/<repo>/ablate-<name>.md"""
@@ -1229,10 +1369,10 @@ STAGES = {"prepare": prepare, "baseline": baseline, "covmap": covmap, "testmon":
           "select": lambda: (baseline(), covmap(), testmon(), nrinit(), drop_crash_rows(),
                              parallel("select", bugs(), NR_WORKERS)),
           "mine": lambda: parallel("mine", commits()), "realeval": lambda: parallel("realeval", real_set(), NR_WORKERS),
-          "deflake": deflake, "report": report, "retestmon": retestmon, "tdad": tdad, "rescore": lambda: rescore(), "reproviso": reproviso,
+          "deflake": deflake, "report": report, "retestmon": retestmon, "tdad": tdad, "rescore": lambda: rescore(), "reproviso": reproviso, "classic": classic,
           "samemaps": samemaps, "ablate": ablate}
 WORKER = {"truth": truth_worker, "select": select_worker, "mine": mine_worker, "realeval": realeval_worker,
-          "reproviso": reproviso_worker, "samemaps": samemaps_worker, "ablate": ablate_worker,
+          "reproviso": reproviso_worker, "classic": classic_worker, "samemaps": samemaps_worker, "ablate": ablate_worker,
           "deflake": deflake_worker}
 
 if __name__ == "__main__":
@@ -1246,7 +1386,7 @@ if __name__ == "__main__":
     if sys.argv[2] == "worker":
         WORKER[sys.argv[3]](int(sys.argv[4]), int(sys.argv[5]))
     else:
-        for s in ([k for k in STAGES if k not in ("retestmon", "tdad", "rescore", "reproviso", "samemaps", "ablate")]
+        for s in ([k for k in STAGES if k not in ("retestmon", "tdad", "rescore", "reproviso", "samemaps", "ablate", "classic")]
                   if sys.argv[2] == "all" else sys.argv[2:]):
             log("==", s)
             STAGES[s]()
