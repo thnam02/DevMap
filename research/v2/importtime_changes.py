@@ -12,7 +12,7 @@ A change "edits import-time code" at three levels:
   any      some line is not 'body'
   code     some line is 'statement' or 'import' (headers and docstrings left out)
   values   some line is 'statement' (the values built at import: what Proviso's snapshot compares)
-A file that does not parse on one side counts as 'unparsable' (and as import-time on every level).
+A file that does not parse on one side is counted as 'unparsable' and gives no evidence either way.
 
 Sources:
   real    the main benchmark's real commits, the same sample as report-all.md (python importtime_changes.py real)
@@ -129,13 +129,15 @@ def summarise_change(files: dict[str, collections.Counter]) -> dict:
     tot = collections.Counter()
     for c in files.values():
         tot.update(c)
+    # a file that does not parse (e.g. Python 2 code in old sympy history) is reported apart and counts as no
+    # import-time evidence either way: the levels count only lines placed by a syntax tree
     unp = tot["unparsable"] > 0
-    return {"files": {f: dict(c) for f, c in files.items()}, "lines": dict(tot),
-            "any": unp or any(tot[k] for k in ("statement", "import", "header", "docstring")),
-            "code": unp or bool(tot["statement"] or tot["import"]),
-            "values": unp or bool(tot["statement"]),
-            "body_only": not unp and bool(tot["body"]) and not any(tot[k] for k in KINDS[1:]),
-            "no_code": not unp and not sum(tot.values())}
+    return {"files": {f: dict(c) for f, c in files.items()}, "lines": dict(tot), "unparsable": unp,
+            "any": any(tot[k] for k in ("statement", "import", "header", "docstring")),
+            "code": bool(tot["statement"] or tot["import"]),
+            "values": bool(tot["statement"]),
+            "body_only": bool(tot["body"]) and not any(tot[k] for k in KINDS[1:]) and not unp,
+            "no_code": not sum(tot.values())}
 
 
 def show(repo, rev, path):
@@ -231,6 +233,29 @@ def agent_rows(all_patches: bool, cases: list[dict] | None = None):
     return out
 
 
+def mined_rows():
+    """Every commit the main benchmark scanned (results/<repo>/commits.json: the last 250 first-parent, non-merge
+    commits before the base commit that change 1-15 non-test package files), sampled or not."""
+    import pipeline as PL
+    out = []
+    for repo in ["sqlglot", "sympy", "sqlalchemy", "pygments", "datasette"]:
+        PL.use(repo)
+        clone = os.path.join(os.environ.get("IMPORTTIME_CLONES", os.path.expanduser("~/proviso-work/static")), repo)
+        if not os.path.isdir(os.path.join(clone, ".git")):
+            subprocess.run(["git", "clone", "-q", "--filter=blob:none", "--no-checkout", PL.CFG["url"], clone], check=True)
+        mine = PL.merged("mine")
+        for c in PL.commits():
+            commit = c["commit"]
+            files = {f: classify_file(show(clone, commit + "^", f), show(clone, commit, f))
+                     for f in c["src"] if f.endswith(".py") and not is_test(f)}
+            m = mine.get(c["id"])
+            out.append({"source": "mined", "repo": repo, "id": c["id"], "commit": commit,
+                        "breaks_tests": (bool(m["failing"]) if m and m.get("n_tests") else None),
+                        **summarise_change(files)})
+        print(repo, len(PL.commits()), flush=True)
+    return out
+
+
 # ------------------------------------------------------------------------------------------------------- report
 
 def pct(a, b):
@@ -240,8 +265,8 @@ def pct(a, b):
 def report(rows, title, group_key):
     rows = [r for r in rows if "error" not in r]
     lines = [f"# {title}", "", "| Group | Changes | Some import-time line (any) | Import-time statements or imports (code) "
-             "| Import-time statements (values) | Function bodies only | No non-test Python code |",
-             "|---|---|---|---|---|---|---|"]
+             "| Import-time statements (values) | Function bodies only | No non-test Python code | With an unparsable file |",
+             "|---|---|---|---|---|---|---|---|"]
     groups = collections.defaultdict(list)
     for r in rows:
         groups[r[group_key]].append(r)
@@ -249,7 +274,7 @@ def report(rows, title, group_key):
         n = len(rs)
         lines.append(f"| {name} | {n} | {pct(sum(r['any'] for r in rs), n)} | {pct(sum(r['code'] for r in rs), n)} | "
                      f"{pct(sum(r['values'] for r in rs), n)} | {pct(sum(r['body_only'] for r in rs), n)} | "
-                     f"{pct(sum(r['no_code'] for r in rs), n)} |")
+                     f"{pct(sum(r['no_code'] for r in rs), n)} | {sum(r.get('unparsable', False) for r in rs)} |")
     tot = collections.Counter()
     for r in rows:
         tot.update(r["lines"])
@@ -259,7 +284,13 @@ def report(rows, title, group_key):
 
 def main():
     src = sys.argv[1] if len(sys.argv) > 1 else "real"
-    if src == "real":
+    if src == "mined":
+        rows = mined_rows()
+        lines = report(rows, "All scanned commits (250 per project) that edit import-time code", "repo")
+        for name, keep in (("break a test", True), ("break no test", False), ("not run (suite does not run at the parent here)", None)):
+            rs = [r for r in rows if r["breaks_tests"] is keep]
+            lines += ["", f"Commits that {name}:" if keep is not None else f"Commits {name}:", ""] + report(rs, "", "repo")[2:]
+    elif src == "real":
         rows = real_rows()
         lines = report(rows, "Real commits of the main benchmark that edit import-time code", "repo")
         brk = [r for r in rows if r["breaks_tests"]]
