@@ -38,7 +38,7 @@ import time
 
 from . import record as REC
 
-VERSION = "2.4"
+VERSION = "2.4.1"
 
 
 def _git(root: str, *args: str) -> str:
@@ -95,6 +95,16 @@ def _record_env(env: dict | None) -> dict:
     e["PYTHONPATH"] = os.pathsep.join([REC.SRC, *[p for p in e.get("PYTHONPATH", "").split(os.pathsep) if p]])
     e.setdefault("PYTHONDONTWRITEBYTECODE", "1")
     return e
+
+
+def _collection_order(root: str, python: str, files: list[str], extra_args: list[str] | None, env: dict) -> dict:
+    """{test id: position} in the order pytest collects (and runs) the given files' tests, with the options they are
+    recorded with."""
+    r = subprocess.run([python, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider", "-p", "no:randomly",
+                        "--continue-on-collection-errors", *(extra_args or []), *files],
+                       cwd=root, env=env, capture_output=True, text=True)
+    ids = [line.strip() for line in r.stdout.splitlines() if "::" in line and not line.startswith(" ")]
+    return {n: i for i, n in enumerate(ids)}
 
 
 def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | None, python: str | None = None,
@@ -178,12 +188,16 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
             why.setdefault(f, redo_tests[ns[0]])
             del per_file[f]
     present = set(collected)
-    # in the order the tests ran when recorded (the map's order), not alphabetical: work done once per process (lazy
-    # set-up, caches) is charged to the first test that needs it, so a test run ahead of one that ran before it in
-    # the file would take that work from it. In file order every test re-recorded alone has only a subset of the
-    # tests that ran before it in the file, so it records at least what it did there.
+    # in the order pytest runs the file's tests (its collection order), not alphabetical and not the map's order (an
+    # update puts re-recorded tests after the kept ones, so after one update the map's order is no longer the file's):
+    # work done once per process (lazy set-up, caches) is charged to the first test that needs it, so a test run
+    # ahead of one that runs before it in the file would take that work from it. In file order every test re-recorded
+    # alone has only a subset of the tests that run before it in the file, so it records at least what it does there.
+    per_file = {f: ns for f, ns in per_file.items() if f in present}
+    order = _collection_order(root, python, sorted(per_file), extra_args, renv) if per_file else {}
     pos = {n: i for i, n in enumerate(tests)}
-    per_file = {f: sorted(ns, key=lambda n: pos.get(n, len(pos))) for f, ns in per_file.items() if f in present}
+    per_file = {f: sorted(ns, key=lambda n: (order.get(n, len(order)), pos.get(n, len(pos))))
+                for f, ns in per_file.items()}
     redo = sorted(f for f in why if f in present)   # files gone from the suite drop out with their tests
     redone = {n for ns in per_file.values() for n in ns}
     kept = {}

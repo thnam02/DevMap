@@ -31,8 +31,8 @@ BASE = {
     "tests/test_limits.py": "from pkg.limits import limit\n\n\ndef test_limit():\n    assert limit() == 3\n",
     # set-up done once per process, charged to the first test that needs it; file order is not alphabetical order
     "pkg/lazy.py": "_T = None\n\n\ndef _build():\n    return {'x': 1}\n\n\ndef get():\n    global _T\n    if _T is None:\n"
-                   "        _T = _build()\n    return _T['x']\n\n\ndef other():\n    return 2\n",
-    "tests/test_lazy.py": "from pkg.lazy import get, other\n\n\ndef test_z_first():\n    assert get() + other() == 3\n\n\n"
+                   "        _T = _build()\n    return _T['x']\n\n\ndef other():\n    return 2\n\n\ndef only_z():\n    return 0\n",
+    "tests/test_lazy.py": "from pkg.lazy import get, only_z, other\n\n\ndef test_z_first():\n    assert get() + other() + only_z() == 3\n\n\n"
                           "def test_a_second():\n    assert get() + other() == 3\n\n\ndef test_p1():\n    pass\n\n\n"
                           "def test_p2():\n    pass\n\n\ndef test_p3():\n    pass\n",
 }
@@ -173,6 +173,26 @@ class UpdateTest(unittest.TestCase):
         fresh = REC.record(self.root, "pkg", os.path.join(self.root, ".fresh.json"), sys.executable, workers=2)
         d = INC.compare(new, fresh)
         self.assertEqual(d["missing_in_a"], 0, d)
+
+    def test_file_order_holds_over_consecutive_updates(self):
+        # only_z() changes: test_z_first alone is re-recorded, and the update puts it after the file's kept tests in
+        # the map. other() changes next: both lazy tests are re-recorded and must still run in file order.
+        self.commit({"pkg/lazy.py": BASE["pkg/lazy.py"].replace("    return 0", "    return 1 - 1")})
+        sel1, _ = I.selection(self.root, self.map0, sys.executable)
+        self.assertEqual([n for n in sel1 if "test_lazy" in n], ["tests/test_lazy.py::test_z_first"])
+        map1 = INC.update(self.map0, self.root, "pkg", os.path.join(self.root, ".map1.json"), sel1, sys.executable,
+                          workers=2)
+        self.commit({"pkg/lazy.py": BASE["pkg/lazy.py"].replace("    return 0", "    return 1 - 1")
+                     .replace("return 2", "return 1 + 1")})
+        sel2, _ = I.selection(self.root, map1, sys.executable)
+        self.assertEqual(sorted(n for n in sel2 if "test_lazy" in n),
+                         ["tests/test_lazy.py::test_a_second", "tests/test_lazy.py::test_z_first"])
+        map2 = INC.update(map1, self.root, "pkg", os.path.join(self.root, ".map2.json"), sel2, sys.executable,
+                          workers=2)
+        self.assertGreaterEqual(map2["__incremental__"]["rerecorded_tests_alone"], 2, map2["__incremental__"])
+        self.assertIn(["pkg/lazy.py", 4], map2["tests/test_lazy.py::test_z_first"]["funcs"])
+        fresh = REC.record(self.root, "pkg", os.path.join(self.root, ".fresh.json"), sys.executable, workers=2)
+        self.assertEqual(INC.compare(map2, fresh)["missing_in_a"], 0)
 
     def test_whole_suite_selection_records_everything(self):
         self.commit({"pkg/a.py": BASE["pkg/a.py"] + "\n"})
