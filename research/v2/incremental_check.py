@@ -80,20 +80,38 @@ def main() -> None:
     for k in range(1, len(commits)):
         checkout(tree, commits[k])
         row = {"k": k, "commit": commits[k], "from": commits[k - 1], "full_record_s_first": round(full0, 2)}
+        sel = None
         if pending_next:
             mi, mf = pending_next
-            si, _ = I.selection(tree, mi, PL.PY)
+            # v2.3 protocol: the fresh map of the previous commit, with its own 9-sample base snapshot (its cache is
+            # set aside, then the incremental run's adopted snapshot put back), timed apart from v2.4's selection
+            cache = os.path.join(tree, I.STATE_DIR, "importstate_base.json")
+            adopted = open(cache).read() if os.path.exists(cache) else None
+            if os.path.exists(cache):
+                os.remove(cache)
+            t = time.time()
             sf, _ = I.selection(tree, mf, PL.PY)
+            t_f = time.time() - t
+            if adopted is not None:
+                open(cache, "w").write(adopted)
+            elif os.path.exists(cache):
+                os.remove(cache)
+            t = time.time()
+            si, why_i = I.selection(tree, mi, PL.PY)
+            t_i = time.time() - t
             only_fresh = 0 if si is None else ("full" if sf is None else len(set(sf) - set(si)))
             row["next_selection"] = {
                 "incremental": None if si is None else len(si), "fresh": None if sf is None else len(sf),
                 "only_fresh": only_fresh,
                 "only_fresh_examples": [] if si is None or sf is None else sorted(set(sf) - set(si))[:5],
-                "only_incremental": 0 if si is None or sf is None else len(set(si) - set(sf))}
+                "only_incremental": 0 if si is None or sf is None else len(set(si) - set(sf)),
+                "v23_selection_s": round(t_f, 2), "v24_selection_s": round(t_i, 2)}
             pending_next = None
-        t = time.time()
-        sel, why = I.selection(tree, cur, PL.PY)
-        row["selection_s"] = round(time.time() - t, 2)
+            sel, why, row["selection_s"] = si, why_i, round(t_i, 2)
+        if "next_selection" not in row:
+            t = time.time()
+            sel, why = I.selection(tree, cur, PL.PY)
+            row["selection_s"] = round(time.time() - t, 2)
         row["selected"] = None if sel is None else len(sel)
         row["reason"] = why.get("reason")
         t = time.time()
@@ -145,6 +163,21 @@ def summarise(repo: str) -> None:
                if cmp_rows and "noise" in cmp_rows[0] else []),
              f"- Selection at the next commit: {len(nxt)} checks; tests selected only with the fresh map: "
              f"{sum(x['only_fresh'] for x in nxt if isinstance(x['only_fresh'], int))}"]
+    both = [(prev, r) for prev, r in zip(rows, rows[1:]) if "next_selection" in r and "fresh_record_s" in prev]
+    if both:
+        v23 = [p["fresh_record_s"] + r["next_selection"]["v23_selection_s"] for p, r in both]
+        v24 = [p["update_s"] + r["next_selection"]["v24_selection_s"] for p, r in both]
+        same = sum(1 for _, r in both if r["next_selection"]["only_fresh"] == 0 and r["next_selection"]["only_incremental"] == 0)
+        med = lambda xs: sorted(xs)[len(xs) // 2]
+        lines += ["", "## v2.3 (record from scratch at every commit) vs v2.4 (incremental), same commits", "",
+                  "| | v2.3 | v2.4 |", "|---|---|---|",
+                  f"| Per-commit cost: recording + selection, median | {med(v23):.1f} s | {med(v24):.1f} s |",
+                  f"| Total over {len(both)} commits | {sum(v23):.0f} s | {sum(v24):.0f} s |",
+                  f"| Selection alone, median | {med([r['next_selection']['v23_selection_s'] for _, r in both]):.1f} s | "
+                  f"{med([r['next_selection']['v24_selection_s'] for _, r in both]):.1f} s |",
+                  f"| Commits with identical selected tests | {same} of {len(both)} | |",
+                  f"| Tests only v2.3 selects (lost by v2.4) | {sum(r['next_selection']['only_fresh'] for _, r in both if isinstance(r['next_selection']['only_fresh'], int))} | |",
+                  f"| Tests only v2.4 selects (extra cost) | {sum(r['next_selection']['only_incremental'] for _, r in both)} | |"]
     for r in cmp_rows:
         if r["compare"]["missing_in_a"] or r["compare"]["only_in_b"]:
             lines.append(f"  - step {r['k']} ({r['commit'][:10]}): {json.dumps(r['compare']['examples'][:2])[:600]}")
