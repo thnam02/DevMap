@@ -8,9 +8,12 @@ the map's commit and its record still describes it. Two things do change for it:
     in a changed file is moved along the unchanged lines of the file (difflib's equal blocks); a key whose line was
     itself edited or deleted cannot be moved, so the tests that depend on it are re-recorded instead of guessed.
   - new tests: test files that pytest now collects and the map does not know are recorded.
-Re-recorded: every test file holding a selected test, every changed or new test file, every test file whose record
-(or one of its fixture records) has a key that cannot be moved, and every test recorded as unrecorded. selected=None
-(selection fell back to the whole suite) records everything again.
+Re-recorded, at the finest safe grain: single tests when only those tests' records can be out of date (selected
+tests, and tests whose own or fixture record has a key that cannot be moved), recorded in their file's interpreter
+without the file's other tests; whole test files when the file changed, is new, failed to record before, or when
+half of its tests or more need re-recording. A requested test that leaves no record (pytest cannot address it by id,
+or it is now skipped) sends its file to a whole-file recording. selected=None (selection fell back to the whole
+suite) records everything again.
 
 The global (import and collection) record keeps its moved keys; when one cannot be moved and no test file is
 re-recorded, the cheapest test file is re-recorded to refresh it. Fixture records are moved like tests' records;
@@ -130,9 +133,12 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
     tests = {k: v for k, v in covmap.items() if not k.startswith("__")}
     known_files = {_test_file(n) for n in tests} | set(covmap.get("__collected__") or [])
 
-    why: dict[str, str] = {}
+    # what to re-record: whole test files (the file changed, is new, or its recording failed before), or single
+    # tests (selected, or a record that cannot be moved), since only those tests' records can be out of date
+    why: dict[str, str] = {}            # whole files
+    redo_tests: dict[str, str] = {}     # test id -> reason
     for n in selected:
-        why.setdefault(_test_file(n), "selected")
+        redo_tests.setdefault(n, "selected")
     for p in changes:
         if p in known_files:
             why.setdefault(p, "test file changed")
@@ -144,34 +150,46 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
             fixtures[k] = {**r, "funcs": funcs}
         else:
             fx_unmovable.add(k)
-    kept = {}
     for n, v in tests.items():
         f = _test_file(n)
-        if f in why:
+        if f in why or n in redo_tests:
             continue
         if v.get("unrecorded"):
             why.setdefault(f, "unrecorded before")
-            continue
-        if fx_unmovable & set(v.get("fx", ())):
-            why.setdefault(f, "fixture record cannot be moved")
-            continue
-        funcs, ok = _move(v.get("funcs", []), maps, py_changed)
-        if not ok:
-            why.setdefault(f, "record cannot be moved")
-            continue
-        kept[n] = {**v, "funcs": funcs}
-    kept = {n: v for n, v in kept.items() if _test_file(n) not in why}
+        elif fx_unmovable & set(v.get("fx", ())):
+            redo_tests[n] = "fixture record cannot be moved"
+        elif not _move(v.get("funcs", []), maps, py_changed)[1]:
+            redo_tests[n] = "record cannot be moved"
 
     renv = _record_env(env)
     collected = REC.collect_files(root, python, targets or [], renv)
     for f in collected:
         if f not in known_files:
             why.setdefault(f, "new test file")
-    redo = sorted(f for f in why if f in set(collected))   # files gone from the suite drop out with their tests
+    per_file: dict[str, list[str]] = {}
+    for n in redo_tests:
+        if _test_file(n) not in why:
+            per_file.setdefault(_test_file(n), []).append(n)
+    in_file = {}
+    for n in tests:
+        in_file[_test_file(n)] = in_file.get(_test_file(n), 0) + 1
+    for f, ns in list(per_file.items()):
+        if len(ns) * 2 >= in_file.get(f, 0):      # half the file or more: record it whole
+            why.setdefault(f, redo_tests[ns[0]])
+            del per_file[f]
+    present = set(collected)
+    per_file = {f: sorted(ns) for f, ns in per_file.items() if f in present}
+    redo = sorted(f for f in why if f in present)   # files gone from the suite drop out with their tests
+    redone = {n for ns in per_file.values() for n in ns}
+    kept = {}
+    for n, v in tests.items():
+        if _test_file(n) in why or n in redone or n in redo_tests:
+            continue
+        kept[n] = {**v, "funcs": _move(v.get("funcs", []), maps, py_changed)[0]}
 
     glob = covmap.get("__global__") or {}
     gfuncs, gok = _move(glob.get("funcs", []), maps, py_changed)
-    if not gok and not redo and collected:
+    if not gok and not redo and not per_file and collected:
         cheapest = min(collected, key=lambda f: sum(v.get("time", 0) for n, v in tests.items() if _test_file(n) == f))
         redo = [cheapest]
         why.setdefault(cheapest, "refresh the import-time record")
@@ -181,11 +199,22 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
                                 "file_records": glob.get("file_records", False)}}
     parts = [kept_part]
     rec_seconds = 0.0
-    if redo:
+    fallback = []
+    if redo or per_file:
         t1 = time.time()
         with tempfile.TemporaryDirectory(prefix="dc-incr-") as tmp:
-            parts.append(REC.record(root, pkg, os.path.join(tmp, "part.json"), python, redo, workers, before_test,
-                                    extra_args, env))
+            part = REC.record(root, pkg, os.path.join(tmp, "part.json"), python, sorted(set(redo) | set(per_file)),
+                              workers, before_test, extra_args, env, nodes=per_file)
+            # a requested test that left no record (pytest could not address it by id, or it is now skipped): its
+            # file is recorded whole instead, so nothing is lost
+            fallback = sorted(f for f, ns in per_file.items() if any(n not in part for n in ns))
+            if fallback:
+                kept = {n: v for n, v in kept.items() if _test_file(n) not in fallback}
+                parts[0] = {k: v for k, v in parts[0].items() if k.startswith("__") or _test_file(k) not in fallback}
+                part = {k: v for k, v in part.items() if k.startswith("__") or _test_file(k) not in fallback}
+                parts.append(REC.record(root, pkg, os.path.join(tmp, "fallback.json"), python, fallback, workers,
+                                        before_test, extra_args, env))
+            parts.insert(1, part)
         rec_seconds = time.time() - t1
     m = REC.merge(parts)
     used = {k for n, v in m.items() if not n.startswith("__") for k in v.get("fx", ())}
@@ -195,9 +224,12 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
     adopted = _adopt_snapshot(root, m, python)
     m["__incremental__"] = {
         "version": VERSION, "from": old, "full": None, "changed_files": len(changes),
-        "rerecorded_files": len(redo), "test_files": len(collected),
+        "rerecorded_files": len(redo) + len(fallback), "rerecorded_tests_alone": len(redone) - sum(
+            len(per_file[f]) for f in fallback), "files_with_single_tests": len(per_file) - len(fallback),
+        "test_files": len(collected),
         "kept_tests": len(kept), "tests": sum(1 for n in m if not n.startswith("__")),
         "reasons": {r: sum(1 for f in redo if why.get(f) == r) for r in sorted({why[f] for f in redo})},
+        "test_reasons": {r: sum(1 for n in redone if redo_tests.get(n) == r) for r in sorted({redo_tests[n] for n in redone})},
         "record_seconds": round(rec_seconds, 2), "snapshot_adopted": adopted, "seconds": round(time.time() - t0, 2)}
     json.dump(m, open(out, "w"))
     return m

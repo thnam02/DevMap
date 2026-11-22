@@ -89,7 +89,9 @@ def _unrecorded(root: str, python: str, f: str, env: dict, spent: int) -> dict:
 
 def record(root: str, pkg: str, out: str, python: str | None = None, targets: list[str] | None = None,
            workers: int | None = None, before_test: str = "", extra_args: list[str] | None = None,
-           env: dict | None = None) -> dict:
+           env: dict | None = None, nodes: dict[str, list[str]] | None = None) -> dict:
+    """(v2.4) nodes: {test file: [test ids]} records only those tests of that file (still one interpreter per file);
+    files not in nodes are recorded whole."""
     python = python or sys.executable
     base_commit = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     base_dirty = bool(subprocess.run(["git", "-C", root, "status", "--porcelain", "--untracked-files=no"],
@@ -108,7 +110,7 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
         if before_test:
             e["COVMAP_BEFORE_TEST"] = before_test
         cmd = [python, "-m", "pytest", "-p", "dc_engine.covplugin", "-p", "no:cacheprovider", "-q", "--tb=no",
-               "-p", "no:randomly", *(extra_args or []), f]
+               "-p", "no:randomly", *(extra_args or []), *((nodes or {}).get(f) or [f])]
         try:
             subprocess.run(cmd, cwd=root, env=e, capture_output=True, timeout=FILE_TIMEOUT or None)
         except subprocess.TimeoutExpired:
