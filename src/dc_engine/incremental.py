@@ -178,7 +178,12 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
             why.setdefault(f, redo_tests[ns[0]])
             del per_file[f]
     present = set(collected)
-    per_file = {f: sorted(ns) for f, ns in per_file.items() if f in present}
+    # in the order the tests ran when recorded (the map's order), not alphabetical: work done once per process (lazy
+    # set-up, caches) is charged to the first test that needs it, so a test run ahead of one that ran before it in
+    # the file would take that work from it. In file order every test re-recorded alone has only a subset of the
+    # tests that ran before it in the file, so it records at least what it did there.
+    pos = {n: i for i, n in enumerate(tests)}
+    per_file = {f: sorted(ns, key=lambda n: pos.get(n, len(pos))) for f, ns in per_file.items() if f in present}
     redo = sorted(f for f in why if f in present)   # files gone from the suite drop out with their tests
     redone = {n for ns in per_file.values() for n in ns}
     kept = {}

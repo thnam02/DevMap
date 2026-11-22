@@ -29,6 +29,12 @@ BASE = {
     "tests/test_many.py": "from pkg.a import f, g\n\n\ndef test_m1():\n    assert g(1) == 2\n\n\ndef test_m2():\n    assert f(1) == 2\n\n\ndef test_m3():\n    assert f(2) == 3\n\n\ndef test_m4():\n    assert f(3) == 4\n",
     "pkg/limits.py": "LIMIT = 3\n\n\ndef limit():\n    return LIMIT\n",
     "tests/test_limits.py": "from pkg.limits import limit\n\n\ndef test_limit():\n    assert limit() == 3\n",
+    # set-up done once per process, charged to the first test that needs it; file order is not alphabetical order
+    "pkg/lazy.py": "_T = None\n\n\ndef _build():\n    return {'x': 1}\n\n\ndef get():\n    global _T\n    if _T is None:\n"
+                   "        _T = _build()\n    return _T['x']\n\n\ndef other():\n    return 2\n",
+    "tests/test_lazy.py": "from pkg.lazy import get, other\n\n\ndef test_z_first():\n    assert get() + other() == 3\n\n\n"
+                          "def test_a_second():\n    assert get() + other() == 3\n\n\ndef test_p1():\n    pass\n\n\n"
+                          "def test_p2():\n    pass\n\n\ndef test_p3():\n    pass\n",
 }
 
 
@@ -108,7 +114,7 @@ class UpdateTest(unittest.TestCase):
         self.assertEqual(INC.compare(new, fresh)["differ"], 0)
         self.assertIn("tests/test_b.py::test_h", new)
         self.assertEqual(new["__incremental__"]["rerecorded_files"], 1, new["__incremental__"])
-        self.assertEqual(new["__incremental__"]["kept_tests"], 7)
+        self.assertEqual(new["__incremental__"]["kept_tests"], 12)
 
     def test_skipped_only_files_are_not_re_recorded_each_time(self):
         self.assertIn("tests/test_skipped.py", self.map0["__collected__"])
@@ -152,6 +158,21 @@ class UpdateTest(unittest.TestCase):
         fresh = REC.record(self.root, "pkg", os.path.join(self.root, ".fresh.json"), sys.executable, workers=2)
         d = INC.compare(new, fresh)
         self.assertEqual((d["only_in_a"], d["only_in_b"], d["differ"]), (0, 0, 0), d)
+
+    def test_single_tests_are_re_recorded_in_file_order(self):
+        # other() changes: test_z_first and test_a_second (2 of 5) are re-recorded alone. Run alphabetically,
+        # test_a_second would build the cache and test_z_first's record would lose _build.
+        self.assertIn(["pkg/lazy.py", 4], self.map0["tests/test_lazy.py::test_z_first"]["funcs"])
+        self.commit({"pkg/lazy.py": BASE["pkg/lazy.py"].replace("return 2", "return 1 + 1")})
+        selected, _ = I.selection(self.root, self.map0, sys.executable)
+        self.assertEqual(sorted(n for n in selected if "test_lazy" in n),
+                         ["tests/test_lazy.py::test_a_second", "tests/test_lazy.py::test_z_first"])
+        new = INC.update(self.map0, self.root, "pkg", os.path.join(self.root, ".map1.json"), selected, sys.executable,
+                         workers=2)
+        self.assertGreaterEqual(new["__incremental__"]["rerecorded_tests_alone"], 2, new["__incremental__"])
+        fresh = REC.record(self.root, "pkg", os.path.join(self.root, ".fresh.json"), sys.executable, workers=2)
+        d = INC.compare(new, fresh)
+        self.assertEqual(d["missing_in_a"], 0, d)
 
     def test_whole_suite_selection_records_everything(self):
         self.commit({"pkg/a.py": BASE["pkg/a.py"] + "\n"})
