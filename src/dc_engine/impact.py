@@ -631,6 +631,7 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     cur = importstate.snapshot(root, files, python) if base is not None else None
     if base is None or cur is None:
         return None, set(), {"reason": "could not compare import-time state"}
+    importstate.keep_clean_snapshot(root, files, python, cur, os.path.join(root, STATE_DIR, "importstate_cur.json"))
     d = importstate.diff(base, cur, _new_top_level_defs(root, changed_files))
     # values of a module the base did not have (a new source file): new, so no existing code reads them
     base_mods = {k.split(":", 1)[0] for k in base["state"]}

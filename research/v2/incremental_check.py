@@ -105,6 +105,11 @@ def main() -> None:
             fresh, fs = record(os.path.join(work, f"fresh-{k}.json"))
             row["fresh_record_s"] = round(fs, 2)
             row["compare"] = INC.compare(cur, fresh)
+            if k == a.every:
+                # noise baseline: a second fresh recording of the same commit; what two fresh recordings disagree
+                # on is run-to-run variation, not something incremental recording loses
+                fresh2, _ = record(os.path.join(work, f"fresh2-{k}.json"))
+                row["noise"] = INC.compare(fresh2, fresh)
             pending_next = (cur, fresh)
         with open(rows_path, "a") as f:
             f.write(json.dumps(row) + "\n")
@@ -128,11 +133,16 @@ def summarise(repo: str) -> None:
              f"- First full recording: {rows[0]['full_record_s_first']} s; fresh recordings at check points: "
              f"median {sorted(fresh)[len(fresh) // 2] if fresh else '-'} s",
              f"- Incremental update: median {upd[len(upd) // 2]} s, max {upd[-1]} s; test files re-recorded: median "
-             f"{sorted(r['incremental'].get('rerecorded_files', 0) or 0 for r in rows)[len(rows) // 2]}",
+             f"{sorted(r['incremental'].get('rerecorded_files', 0) or 0 for r in rows)[len(rows) // 2]}; "
+             f"selection: median {sorted(r['selection_s'] for r in rows)[len(rows) // 2]} s; base snapshot adopted at "
+             f"{sum(1 for r in rows if r['incremental'].get('snapshot_adopted'))} of {len(rows)} steps",
              f"- Map comparisons: {len(cmp_rows)}; tests whose fresh record has something the incremental one lacks: "
              f"{sum(r['compare']['missing_in_a'] for r in cmp_rows)}; tests only in the fresh map: "
              f"{sum(r['compare']['only_in_b'] for r in cmp_rows)}; global record missing: "
              f"{sum(r['compare']['global_missing_in_a'] for r in cmp_rows)}",
+             *([f"- Noise baseline (two fresh recordings of one commit): {cmp_rows[0]['noise']['differ']} tests differ, "
+                f"{cmp_rows[0]['noise']['missing_in_a']} with something only one of them records"]
+               if cmp_rows and "noise" in cmp_rows[0] else []),
              f"- Selection at the next commit: {len(nxt)} checks; tests selected only with the fresh map: "
              f"{sum(x['only_fresh'] for x in nxt if isinstance(x['only_fresh'], int))}"]
     for r in cmp_rows:

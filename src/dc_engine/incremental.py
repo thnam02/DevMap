@@ -128,7 +128,7 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
         if a is not None and b is not None:
             maps[p] = line_map(a, b)
     tests = {k: v for k, v in covmap.items() if not k.startswith("__")}
-    known_files = {_test_file(n) for n in tests}
+    known_files = {_test_file(n) for n in tests} | set(covmap.get("__collected__") or [])
 
     why: dict[str, str] = {}
     for n in selected:
@@ -191,14 +191,27 @@ def update(covmap: dict, root: str, pkg: str, out: str, selected: list[str] | No
     used = {k for n, v in m.items() if not n.startswith("__") for k in v.get("fx", ())}
     m["__fixtures__"] = {k: r for k, r in m["__fixtures__"].items() if k in used}
     m["__base__"] = {"commit": new, "dirty": dirty}
+    m["__collected__"] = collected
+    adopted = _adopt_snapshot(root, m, python)
     m["__incremental__"] = {
         "version": VERSION, "from": old, "full": None, "changed_files": len(changes),
         "rerecorded_files": len(redo), "test_files": len(collected),
         "kept_tests": len(kept), "tests": sum(1 for n in m if not n.startswith("__")),
         "reasons": {r: sum(1 for f in redo if why.get(f) == r) for r in sorted({why[f] for f in redo})},
-        "record_seconds": round(rec_seconds, 2), "seconds": round(time.time() - t0, 2)}
+        "record_seconds": round(rec_seconds, 2), "snapshot_adopted": adopted, "seconds": round(time.time() - t0, 2)}
     json.dump(m, open(out, "w"))
     return m
+
+
+def _adopt_snapshot(root: str, m: dict, python: str) -> bool:
+    """The import-time snapshot selection took of this commit becomes the base snapshot for the next change
+    (importstate.adopt_base), so the next selection needs no new base samples."""
+    from . import impact as I
+    from . import importstate
+    state = os.path.join(root, I.STATE_DIR)
+    base = os.path.join(state, "importstate_base.json")
+    return importstate.adopt_base(root, I._snapshot_files(m), python, os.path.join(state, "importstate_cur.json"),
+                                  base, base)
 
 
 def _norm(v: dict) -> dict:

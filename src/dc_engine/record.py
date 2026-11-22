@@ -129,6 +129,9 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
     # (v2.2) the commit the map describes: selection measures changes from it, so commits made after recording
     # still count as changes (and a map from a commit outside the current history is not used)
     m["__base__"] = {"commit": base_commit, "dirty": base_dirty}
+    # (v2.4) every test file collected, also those with no entry (all tests skipped): incremental recording must not
+    # take them for new test files at every update
+    m["__collected__"] = files
     json.dump(m, open(out, "w"))
     return m
 

@@ -436,6 +436,47 @@ def base_snapshot(root: str, files: list[str], python: str, cache_path: str, rev
     return snap
 
 
+def keep_clean_snapshot(root: str, files: list[str], python: str, snap: dict, path: str) -> None:
+    """(v2.4) Keep a snapshot of the working tree when it is exactly HEAD in the package directories (no edits, no
+    untracked files there), keyed like a base snapshot of HEAD: incremental recording installs it as the next base
+    (adopt_base) instead of taking nine new samples."""
+    tops = sorted({f.split("/", 1)[0] for f in files})
+    st = subprocess.run(["git", "-C", root, "status", "--porcelain", "--", *tops], capture_output=True, text=True)
+    if st.returncode != 0 or st.stdout.strip():
+        return
+    try:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        json.dump({"head": cache_key(root, tops, python, files), "format": BASE_FORMAT, "snapshot": snap}, open(path, "w"))
+    except OSError:
+        pass
+
+
+def adopt_base(root: str, files: list[str], python: str, cur_path: str, old_base_path: str, base_path: str) -> bool:
+    """(v2.4) Make the kept snapshot of HEAD (keep_clean_snapshot) the cached base snapshot, carrying over the keys
+    the previous base found order-unstable. A value that became order-unstable in between is then compared with
+    order and may count as changed: more tests selected, never fewer. False when there is nothing to adopt."""
+    tops = sorted({f.split("/", 1)[0] for f in files})
+    try:
+        cur = json.load(open(cur_path))
+    except (OSError, ValueError):
+        return False
+    if cur.get("format") != BASE_FORMAT or cur.get("head") != cache_key(root, tops, python, files):
+        return False
+    try:
+        old = json.load(open(old_base_path)).get("snapshot") or {}
+    except (OSError, ValueError):
+        old = {}
+    snap = dict(cur["snapshot"])
+    snap["unstable"] = sorted(set(old.get("unstable", [])))
+    snap["unstable_samples"] = old.get("unstable_samples", 0)
+    snap["adopted"] = True
+    try:
+        json.dump({"head": cur["head"], "format": BASE_FORMAT, "snapshot": snap}, open(base_path, "w"))
+    except OSError:
+        return False
+    return True
+
+
 def import_funcs_of(root: str, files: list[str], python: str, cache_path: str, rev: str = "HEAD") -> list | None:
     """Functions of the HEAD commit that run while its package is imported (an import-only pass: no fingerprints),
     cached per commit. Used when only function bodies changed, to tell whether an edited function runs at import."""

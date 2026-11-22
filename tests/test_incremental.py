@@ -25,6 +25,9 @@ BASE = {
     "tests/test_a.py": "from pkg.a import f\n\n\ndef test_f():\n    assert f(1) == 2\n",
     "tests/test_b.py": "from pkg.b import h\n\n\ndef test_h():\n    assert h(1) == 0\n",
     "tests/test_gone.py": "from pkg.a import g\n\n\ndef test_g():\n    assert g(2) == 4\n",
+    "tests/test_skipped.py": "import pytest\n\n\n@pytest.mark.skip(reason='never')\ndef test_s():\n    pass\n",
+    "pkg/limits.py": "LIMIT = 3\n\n\ndef limit():\n    return LIMIT\n",
+    "tests/test_limits.py": "from pkg.limits import limit\n\n\ndef test_limit():\n    assert limit() == 3\n",
 }
 
 
@@ -104,7 +107,34 @@ class UpdateTest(unittest.TestCase):
         self.assertEqual(INC.compare(new, fresh)["differ"], 0)
         self.assertIn("tests/test_b.py::test_h", new)
         self.assertEqual(new["__incremental__"]["rerecorded_files"], 1, new["__incremental__"])
-        self.assertEqual(new["__incremental__"]["kept_tests"], 2)
+        self.assertEqual(new["__incremental__"]["kept_tests"], 3)
+
+    def test_skipped_only_files_are_not_re_recorded_each_time(self):
+        self.assertIn("tests/test_skipped.py", self.map0["__collected__"])
+        self.commit({"pkg/a.py": BASE["pkg/a.py"].replace("x * 2", "x * 3")})
+        selected, _ = I.selection(self.root, self.map0, sys.executable)
+        new = INC.update(self.map0, self.root, "pkg", os.path.join(self.root, ".map1.json"), selected or [],
+                         sys.executable, workers=2)
+        self.assertNotIn("new test file", new["__incremental__"]["reasons"], new["__incremental__"])
+
+    def test_the_snapshot_of_the_new_commit_becomes_the_next_base(self):
+        from dc_engine import importstate
+        # an import-time value changes: selection takes a snapshot of the new commit, the update adopts it
+        self.commit({"pkg/limits.py": BASE["pkg/limits.py"].replace("LIMIT = 3", "LIMIT = 4")})
+        selected, why = I.selection(self.root, self.map0, sys.executable)
+        self.assertIn("tests/test_limits.py::test_limit", selected or [], why)
+        new = INC.update(self.map0, self.root, "pkg", os.path.join(self.root, ".map1.json"), selected, sys.executable,
+                         workers=2)
+        self.assertTrue(new["__incremental__"]["snapshot_adopted"], new["__incremental__"])
+        cached = json.load(open(os.path.join(self.root, ".dc-engine", "importstate_base.json")))
+        files = I._snapshot_files(new)
+        tops = sorted({f.split("/", 1)[0] for f in files})
+        self.assertEqual(cached["head"], importstate.cache_key(self.root, tops, sys.executable, files))
+        self.assertTrue(cached["snapshot"]["adopted"])
+        # the next change is compared with the adopted base: the value changed again, so its reader is selected
+        self.commit({"pkg/limits.py": BASE["pkg/limits.py"].replace("LIMIT = 3", "LIMIT = 5")})
+        selected2, why2 = I.selection(self.root, new, sys.executable)
+        self.assertIn("tests/test_limits.py::test_limit", selected2 or [], why2)
 
     def test_whole_suite_selection_records_everything(self):
         self.commit({"pkg/a.py": BASE["pkg/a.py"] + "\n"})
