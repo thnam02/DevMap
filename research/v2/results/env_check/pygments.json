@@ -1,0 +1,26 @@
+{
+ "project": "pygments",
+ "commit": "156d85fdd18d34427fe893527e71da91dcfb0eb5",
+ "env": {
+  "python": "3.13.18",
+  "packages": 192,
+  "hash": "fbe62365de2c533e"
+ },
+ "collect_s": 3.1,
+ "test_files": 1541,
+ "tests": 5345,
+ "files_failing_to_collect": 1,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [
+  "wcag_contrast_ratio"
+ ],
+ "failed": {
+  "tests/contrast/test_contrasts.py": {
+   "missing": [
+    "wcag_contrast_ratio"
+   ],
+   "message": "ure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/contrast/test_contrasts.py:17: in <module>\n    import wcag_contrast_ratio\nE   ModuleNotFoundError: No module named 'wcag_contrast_ratio'"
+  }
+ },
+ "skipped": {}
+}

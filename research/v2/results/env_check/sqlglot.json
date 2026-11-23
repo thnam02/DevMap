@@ -1,0 +1,39 @@
+{
+ "project": "sqlglot",
+ "commit": "7f1cf60c884868a295f76dfd42745b931dd9cfbb",
+ "env": {
+  "python": "3.13.18",
+  "packages": 192,
+  "hash": "fbe62365de2c533e"
+ },
+ "collect_s": 2.1,
+ "test_files": 55,
+ "tests": 1104,
+ "files_failing_to_collect": 3,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [
+  "duckdb",
+  "pytz"
+ ],
+ "failed": {
+  "tests/dialects/test_bigquery.py": {
+   "missing": [
+    "pytz"
+   ],
+   "message": "/test_bigquery.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/dialects/test_bigquery.py:3: in <module>\n    import pytz\nE   ModuleNotFoundError: No module named 'pytz'"
+  },
+  "tests/test_executor.py": {
+   "missing": [
+    "duckdb"
+   ],
+   "message": "ests/test_executor.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_executor.py:10: in <module>\n    import duckdb\nE   ModuleNotFoundError: No module named 'duckdb'"
+  },
+  "tests/test_optimizer.py": {
+   "missing": [
+    "duckdb"
+   ],
+   "message": "sts/test_optimizer.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_optimizer.py:9: in <module>\n    import duckdb\nE   ModuleNotFoundError: No module named 'duckdb'"
+  }
+ },
+ "skipped": {}
+}
