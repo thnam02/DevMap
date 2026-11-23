@@ -1,0 +1,18 @@
+{
+ "repo": "sqlglot",
+ "commit": "7f1cf60c884868a295f76dfd42745b931dd9cfbb",
+ "seconds": {
+  "old1": 165.5,
+  "old2": 151.5,
+  "new": 109.4
+ },
+ "noise_tests": 0,
+ "old_vs_new_tests": 0,
+ "beyond_noise": [],
+ "same": {
+  "__global__": true,
+  "__collected__": true
+ },
+ "pass": true,
+ "tests": 1104
+}

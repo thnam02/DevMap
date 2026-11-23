@@ -49,10 +49,10 @@ class RecordSpeedTest(unittest.TestCase):
         subprocess.run(g + ["init", "-q"], check=True)
         subprocess.run(g + ["add", "-A"], check=True)
         subprocess.run(g + ["commit", "-qm", "base"], check=True)
-        self.pycache = REC.PYCACHE
+        self.pycache, self.fork = REC.PYCACHE, REC.FORK
 
     def tearDown(self):
-        REC.PYCACHE = self.pycache
+        REC.PYCACHE, REC.FORK = self.pycache, self.fork
         shutil.rmtree(self.root, ignore_errors=True)
 
     def rec(self, name):
@@ -74,10 +74,12 @@ class RecordSpeedTest(unittest.TestCase):
         self.assertIn(["pkg/lazy.py", 1], m["tests/test_lazy.py::test_lazy"]["funcs"])
         self.assertNotIn(["pkg/lazy.py", 1], m["tests/test_lazy.py::test_after"]["funcs"])
 
-    def test_shared_bytecode_and_scheduling_leave_the_map_unchanged(self):
-        REC.PYCACHE = False
+    def test_speed_ups_leave_the_map_unchanged(self):
+        """Shared byte-code, longest files first and the fork server (dc_engine.forkrec) against one new interpreter
+        per test file compiling its own byte-code."""
+        REC.PYCACHE, REC.FORK = False, False
         plain = self.rec(".plain.json")
-        REC.PYCACHE = True
+        REC.PYCACHE, REC.FORK = True, True
         first = self.rec(".first.json")       # no recorded file times yet: collection order
         times = json.load(open(os.path.join(self.root, REC.TIMES)))
         self.assertEqual(sorted(times), sorted(plain["__collected__"]))
@@ -89,6 +91,17 @@ class RecordSpeedTest(unittest.TestCase):
         # byte-code went to a temporary directory outside the tree, which is gone
         caches = [d for d, _, _ in os.walk(self.root) if d.endswith("__pycache__")]
         self.assertEqual(caches, [])
+
+    def test_fork_server_handles_timeouts_like_subprocesses(self):
+        REC.FORK = True
+        old = REC.FILE_TIMEOUT
+        REC.FILE_TIMEOUT = 0.3   # test_slow sleeps 0.5 s: its file is recorded as unrecorded (always selected)
+        try:
+            m = self.rec(".t.json")
+        finally:
+            REC.FILE_TIMEOUT = old
+        self.assertTrue(m["tests/test_slow.py::test_slow"].get("unrecorded"))
+        self.assertTrue(m["tests/test_slow.py::test_slow"]["always"])
 
     def test_partial_recordings_do_not_overwrite_file_times(self):
         self.rec(".full.json")
