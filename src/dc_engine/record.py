@@ -7,6 +7,10 @@ by one file's tests (memoised values, compiled-statement caches) cannot hide ano
 Each file runs `python -m pytest -p dc_engine.covplugin FILE`; the partial maps are merged: tests are disjoint,
 fixture records with the same key (session-scoped fixtures, the "<session>" record) and the global (package import)
 record are unions.
+
+(v2.3.1) Speed only, the map is the same: the recording's processes share byte-code compiled once (in a temporary
+directory outside the tree), and test files run longest first (each file's time at the previous recording, kept in
+.dc-engine/record_times.json).
 """
 from __future__ import annotations
 
@@ -17,6 +21,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +81,30 @@ def merge(parts: list[dict]) -> dict:
 # selected (like a test whose setup failed), so a slow or crashing file costs time, not safety. Each such test is given
 # an equal share of the time the file was allowed.
 FILE_TIMEOUT = int(os.environ.get("PROVISO_RECORD_FILE_TIMEOUT", "0") or 0)
+# (v2.3.1) recording speed only; the map is the same either way. PROVISO_RECORD_PYCACHE=0: every process compiles its
+# own byte-code, as before v2.3.1.
+PYCACHE = os.environ.get("PROVISO_RECORD_PYCACHE", "1") != "0"
+TIMES = os.path.join(".dc-engine", "record_times.json")   # each test file's recording time, to schedule long ones first
+
+
+def _load_times(path: str) -> dict:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            got = json.load(fh)
+        return {k: float(v) for k, v in got.items()} if isinstance(got, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _save_times(path: str, times: dict) -> None:
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(times, fh, sort_keys=True)
+        os.replace(tmp, path)
+    except OSError:
+        pass   # scheduling is only a speed-up
 
 
 def _unrecorded(root: str, python: str, f: str, env: dict, spent: int) -> dict:
@@ -100,11 +129,30 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
     base_env = dict(env or os.environ)
     base_env["PYTHONPATH"] = os.pathsep.join([SRC, *[p for p in base_env.get("PYTHONPATH", "").split(os.pathsep) if p]])
     base_env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
+    pyc = None
+    if PYCACHE and not base_env.get("PYTHONPYCACHEPREFIX"):
+        # (v2.3.1) byte-code shared by this recording's processes, outside the tree and deleted afterwards: one
+        # interpreter per test file otherwise recompiles the package and the tests (and pytest re-rewrites their
+        # asserts) in every process. Fresh for every recording, so byte-code of another commit is never used.
+        pyc = tempfile.mkdtemp(prefix="dc-pyc-")
+        base_env.pop("PYTHONDONTWRITEBYTECODE", None)
+        base_env["PYTHONPYCACHEPREFIX"] = pyc
     files = collect_files(root, python, targets or [], base_env)
     tmp = tempfile.mkdtemp(prefix="dc-record-")
+    times_path = os.path.join(root, TIMES)
+    known = _load_times(times_path)
+    took: dict = {}
 
     def one(i_f):
         i, f = i_f
+        t0 = time.time()
+        try:
+            return _one(i, f)
+        finally:
+            if not (nodes or {}).get(f):   # whole-file recordings only: a few tests' time says little about the file
+                took[f] = round(time.time() - t0, 2)
+
+    def _one(i, f):
         part = os.path.join(tmp, f"part{i}.json")
         e = {**base_env, "COVMAP_OUT": part, "COVMAP_PKG": pkg}
         if before_test:
@@ -122,11 +170,20 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
             # always selected instead of disappearing from the map
             return _unrecorded(root, python, f, base_env, 0) if FILE_TIMEOUT else {}
 
+    # (v2.3.1) longest files first (their time at the last recording; files never timed before go first), so that one
+    # long file does not start last and keep the recording waiting on it alone. The parts are merged in collection
+    # order whatever order they ran in, so the map is the same.
+    order = sorted(enumerate(files), key=lambda i_f: (-known.get(i_f[1], float("inf")), i_f[0]))
     try:
         with ThreadPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:
-            parts = list(ex.map(one, enumerate(files)))
+            done = dict(zip([i for i, _ in order], ex.map(one, order)))
+        parts = [done[i] for i in range(len(files))]
     finally:
         shutil.rmtree(tmp, ignore_errors=True)  # one folder of per-file parts per recording (19 GB over a benchmark)
+        if pyc:
+            shutil.rmtree(pyc, ignore_errors=True)
+    if took:
+        _save_times(times_path, {**known, **took})
     m = merge(parts)
     # (v2.2) the commit the map describes: selection measures changes from it, so commits made after recording
     # still count as changes (and a map from a commit outside the current history is not used)

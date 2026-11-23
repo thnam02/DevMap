@@ -93,11 +93,12 @@ DISABLE = mon.DISABLE
 
 
 class Target:
-    __slots__ = ("funcs", "classes", "always", "files", "dirs")
+    __slots__ = ("funcs", "classes", "always", "files", "dirs", "seen")
 
     def __init__(self):
         self.funcs, self.classes, self.always = set(), set(), False
         self.files, self.dirs = set(), set()   # (v2.3) project files opened for reading, directories listed
+        self.seen = set()   # (v2.3.1) types whose package classes are already in self.classes (a cache only)
 
 
 GLOBAL = Target()          # code run while a PACKAGE module is imported (import-time state: the snapshot's channel)
@@ -106,6 +107,7 @@ _stack: list = []          # recording targets; the top one receives what runs
 _map: dict = {}
 _own: dict = {}            # node id -> Target of its call phase
 _kind: dict = {}
+_meth: dict = {}           # (v2.3.1) id(code) -> (key, name of its first argument) for package methods
 _mro_cache: dict = {}
 
 
@@ -193,10 +195,30 @@ def _classify(code):
     else:
         k = None
     _kind[id(code)] = (code, k)  # keyed by identity: code objects of different files can compare equal
+    if k is not None and k not in ("subprocess", "process") and k[1]:
+        _meth[id(code)] = (k[0], code.co_varnames[0])   # the code object is kept alive by _kind
     return k
 
 
 def _start(code, offset):
+    m = _meth.get(id(code))
+    if m is not None and _stack:
+        # (v2.3.1) the path below for a package method run inside a recording target, the hot case: methods stay
+        # switched on to record the classes they run on. Same records; each type's classes are added once per target.
+        t = _stack[-1]
+        t.funcs.add(m[0])
+        obj = sys._getframe(1).f_locals.get(m[1])
+        if obj is None:
+            return None
+        tp = obj if isinstance(obj, type) else type(obj)
+        try:
+            if tp in t.seen:
+                return None
+            t.seen.add(tp)
+        except TypeError:   # an unhashable type: _classes_of has nothing for it either
+            return None
+        t.classes.update(_classes_of(tp))
+        return None
     if code.co_name == "<module>" and code.co_filename.startswith(ROOT + os.sep) and not _stack:
         _module_start(code)
     got = _kind.get(id(code))
