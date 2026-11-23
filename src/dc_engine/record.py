@@ -84,6 +84,9 @@ FILE_TIMEOUT = int(os.environ.get("PROVISO_RECORD_FILE_TIMEOUT", "0") or 0)
 # (v2.3.1) recording speed only; the map is the same either way. PROVISO_RECORD_PYCACHE=0: every process compiles its
 # own byte-code, as before v2.3.1.
 PYCACHE = os.environ.get("PROVISO_RECORD_PYCACHE", "1") != "0"
+# PROVISO_RECORD_FORK=0: a new interpreter per test file instead of a child forked from one that has imported pytest
+# (dc_engine.forkrec).
+FORK = os.environ.get("PROVISO_RECORD_FORK", "1") != "0" and hasattr(os, "fork")
 TIMES = os.path.join(".dc-engine", "record_times.json")   # each test file's recording time, to schedule long ones first
 
 
@@ -152,31 +155,70 @@ def record(root: str, pkg: str, out: str, python: str | None = None, targets: li
             if not (nodes or {}).get(f):   # whole-file recordings only: a few tests' time says little about the file
                 took[f] = round(time.time() - t0, 2)
 
-    def _one(i, f):
-        part = os.path.join(tmp, f"part{i}.json")
-        e = {**base_env, "COVMAP_OUT": part, "COVMAP_PKG": pkg}
+    def job_env(i):
+        e = {**base_env, "COVMAP_OUT": os.path.join(tmp, f"part{i}.json"), "COVMAP_PKG": pkg}
         if before_test:
             e["COVMAP_BEFORE_TEST"] = before_test
-        cmd = [python, "-m", "pytest", "-p", "dc_engine.covplugin", "-p", "no:cacheprovider", "-q", "--tb=no",
-               "-p", "no:randomly", *(extra_args or []), *((nodes or {}).get(f) or [f])]
-        try:
-            subprocess.run(cmd, cwd=root, env=e, capture_output=True, timeout=FILE_TIMEOUT or None)
-        except subprocess.TimeoutExpired:
+        return e
+
+    def job_args(f):
+        return ["-p", "dc_engine.covplugin", "-p", "no:cacheprovider", "-q", "--tb=no", "-p", "no:randomly",
+                *(extra_args or []), *((nodes or {}).get(f) or [f])]
+
+    def result(i, f, timed_out):
+        if timed_out:
             return _unrecorded(root, python, f, base_env, FILE_TIMEOUT)
         try:
-            return json.load(open(part))
+            return json.load(open(os.path.join(tmp, f"part{i}.json")))
         except (OSError, ValueError):
             # the file's recording crashed before writing its part: with the safety setting on, its tests are kept and
             # always selected instead of disappearing from the map
             return _unrecorded(root, python, f, base_env, 0) if FILE_TIMEOUT else {}
+
+    def _one(i, f):
+        try:
+            subprocess.run([python, "-m", "pytest", *job_args(f)], cwd=root, env=job_env(i), capture_output=True,
+                           timeout=FILE_TIMEOUT or None)
+        except subprocess.TimeoutExpired:
+            return result(i, f, True)
+        return result(i, f, False)
+
+    def forked(order) -> dict:
+        """{index: part} for the files the fork server recorded (forkrec); files it did not report are left out."""
+        jobs = [{"id": i, "args": job_args(f), "env": job_env(i)} for i, f in order]
+        got: dict = {}
+        try:
+            p = subprocess.Popen([python, "-m", "dc_engine.forkrec"], cwd=root, env=base_env, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+            p.stdin.write(json.dumps({"workers": workers or max(1, (os.cpu_count() or 2) - 1),
+                                      "timeout": FILE_TIMEOUT, "jobs": jobs}))
+            p.stdin.close()
+            for line in p.stdout:
+                r = json.loads(line)
+                got[r["id"]] = r
+            p.wait()
+        except (OSError, ValueError):
+            pass
+        out = {}
+        for i, f in order:
+            r = got.get(i)
+            if r is None:
+                continue
+            if not (nodes or {}).get(f):
+                took[f] = r["seconds"]
+            out[i] = result(i, f, r["timeout"])
+        return out
 
     # (v2.3.1) longest files first (their time at the last recording; files never timed before go first), so that one
     # long file does not start last and keep the recording waiting on it alone. The parts are merged in collection
     # order whatever order they ran in, so the map is the same.
     order = sorted(enumerate(files), key=lambda i_f: (-known.get(i_f[1], float("inf")), i_f[0]))
     try:
-        with ThreadPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:
-            done = dict(zip([i for i, _ in order], ex.map(one, order)))
+        done = forked(order) if FORK else {}
+        rest = [(i, f) for i, f in order if i not in done]   # all of them without the fork server, or if it failed
+        if rest:
+            with ThreadPoolExecutor(max_workers=workers or max(1, (os.cpu_count() or 2) - 1)) as ex:
+                done.update(zip([i for i, _ in rest], ex.map(one, rest)))
         parts = [done[i] for i in range(len(files))]
     finally:
         shutil.rmtree(tmp, ignore_errors=True)  # one folder of per-file parts per recording (19 GB over a benchmark)
