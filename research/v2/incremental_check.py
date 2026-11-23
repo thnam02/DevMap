@@ -12,8 +12,10 @@ Times: selection, update (and the re-recording inside it), fresh recording.
 Commits: the last N+1 first-parent commits up to the project's base commit that change a non-test Python file under
 the package (B1's rule), oldest first; each step measures from the previous chain commit.
 
-  python research/v2/incremental_check.py REPO [--n 20] [--every 5]
-Rows: results/incremental/<repo>.jsonl; summary printed and in results/incremental/<repo>.md."""
+  python research/v2/incremental_check.py REPO [--n 20] [--every 5] [--name NAME] [--budget SECONDS] [--resume]
+Rows: results/incremental/<NAME>.jsonl (NAME defaults to the repository); summary printed and in <NAME>.md.
+--budget stops cleanly before a step that would not finish in time; --resume continues such a run from its last
+complete step (same REPO, --n, --every and --name), with the maps it left in incr-maps-<NAME>."""
 from __future__ import annotations
 
 import argparse
@@ -55,13 +57,18 @@ def main() -> None:
     ap.add_argument("repo")
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--every", type=int, default=5)
+    ap.add_argument("--name", default="")
+    ap.add_argument("--budget", type=float, default=0, help="seconds; 0 = no limit")
+    ap.add_argument("--resume", action="store_true")
     a = ap.parse_args()
+    name = a.name or a.repo
+    t_start = time.time()
     PL.use(a.repo)
     CFG = PL.CFG
     os.makedirs(OUT, exist_ok=True)
     tree = PL.make_tree("incr", CFG["commit"])
     commits = chain(tree, CFG["commit"], a.n, CFG["pkg"])
-    work = os.path.join(PL.WORK, "incr-maps")
+    work = os.path.join(PL.WORK, "incr-maps" if name == a.repo else f"incr-maps-{name}")
     os.makedirs(work, exist_ok=True)
     extra = ["-p", "no:randomly", *CFG["pytest_args"]]
 
@@ -71,13 +78,34 @@ def main() -> None:
                        PL.env(tree, [PL.PLUG]))
         return m, time.time() - t
 
-    rows_path = os.path.join(OUT, f"{a.repo}.jsonl")
-    open(rows_path, "w").close()
-    checkout(tree, commits[0])
-    cur, full0 = record(os.path.join(work, "map-0.json"))
-    print(a.repo, "chain of", len(commits), "commits; first full recording", round(full0, 1), "s", flush=True)
+    rows_path = os.path.join(OUT, f"{name}.jsonl")
+    done = [json.loads(l) for l in open(rows_path)] if a.resume and os.path.exists(rows_path) else []
     pending_next = None    # (incremental map, fresh map) to compare selections at the next commit
-    for k in range(1, len(commits)):
+    if done:
+        last = done[-1]["k"]
+        assert [r["k"] for r in done] == list(range(1, last + 1)) and done[-1]["commit"] == commits[last], \
+            "the rows do not belong to this chain"
+        full0 = done[0]["full_record_s_first"]
+        cur = json.load(open(os.path.join(work, f"map-{last}.json")))
+        if "compare" in done[-1]:
+            pending_next = (cur, json.load(open(os.path.join(work, f"fresh-{last}.json"))))
+        start = last + 1
+        checkout(tree, commits[last])
+        print(a.repo, "resuming after step", last, "of", len(commits) - 1, flush=True)
+    else:
+        open(rows_path, "w").close()
+        checkout(tree, commits[0])
+        cur, full0 = record(os.path.join(work, "map-0.json"))
+        start = 1
+        print(a.repo, "chain of", len(commits), "commits; first full recording", round(full0, 1), "s", flush=True)
+    step_s = []
+    for k in range(start, len(commits)):
+        # a step takes about as long as the longest one so far (a whole-suite step re-records everything): stop
+        # before one that would not finish within the budget, so --resume continues from a complete step
+        if a.budget and step_s and time.time() - t_start + max(step_s) * 1.2 > a.budget:
+            print("budget reached after step", k - 1, "; continue with --resume", flush=True)
+            return
+        t_step = time.time()
         checkout(tree, commits[k])
         row = {"k": k, "commit": commits[k], "from": commits[k - 1], "full_record_s_first": round(full0, 2)}
         sel = None
@@ -136,7 +164,8 @@ def main() -> None:
               cur["__incremental__"].get("rerecorded_files"), "of", cur["__incremental__"].get("test_files"),
               ("| compare: differ %d missing %d only_fresh %d" % (c["differ"], c["missing_in_a"], c["only_in_b"]))
               if c else "", flush=True)
-    summarise(a.repo)
+        step_s.append(time.time() - t_step)
+    summarise(name)
 
 
 def summarise(repo: str) -> None:
