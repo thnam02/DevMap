@@ -210,6 +210,15 @@ def tools_available():
 
 # --------------------------------------------------------------------------------------------- one pair
 
+def covmap_at(tree, out, commit, workers=None):
+    """Proviso's map of tree at commit; a map left from an earlier run is reused only if it was recorded at that
+    commit (else it is recorded again)."""
+    old = PL.jload(out, None)
+    if old is not None and (old.get("__base__") or {}).get("commit") != commit:
+        os.remove(out)
+    return PL.covmap(tree, out, workers)
+
+
 def _files(ns):
     return {n.split("::", 1)[0] for n in ns}
 
@@ -448,7 +457,7 @@ def run_pair(p, c, info, i):
     base_fail = PL.failing(base)
     t = time.time()
     workers = max(1, PL.WORKERS // max(1, int(os.environ.get("B1_PAIR_WORKERS", "1"))))
-    cov = PL.covmap(tree, os.path.join(d, "covmap.json"), workers)
+    cov = covmap_at(tree, os.path.join(d, "covmap.json"), p, workers)
     record_s = round(time.time() - t, 1)
     universe = PL.universe_of(cov, base_fail)
     avail = tools_available()

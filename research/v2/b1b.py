@@ -124,7 +124,14 @@ def fixed_tree(x: dict, i: int) -> tuple[str, str]:
         if x.get(what):
             git(tree, "apply", "-", inp=x[what] if x[what].endswith("\n") else x[what] + "\n")
     git(tree, "add", "-A")
-    git(tree, "commit", "-q", "--allow-empty", "-m", f"{x['instance_id']}: fixed version with its tests")
+    # a fixed commit date makes F's hash the same in every run, so data recorded at F stays valid on a re-run
+    when = git(tree, "log", "-1", "--format=%cI", x["base_commit"]).strip()
+    os.environ.update(GIT_AUTHOR_DATE=when, GIT_COMMITTER_DATE=when)
+    try:
+        git(tree, "commit", "-q", "--allow-empty", "-m", f"{x['instance_id']}: fixed version with its tests")
+    finally:
+        os.environ.pop("GIT_AUTHOR_DATE", None)
+        os.environ.pop("GIT_COMMITTER_DATE", None)
     f = git(tree, "rev-parse", "HEAD").strip()
     r = P.run(["uv", "pip", "install", "-q", "--python", PL.PY, "--no-deps", "-e", tree], timeout=1800)
     if r.returncode:
@@ -167,7 +174,7 @@ def run_instance(x: dict, i: int) -> dict:
     base_fail = PL.failing(base)
     f2p = json.loads(x["FAIL_TO_PASS"]) if isinstance(x["FAIL_TO_PASS"], str) else x["FAIL_TO_PASS"]
     t = time.time()
-    cov = PL.covmap(tree, os.path.join(d, "covmap.json"))
+    cov = b1.covmap_at(tree, os.path.join(d, "covmap.json"), f)
     record_s = round(time.time() - t, 1)
     universe = PL.universe_of(cov, base_fail)
     avail = b1.tools_available()
