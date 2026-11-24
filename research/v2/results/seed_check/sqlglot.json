@@ -1,0 +1,45 @@
+{
+ "project": "sqlglot",
+ "commit": "7f1cf60c884868a295f76dfd42745b931dd9cfbb",
+ "env": {
+  "python": "3.13.18",
+  "packages": 192,
+  "hash": "fbe62365de2c533e"
+ },
+ "seeds": [
+  "0",
+  "1",
+  "2"
+ ],
+ "sample": 1.0,
+ "test_files_recorded": null,
+ "tests": 1104,
+ "seconds": {
+  "0": 117.5,
+  "1": 97.0,
+  "2": 96.8
+ },
+ "tests_differing_any_pair": 0,
+ "share": 0.0,
+ "files_with_differing_tests": [],
+ "pairs": {
+  "0-1": {
+   "tests_differing": 0,
+   "by_kind": {},
+   "examples": [],
+   "global_differs": false
+  },
+  "0-2": {
+   "tests_differing": 0,
+   "by_kind": {},
+   "examples": [],
+   "global_differs": false
+  },
+  "1-2": {
+   "tests_differing": 0,
+   "by_kind": {},
+   "examples": [],
+   "global_differs": false
+  }
+ }
+}
