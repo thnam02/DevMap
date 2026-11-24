@@ -1,0 +1,104 @@
+{
+ "project": "pygments",
+ "commit": "156d85fdd18d34427fe893527e71da91dcfb0eb5",
+ "env": {
+  "python": "3.13.18",
+  "packages": 192,
+  "hash": "fbe62365de2c533e"
+ },
+ "seeds": [
+  "0",
+  "1",
+  "2"
+ ],
+ "sample": 1.0,
+ "test_files_recorded": null,
+ "tests": 5342,
+ "seconds": {
+  "0": 207.0,
+  "1": 207.6,
+  "2": 210.7
+ },
+ "tests_differing_any_pair": 78,
+ "share": 0.0146,
+ "files_with_differing_tests": [
+  "tests/test_basic_api.py"
+ ],
+ "pairs": {
+  "0-1": {
+   "tests_differing": 61,
+   "by_kind": {
+    "funcs": 61,
+    "classes": 6
+   },
+   "examples": [
+    "tests/test_basic_api.py::test_random_input[ActionScript3Lexer]",
+    "tests/test_basic_api.py::test_random_input[ArrowLexer]",
+    "tests/test_basic_api.py::test_random_input[AspectJLexer]",
+    "tests/test_basic_api.py::test_random_input[BBCodeLexer]",
+    "tests/test_basic_api.py::test_random_input[BashSessionLexer]",
+    "tests/test_basic_api.py::test_random_input[BlitzMaxLexer]",
+    "tests/test_basic_api.py::test_random_input[CMakeLexer]",
+    "tests/test_basic_api.py::test_random_input[CadlLexer]",
+    "tests/test_basic_api.py::test_random_input[Cfengine3Lexer]",
+    "tests/test_basic_api.py::test_random_input[ColdfusionCFCLexer]",
+    "tests/test_basic_api.py::test_random_input[ColdfusionLexer]",
+    "tests/test_basic_api.py::test_random_input[CrystalLexer]",
+    "tests/test_basic_api.py::test_random_input[DLexer]",
+    "tests/test_basic_api.py::test_random_input[DObjdumpLexer]",
+    "tests/test_basic_api.py::test_random_input[DockerLexer]"
+   ],
+   "global_differs": false
+  },
+  "0-2": {
+   "tests_differing": 42,
+   "by_kind": {
+    "funcs": 42,
+    "classes": 3
+   },
+   "examples": [
+    "tests/test_basic_api.py::test_random_input[ActionScript3Lexer]",
+    "tests/test_basic_api.py::test_random_input[AgdaLexer]",
+    "tests/test_basic_api.py::test_random_input[ArrowLexer]",
+    "tests/test_basic_api.py::test_random_input[CadlLexer]",
+    "tests/test_basic_api.py::test_random_input[CddlLexer]",
+    "tests/test_basic_api.py::test_random_input[ColdfusionCFCLexer]",
+    "tests/test_basic_api.py::test_random_input[ColdfusionLexer]",
+    "tests/test_basic_api.py::test_random_input[CplintLexer]",
+    "tests/test_basic_api.py::test_random_input[DLexer]",
+    "tests/test_basic_api.py::test_random_input[DObjdumpLexer]",
+    "tests/test_basic_api.py::test_random_input[FortranFixedLexer]",
+    "tests/test_basic_api.py::test_random_input[GleamLexer]",
+    "tests/test_basic_api.py::test_random_input[GnuplotLexer]",
+    "tests/test_basic_api.py::test_random_input[GraphvizLexer]",
+    "tests/test_basic_api.py::test_random_input[IdrisLexer]"
+   ],
+   "global_differs": false
+  },
+  "1-2": {
+   "tests_differing": 53,
+   "by_kind": {
+    "funcs": 53,
+    "classes": 3
+   },
+   "examples": [
+    "tests/test_basic_api.py::test_random_input[AgdaLexer]",
+    "tests/test_basic_api.py::test_random_input[AspectJLexer]",
+    "tests/test_basic_api.py::test_random_input[BBCodeLexer]",
+    "tests/test_basic_api.py::test_random_input[BashSessionLexer]",
+    "tests/test_basic_api.py::test_random_input[BlitzMaxLexer]",
+    "tests/test_basic_api.py::test_random_input[CMakeLexer]",
+    "tests/test_basic_api.py::test_random_input[CddlLexer]",
+    "tests/test_basic_api.py::test_random_input[Cfengine3Lexer]",
+    "tests/test_basic_api.py::test_random_input[CplintLexer]",
+    "tests/test_basic_api.py::test_random_input[CrystalLexer]",
+    "tests/test_basic_api.py::test_random_input[DockerLexer]",
+    "tests/test_basic_api.py::test_random_input[EvoqueHtmlLexer]",
+    "tests/test_basic_api.py::test_random_input[EvoqueLexer]",
+    "tests/test_basic_api.py::test_random_input[EvoqueXmlLexer]",
+    "tests/test_basic_api.py::test_random_input[FantomLexer]"
+   ],
+   "global_differs": false
+  }
+ }
+}
