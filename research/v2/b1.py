@@ -3,7 +3,7 @@ RQ7 overhead). Every tool runs on the same commit pairs, in the same environment
 
 Commit pairs (parent P, commit C):
   history  projects: the most recent commits on the main branch (first parent) up to a fixed point, newest first, that
-           change at least one non-test Python file; a pair counts only if the suite runs at P ("builds": outcomes for
+           change at least one non-test Python file of the package (not docs/conf.py, scripts, ...); a pair counts only if the suite runs at P ("builds": outcomes for
            at least half of the test files). The first N pairs that build are kept; skipped ones are reported.
   namerts  NameRTS's ten projects: its own published commit pairs (true_parent, current), not reselected, plus its
            ground truth (tests_to_run) and published selection, so its four metrics can be computed side by side.
@@ -57,7 +57,7 @@ SELECTION_PARTS = ["snapshot", "docs", "hints", "callers", "bindings", "newfiles
                    "data", "syntax", "files"]
 _ab = os.environ.get("B1_ABLATE", "")
 ABLATE = SELECTION_PARTS if _ab == "all" else [p for p in _ab.split(",") if p]
-OUT = os.path.join(HERE, "results", "b1")
+OUT = os.environ.get("B1_OUT") or os.path.join(HERE, "results", "b1")   # dry runs: B1_OUT=results_smoke/b1
 
 # --------------------------------------------------------------------------------------------- projects
 # History projects: the full suite of each (targets as the project runs its own tests). until = the newest commit
@@ -120,7 +120,8 @@ def candidates(limit):
         if not parents:
             break
         names = PL.git(src, "diff", "--name-only", "--no-renames", parents[0], h).split()
-        if any(f.endswith(".py") and not I._is_test_path(f) for f in names):
+        pkg = C["pkg"].rstrip("/") + "/"
+        if any(f.startswith(pkg) and f.endswith(".py") and not I._is_test_path(f) for f in names):
             out.append((parents[0], h, {"merge": len(parents) > 1, "files": len(names)}))
         if len(out) >= limit:
             break
@@ -515,6 +516,12 @@ def worker(i, n, limit, want):
 
 def main_project(name, want, workers):
     use(name)
+    import fcntl
+    lock = open(os.path.join(PL.WORK, "b1.lock"), "w")
+    try:   # two runs on one project would share its trees (b1-w<i>) and break each other's checkouts
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        sys.exit(f"another b1.py run on {name} is active (lock {lock.name})")
     PL.require_importable() if PL.CFG.get("commit") else None
     limit = want * 3 if PL.CFG["source"] == "history" else want
     candidates(limit)   # fail early (and clone) before starting workers
@@ -530,9 +537,9 @@ def main_project(name, want, workers):
 
 # --------------------------------------------------------------------------------------------- report
 
-def _med(xs):
+def _med(xs, nd=1):
     xs = [x for x in xs if x is not None]
-    return round(statistics.median(xs), 3) if xs else None
+    return round(statistics.median(xs), nd) if xs else "n/a"
 
 
 def report(names):
@@ -607,6 +614,10 @@ if __name__ == "__main__":
         for p, c, info in candidates(n):
             print(p[:10], c[:10], json.dumps({k: v for k, v in info.items() if not k.startswith("namerts_")}))
     else:
-        w = int(a[a.index("--workers") + 1]) if "--workers" in a else 1
-        rest = [x for x in a if x not in ("--workers", str(w))]
+        w, rest, it = 1, [], iter(a)
+        for x in it:
+            if x == "--workers":
+                w = int(next(it))
+            else:
+                rest.append(x)
         main_project(rest[0], int(rest[1]) if len(rest) > 1 else 50, w)

@@ -294,8 +294,14 @@ def main():
     if "--worker" in a:
         k = a.index("--worker")
         return worker(int(a[k + 1]), int(a[k + 2]), int(a[k + 3]), repos)
-    w = int(a[a.index("--workers") + 1]) if "--workers" in a else 1
-    n = next((int(x) for x in a if x.isdigit() and x != str(w)), 500)
+    w, n, it = 1, 500, iter(a)
+    for x in it:
+        if x == "--workers":
+            w = int(next(it))
+        elif x == "--repos":
+            next(it)
+        elif x.isdigit():
+            n = int(x)
     if w <= 1:
         return worker(0, 1, n, repos)
     extra = ["--repos", ",".join(sorted(repos))] if repos else []
