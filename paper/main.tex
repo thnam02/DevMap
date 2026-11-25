@@ -5,8 +5,20 @@
 \usepackage{tabularx}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{xspace}
+\usepackage[most]{tcolorbox}
 \lstset{basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,frame=single,showstringspaces=false}
 \newcommand{\ph}[1]{\textcolor{red}{[#1]}}
+% Style conventions (as in recent ISSTA/ICSE/ASE RTS papers):
+% - our tool's name in small caps through one macro; baselines keep their authors' spelling, in plain text;
+% - run-in paragraph headings in bold sentence case ending with a period, through one macro;
+% - italics only for a term at its definition and for the key insight; no bold inside sentences;
+% - research questions as a list with bold labels; each RQ ends with a shaded "Answer to RQn" box.
+\newcommand{\tool}{\textsc{Proviso}\xspace}
+\newcommand{\para}[1]{\smallskip\noindent\textbf{#1}\hspace{0.4em}}
+\newtcolorbox{answerbox}[1]{enhanced,breakable,colback=black!5,colframe=black!45,boxrule=0.5pt,arc=1.5pt,
+  left=5pt,right=5pt,top=3pt,bottom=3pt,fontupper=\small,before skip=6pt,after skip=6pt,
+  title={\textbf{Answer to RQ#1}},coltitle=black,attach title to upper={:\ }}
 
 \setcopyright{none}
 \acmConference[ISSTA 2027]{ACM SIGSOFT International Symposium on Software Testing and Analysis}{2027}{}
@@ -21,9 +33,9 @@
 \begin{abstract}
 AI coding agents rely on a project's tests to check their changes, yet they rarely run the whole suite, and the tests they skip are where their regressions hide. Regression test selection (RTS) runs only the tests a change can affect, but Python RTS tools are blind to a central part of Python programs: the state a package builds when it is imported, such as lookup tables, registries and constants. Coverage-based tools credit this code to no test, and static, name-based tools either link it to every test or miss it.
 
-We present Proviso, an RTS technique for Python that compares import-time state across versions. Proviso records each test's execution once, fingerprints the values a package builds at import, and after a change selects the tests whose recorded execution ran changed code, used a changed value, or read a changed file. It credits shared execution, such as fixture set-up, to every test that relies on it.
+We present \tool, an RTS technique for Python that compares import-time state across versions. \tool records each test's execution once, fingerprints the values a package builds at import, and after a change selects the tests whose recorded execution ran changed code, used a changed value, or read a changed file. It credits shared execution, such as fixture set-up, to every test that relies on it.
 
-We evaluate Proviso on \ph{B1: N} consecutive real commits from 20 Python projects, including the 500 commit pairs of NameRTS's benchmark, on \ph{B1b: N} real bugs obtained by reversing SWE-bench fixes, and on \ph{B3: N} regressions introduced by published AI agents. Proviso misses a failing test on \ph{B1: X\%} of failure-inducing changes, against \ph{B1: Y\%} for NameRTS and \ph{B1: Z\%} for pytest-testmon, while running \ph{B1: T\%} of the suite's test time. On agent regressions it misses \ph{B3: X\%} of broken tests against \ph{B3: Y\%} for NameRTS. \ph{B4: one sentence on agents in the loop, or omit.}
+We evaluate \tool on \ph{B1: N} consecutive real commits from 20 Python projects, including the 500 commit pairs of NameRTS's benchmark, on \ph{B1b: N} real bugs obtained by reversing SWE-bench fixes, and on \ph{B3: N} regressions introduced by published AI agents. \tool misses a failing test on \ph{B1: X\%} of failure-inducing changes, against \ph{B1: Y\%} for NameRTS and \ph{B1: Z\%} for pytest-testmon, while running \ph{B1: T\%} of the suite's test time. On agent regressions it misses \ph{B3: X\%} of broken tests against \ph{B3: Y\%} for NameRTS. \ph{B4: one sentence on agents in the loop, or omit.}
 \end{abstract}
 
 \begin{CCSXML}
@@ -47,25 +59,25 @@ Regression test selection (RTS) addresses this trade-off: given a change, run on
 
 Existing Python RTS handles this state either coarsely or not at all. Coverage-based tools such as pytest-testmon record the lines each test executes; import-time code executes before any test starts and is credited to none, and testmon's own test suite marks a changed import-time constant as a known miss~\cite{testmon}. NameRTS~\cite{wang2026namerts}, the state of the art, follows names statically and puts names used during import under a shared key ``treated as reachable to all test files''; names built at run time and lookup tables escape it. Linking every test to all import-time code is safe but runs \ph{RQ2: T\%} of the suite's test time. No technique checks whether the import-time state a test depends on actually changed.
 
-We present \textbf{Proviso}, an RTS technique for Python built on one idea: \emph{compare the values a package builds at import across versions, and link only the changed values to the tests that use them}. Proviso records each test's execution once, under Python 3.12's low-overhead monitoring, each test file in a fresh process. It fingerprints every module-level value and class attribute, in a form stable across runs. After a change it selects the tests that ran changed code, ran code that names a changed value, or read a changed file. Fixture set-up and cached results are credited to every test that relies on them, not only to the first. Where no dependency can be established, Proviso runs more tests rather than fewer.
+We present \tool, an RTS technique for Python built on one key insight: \emph{compare the values a package builds at import across versions, and link only the changed values to the tests that use them}. \tool records each test's execution once, under Python 3.12's low-overhead monitoring, each test file in a fresh process. It fingerprints every module-level value and class attribute, in a form stable across runs. After a change it selects the tests that ran changed code, ran code that names a changed value, or read a changed file. Fixture set-up and cached results are credited to every test that relies on them, not only to the first. Where no dependency can be established, \tool runs more tests rather than fewer.
 
-We evaluate Proviso against pytest-testmon, NameRTS, EkstaP, TDAD and the traditional rule of selecting every test that executes changed code, on four benchmarks: \ph{B1: 1,000} consecutive real commits from 20 projects, including all 500 commit pairs of NameRTS's benchmark scored with NameRTS's own metric; \ph{B1b: 500} real bugs obtained by reversing SWE-bench fixes; \ph{B3: N} regressions that published agents introduced on SWE-bench, with a full-suite ground truth; and \ph{B4: scope} agent runs with Proviso in the loop. Proviso and every baseline were frozen before any run, and 6 of the 20 projects were never used during development. Proviso misses a failing test on \ph{B1: X\%} of failure-inducing commits, against \ph{B1: Y\%} for NameRTS and \ph{B1: Z\%} for testmon, at \ph{B1: T\%} of test time. On changes that touch import-time state, the gap is \ph{RQ1: ...}.
+We evaluate \tool against pytest-testmon, NameRTS, EkstaP, TDAD and the traditional rule of selecting every test that executes changed code, on four benchmarks: \ph{B1: 1,000} consecutive real commits from 20 projects, including all 500 commit pairs of NameRTS's benchmark scored with NameRTS's own metric; \ph{B1b: 500} real bugs obtained by reversing SWE-bench fixes; \ph{B3: N} regressions that published agents introduced on SWE-bench, with a full-suite ground truth; and \ph{B4: scope} agent runs with \tool in the loop. \tool and every baseline were frozen before any run, and 6 of the 20 projects were never used during development. \tool misses a failing test on \ph{B1: X\%} of failure-inducing commits, against \ph{B1: Y\%} for NameRTS and \ph{B1: Z\%} for testmon, at \ph{B1: T\%} of test time. On changes that touch import-time state, the gap is \ph{RQ1: ...}.
 
-This paper makes the following contributions:
+In summary, this paper makes the following contributions:
 
-\begin{enumerate}
-  \item \textbf{Import-time snapshot.} To our knowledge, the first RTS technique that compares, across versions, the program state a package builds at import and links the changed values to the tests that use them. Unlike uRTS~\cite{wang2023urts} it needs no configuration API, and unlike PolDet~\cite{gyori2015poldet} it compares state across versions rather than between tests in one run.
-  \item \textbf{Per-test attribution of shared execution.} A dynamic recording that credits fixture set-up and cached readers to every test that relies on them, which coverage-based Python tools do not.
-  \item \textbf{Proviso}, an open-source RTS tool for pytest that combines these with established practice (a fresh process per test file, as in NameRTS; file dependencies, as in Ekstazi) and runs as a finish check for coding agents.
-  \item \textbf{An evaluation at the field's standard and beyond:} real history, real bugs and real agent regressions, six tools, one frozen setup, held-out projects, missed failures and the classic safety measure side by side.
-  \item \textbf{A benchmark of \ph{B3: N} real agent regressions} from published SWE-bench agents, reproduced and released with a full-suite ground truth.
-\end{enumerate}
+\begin{itemize}
+  \item \textbf{Technique.} We propose, to our knowledge, the first RTS technique that compares, across versions, the program state a package builds at import and links the changed values to the tests that use them. Unlike uRTS~\cite{wang2023urts} it needs no configuration API, and unlike PolDet~\cite{gyori2015poldet} it compares state across versions rather than between tests in one run.
+  \item \textbf{Attribution.} We record shared execution per test, crediting fixture set-up and cached readers to every test that relies on them, which coverage-based Python tools do not.
+  \item \textbf{Tool.} We implement \tool, an open-source RTS tool for pytest that combines these with established practice (a fresh process per test file, as in NameRTS; file dependencies, as in Ekstazi) and runs as a finish check for coding agents.
+  \item \textbf{Evaluation.} We evaluate six tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.
+  \item \textbf{Benchmark.} We release \ph{B3: N} real agent regressions from published SWE-bench agents, reproduced with a full-suite ground truth.
+\end{itemize}
 
 
 \section{Background and motivating example}\label{sec:background-and-motivating-example}
-\textbf{Tests in pytest.} A pytest suite is a set of test files. pytest imports each file to \emph{collect} its tests, and in doing so imports the package under test. Fixtures supply set-up to tests; a fixture with a module, class or session scope runs once and is shared by every test that uses it. Tests may also be generated at collection time from data (\texttt{parametrize}). All of this runs before, or outside, any single test.
+\para{Tests in pytest.}A pytest suite is a set of test files. pytest imports each file to \emph{collect} its tests, and in doing so imports the package under test. Fixtures supply set-up to tests; a fixture with a module, class or session scope runs once and is shared by every test that uses it. Tests may also be generated at collection time from data (\texttt{parametrize}). All of this runs before, or outside, any single test.
 
-\textbf{Import-time state.} Importing a Python module runs every top-level statement and every class body in it. Packages use this to build the values the rest of the code reads: dialect and token tables, plugin registries, dispatch tables, compiled patterns, constants. The example below is illustrative and simplified from the pattern we see in sqlglot's dialects and pygments' lexers.
+\para{Import-time state.}Importing a Python module runs every top-level statement and every class body in it. Packages use this to build the values the rest of the code reads: dialect and token tables, plugin registries, dispatch tables, compiled patterns, constants. The example below is illustrative and simplified from the pattern we see in sqlglot's dialects and pygments' lexers.
 
 \begin{lstlisting}[language=Python]
 # formats.py: runs once, when the package is imported
@@ -84,18 +96,18 @@ def test_iso(): assert render(D, "iso") == "2026-12-31"
 
 Suppose a change maps \texttt{"us"} to a different function. \texttt{render} is unchanged, and so is every function a test calls by name, yet \texttt{test\_us} now fails. A tool that decides from changed code sees only a changed module-level statement. A tool that decides from changed \emph{values} sees that \texttt{FORMATS["us"]} changed, finds \texttt{render} as the code that reads \texttt{FORMATS}, and selects the tests whose recorded execution ran \texttt{render}: both tests here, and none of the suite's tests that never render.
 
-\textbf{Why existing tools miss it.} Coverage-based tools record which lines ran during each test. The statement that builds \texttt{FORMATS} ran during collection, credited to no test, so a change to it selects nothing (testmon; Section~\ref{sec:related-work}). NameRTS follows names statically: it sees that \texttt{render} names \texttt{FORMATS}, but it puts names used at import under a key shared by all tests, so changing the table selects every test, and a table indexed by a string built at run time is followed by no name at all. Selecting every test that executed changed code is safe here only because every test executed the import, which again selects everything.
+\para{Why existing tools miss it.}Coverage-based tools record which lines ran during each test. The statement that builds \texttt{FORMATS} ran during collection, credited to no test, so a change to it selects nothing (testmon; Section~\ref{sec:related-work}). NameRTS follows names statically: it sees that \texttt{render} names \texttt{FORMATS}, but it puts names used at import under a key shared by all tests, so changing the table selects every test, and a table indexed by a string built at run time is followed by no name at all. Selecting every test that executed changed code is safe here only because every test executed the import, which again selects everything.
 
-\textbf{Shared and cached execution.} The same blind spot appears whenever work is done once and reused. A module-scoped fixture's set-up is credited by coverage tools to the first test that uses it; a cache filled on first use is credited to the first test that fills it. In both cases later tests depend on code that their own recording does not show. We observed testmon rerun only the first of two tests broken by a change to a shared fixture's helper (Section~\ref{sec:results}).
+\para{Shared and cached execution.}The same blind spot appears whenever work is done once and reused. A module-scoped fixture's set-up is credited by coverage tools to the first test that uses it; a cache filled on first use is credited to the first test that fills it. In both cases later tests depend on code that their own recording does not show. We observed testmon rerun only the first of two tests broken by a change to a shared fixture's helper (Section~\ref{sec:results}).
 
 
 \section{Approach}\label{sec:approach}
-Proviso follows three principles: record everything a test depends on; judge import-time changes by the values tests use; and when a dependency cannot be established, run more tests rather than fewer. It works in four steps (Figure~\ref{fig:overview}): \textbf{record} once at a base commit, \textbf{snapshot} the import-time state, \textbf{compare} after each change, and \textbf{select}.
+\tool follows three principles: record everything a test depends on; judge import-time changes by the values tests use; and when a dependency cannot be established, run more tests rather than fewer. It works in four steps (Figure~\ref{fig:overview}): \emph{record} once at a base commit, \emph{snapshot} the import-time state, \emph{compare} after each change, and \emph{select}.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/overview.png}
-\caption{Proviso end to end. Recording and the base snapshot happen once per base commit; every later change is compared against them, and only the selected tests run before the agent can finish.}
+\caption{\tool end to end. Recording and the base snapshot happen once per base commit; every later change is compared against them, and only the selected tests run before the agent can finish.}
 \label{fig:overview}
 \end{figure}
 
@@ -104,99 +116,92 @@ Proviso follows three principles: record everything a test depends on; judge imp
 Selecting few tests in Python without missing failures raises five challenges.
 
 \begin{itemize}
-  \item \textbf{C1. Detecting import-time changes.} The values a package builds at import are arbitrary objects (functions, classes, closures, large tables), and some come out in a different order on each run: sympy's dispatch tables are ordered by memory address. Comparing them must be stable, so that run-to-run noise is not mistaken for a change.
-  \item \textbf{C2. Linking changed values to tests.} Tests read values through names and attributes, not calls, so a record of the functions each test ran does not show them. Code that reads a value often runs once and caches its result, so later tests reach it only through the cache.
-  \item \textbf{C3. Execution shared between tests.} A module-scoped fixture runs once for all its users, and a cache is filled by whichever test runs first. Coverage tools credit both to the first test only.
-  \item \textbf{C4. Dependencies outside Python code.} Tests read JSON data, templates, expected outputs and configuration, sometimes while pytest collects or parametrises tests, and some \texttt{.py} files are read as data rather than executed.
-  \item \textbf{C5. Precision must cost less than it saves.} Finer analysis selects fewer tests but costs more per change: method-level static RTS has been measured at 695\% of the time of running all tests~\cite{legunsen2016static}. Deciding whether import-time state changed requires importing two versions of the package and fingerprinting every module-level value, about 57,000 in sympy.
+  \item \textbf{C1: Detecting import-time changes.} The values a package builds at import are arbitrary objects (functions, classes, closures, large tables), and some come out in a different order on each run: sympy's dispatch tables are ordered by memory address. Comparing them must be stable, so that run-to-run noise is not mistaken for a change.
+  \item \textbf{C2: Linking changed values to tests.} Tests read values through names and attributes, not calls, so a record of the functions each test ran does not show them. Code that reads a value often runs once and caches its result, so later tests reach it only through the cache.
+  \item \textbf{C3: Execution shared between tests.} A module-scoped fixture runs once for all its users, and a cache is filled by whichever test runs first. Coverage tools credit both to the first test only.
+  \item \textbf{C4: Dependencies outside Python code.} Tests read JSON data, templates, expected outputs and configuration, sometimes while pytest collects or parametrises tests, and some \texttt{.py} files are read as data rather than executed.
+  \item \textbf{C5: Precision must cost less than it saves.} Finer analysis selects fewer tests but costs more per change: method-level static RTS has been measured at 695\% of the time of running all tests~\cite{legunsen2016static}. Deciding whether import-time state changed requires importing two versions of the package and fingerprinting every module-level value, about 57,000 in sympy.
 \end{itemize}
 
 
 \subsection{Record (C3, C4)}
-Proviso runs the suite once at a base commit with a pytest plugin built on Python 3.12's low-overhead monitoring (PEP 669). The first time a project function starts within a recording target, the plugin stores its key (file and first line) for that target and switches the event off for it until the target changes. Methods stay on, so the classes of the objects they run on are recorded too. Audit hooks (PEP 578) record the project files each test opens and the directories it lists.
+\tool runs the suite once at a base commit with a pytest plugin built on Python 3.12's low-overhead monitoring (PEP 669). The first time a project function starts within a recording target, the plugin stores its key (file and first line) for that target and switches the event off for it until the target changes. Methods stay on, so the classes of the objects they run on are recorded too. Audit hooks (PEP 578) record the project files each test opens and the directories it lists.
 
 A recording target is a test, a fixture instance, or the package import. Fixture set-up is recorded once per fixture instance and credited to every test that uses that instance, so a shared fixture's code belongs to all its users (C3). Code that runs while a package module is imported at start-up is kept apart from every test, in a global record, and is handled by the snapshot. Each test file runs in a fresh interpreter, so one file's imports and caches cannot hide another file's dependencies. Tests that start subprocesses, or whose set-up fails, cannot be recorded completely and are always selected.
 
 
 \subsection{Snapshot (C1)}
-Proviso imports the package at the base commit and, after a change, at the working tree, each in a separate process, and fingerprints every module-level value and class attribute. Plain data is fingerprinted by value, functions by a hash of their code (so a changed lambda inside a table counts), and other objects by type and attributes, with memory addresses stripped, following PolDet's abstraction of heap state~\cite{gyori2015poldet}. Sets and dictionaries are compared regardless of order. The base snapshot is taken in nine samples; a value whose fingerprint differs between samples is compared without order, and if it still differs it is treated as unstable rather than changed.
+\tool imports the package at the base commit and, after a change, at the working tree, each in a separate process, and fingerprints every module-level value and class attribute. Plain data is fingerprinted by value, functions by a hash of their code (so a changed lambda inside a table counts), and other objects by type and attributes, with memory addresses stripped, following PolDet's abstraction of heap state~\cite{gyori2015poldet}. Sets and dictionaries are compared regardless of order. The base snapshot is taken in nine samples; a value whose fingerprint differs between samples is compared without order, and if it still differs it is treated as unstable rather than changed.
 
 
 \subsection{Compare (C1, C2, C4)}
-After a change, Proviso finds:
+After a change, \tool finds:
 
 \begin{itemize}
-  \item \textbf{changed functions}, from the changed lines of the diff and by comparing each function's code by name, which catches edits that a line diff credits to the wrong function; edits that only touch docstrings or formatting are ignored;
-  \item \textbf{changed import-time values}, by comparing the two snapshots, but only when the change touches code that runs at import;
-  \item \textbf{changed files}, from the diff;
-  \item \textbf{new tests}, which are always run.
+  \item \emph{changed functions}, from the changed lines of the diff and by comparing each function's code by name, which catches edits that a line diff credits to the wrong function; edits that only touch docstrings or formatting are ignored;
+  \item \emph{changed import-time values}, by comparing the two snapshots, but only when the change touches code that runs at import;
+  \item \emph{changed files}, from the diff;
+  \item \emph{new tests}, which are always run.
 \end{itemize}
 
-For each changed value, Proviso finds the functions that name it, through an index of the names each function uses, then follows the names assigned from it and the callers of those functions, so that a reader whose result was cached is still linked to every test that reaches it (C2).
+For each changed value, \tool finds the functions that name it, through an index of the names each function uses, then follows the names assigned from it and the callers of those functions, so that a reader whose result was cached is still linked to every test that reaches it (C2).
 
 
 \subsection{Select (C5)}
-Proviso selects every test whose recording, own or through its fixtures, ran a changed function, ran a function linked to a changed value, or read a changed file. A file read while tests were collected selects its whole test file; one read during the package import selects every test. Where no dependency can be established, it runs the full suite: a changed pytest configuration, a file that no longer parses, a changed non-Python file no test was seen to read, or a map recorded at a commit outside the current history. When the edited functions alone already reach 90\% of the suite's test time, Proviso runs the full suite directly rather than spend time selecting. The snapshot is taken only when a change touches import-time code, so most selections take a few seconds (Section~\ref{sec:results}, RQ4).
+\tool selects every test whose recording, own or through its fixtures, ran a changed function, ran a function linked to a changed value, or read a changed file. A file read while tests were collected selects its whole test file; one read during the package import selects every test. Where no dependency can be established, it runs the full suite: a changed pytest configuration, a file that no longer parses, a changed non-Python file no test was seen to read, or a map recorded at a commit outside the current history. When the edited functions alone already reach 90\% of the suite's test time, \tool runs the full suite directly rather than spend time selecting. The snapshot is taken only when a change touches import-time code, so most selections take a few seconds (Section~\ref{sec:results}, RQ4).
 
 
 \section{Implementation}\label{sec:implementation}
-Proviso is a Python package and a pytest plugin, \ph{LOC: N} lines, for Python 3.12 or later. The recorder uses \texttt{sys.monitoring} and audit hooks only; it needs no change to the project or its tests.
+\tool is a Python package and a pytest plugin, \ph{LOC: N} lines, for Python 3.12 or later. The recorder uses \texttt{sys.monitoring} and audit hooks only; it needs no change to the project or its tests.
 
-\textbf{Recording speed.} Recording forks each test file's process from one interpreter that has already imported pytest, shares compiled bytecode between the processes of one recording, and starts the longest test files first. None of this changes the recorded map: on sqlglot and pygments the maps are identical to those of a fresh interpreter per file, except for tests that draw random inputs, which differ between any two recordings. \ph{Check on the other three projects before the freeze.}
+\para{Recording speed.}Recording forks each test file's process from one interpreter that has already imported pytest, shares compiled bytecode between the processes of one recording, and starts the longest test files first. None of this changes the recorded map: on sqlglot and pygments the maps are identical to those of a fresh interpreter per file, except for tests that draw random inputs, which differ between any two recordings. \ph{Check on the other three projects before the freeze.}
 
-\textbf{Agent integration.} Proviso runs inside Claude Code through its hooks. When the agent runs a broad test command, Proviso replaces it with the selected tests and reports only failures that are new since the base commit; when the agent says it is done, Proviso runs the selected tests as a finish check. The map is recorded once per task, before the agent starts.
+\para{Agent integration.}\tool runs inside Claude Code through its hooks. When the agent runs a broad test command, \tool replaces it with the selected tests and reports only failures that are new since the base commit; when the agent says it is done, \tool runs the selected tests as a finish check. The map is recorded once per task, before the agent starts.
 
-\textbf{Use of generative AI.} Following ACM's policy on authorship, we disclose that Proviso's implementation, the experiment harnesses and the analysis scripts were written with the help of an AI assistant (Claude, Anthropic). Every component was checked by us: Proviso by \ph{N} unit tests over small synthetic projects and by maps compared across recording modes; the harnesses by dry runs on real commits and by checking every reported miss against a rerun of the tests; and every miss of every tool by manual root-cause analysis. The agent study uses Claude Code as its subject, as described in Section~\ref{sec:evaluation-setup}.
+\para{Use of generative AI.}Following ACM's policy on authorship, we disclose that \tool's implementation, the experiment harnesses and the analysis scripts were written with the help of an AI assistant (Claude, Anthropic). Every component was checked by us: \tool by \ph{N} unit tests over small synthetic projects and by maps compared across recording modes; the harnesses by dry runs on real commits and by checking every reported miss against a rerun of the tests; and every miss of every tool by manual root-cause analysis. The agent study uses Claude Code as its subject, as described in Section~\ref{sec:evaluation-setup}.
 
 
 \section{Evaluation setup}\label{sec:evaluation-setup}
 
 \subsection{Research questions}
-Table~\ref{tab:t1} lists the four research questions and the benchmarks that answer each.
+We answer four research questions.
 
-\begin{table}[t]
-\small
-\caption{Research questions and the benchmarks that answer them.}
-\label{tab:t1}
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.18\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
-\toprule
-\textbf{RQ} & \textbf{Question} & \textbf{Benchmarks} \\
-\midrule
-RQ1 Effectiveness & How often does each tool miss a failing test on real changes, and at what cost? Split by whether the change touches import-time state, and by change kind on targeted changes. & B1, B1b; B2 (secondary) \\
-RQ2 Ablation & What does each part of Proviso contribute, and what does the traditional rule cost? & B1; B2 \\
-RQ3 AI agents & Does each tool select the tests that AI agents actually break, and does Proviso in the loop change agent outcomes, time or cost? & B3, B4 \\
-RQ4 Overhead & What do recording and selection cost, and when does recording pay for itself? & B1, B1b \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\begin{description}
+  \item[RQ1 (Effectiveness):] How often does each tool miss a failing test on real changes, and at what cost? We split the results by whether the change touches import-time state.
+  \item[RQ2 (Ablation):] What does each part of \tool contribute, and what does the traditional rule cost?
+  \item[RQ3 (AI agents):] Does each tool select the tests that AI agents actually break, and does \tool in the loop change agent outcomes, time or cost?
+  \item[RQ4 (Overhead):] What do recording and selection cost, and when does recording pay for itself?
+\end{description}
+
+RQ1 uses B1 and B1b, with B2 as a secondary benchmark for change kinds; RQ2 uses B1 and B2; RQ3 uses B3 and B4; RQ4 uses B1 and B1b.
 
 
 \subsection{Benchmarks}
 \begin{itemize}
-  \item \textbf{B1, real history.} 20 Python projects: the 10 of NameRTS's benchmark, the 4 we used during development (sqlglot, pygments, SQLAlchemy, datasette) and 6 held-out projects never used during development \ph{list}. For NameRTS's projects we use its own 500 published commit pairs and its ground truth; for the others, the 50 most recent first-parent commits before a fixed date that change at least one non-test Python file of the package and whose suite runs at the parent. Each pair is evaluated in two scenarios: \textbf{S}, the commit's source changes applied to the parent with the parent's tests (old tests see new behaviour), and \textbf{F}, the whole commit with its own tests.
-  \item \textbf{B1b, real bugs.} \ph{N} SWE-bench tasks sampled by repository. Starting from the fixed version with its tests, we reverse the reference fix's source changes; this reintroduces a real developer's bug whose failing tests are known, as RTSCheck built DefectsEP from Defects4J~\cite{zhu2019rtscheck}.
-  \item \textbf{B2, targeted changes.} \ph{About 750} mutants planted in the kinds of code where tools differ: import-time tables and constants, class attributes, fixtures, data files and configuration. Secondary to B1 and B1b.
-  \item \textbf{B3, agent regressions.} Patches from published SWE-bench agents that break a test that passed before the patch, reproduced in our environments: the \ph{449} sampled earlier, re-run in the frozen setup, extended to about \ph{1,000}. Ground truth is the full suite, not SWE-bench's test lists.
-  \item \textbf{B4, agents in the loop.} \ph{Design to be settled with Dr Li: tasks, agents, arms, budget.}
+  \item \textbf{B1: Real history.} 20 Python projects: the 10 of NameRTS's benchmark, the 4 we used during development (sqlglot, pygments, SQLAlchemy, datasette) and 6 held-out projects never used during development \ph{list}. For NameRTS's projects we use its own 500 published commit pairs and its ground truth; for the others, the 50 most recent first-parent commits before a fixed date that change at least one non-test Python file of the package and whose suite runs at the parent. Each pair is evaluated in two scenarios: \emph{S}, the commit's source changes applied to the parent with the parent's tests (old tests see new behaviour), and \emph{F}, the whole commit with its own tests.
+  \item \textbf{B1b: Real bugs.} \ph{N} SWE-bench tasks sampled by repository. Starting from the fixed version with its tests, we reverse the reference fix's source changes; this reintroduces a real developer's bug whose failing tests are known, as RTSCheck built DefectsEP from Defects4J~\cite{zhu2019rtscheck}.
+  \item \textbf{B2: Targeted changes.} \ph{About 750} mutants planted in the kinds of code where tools differ: import-time tables and constants, class attributes, fixtures, data files and configuration. Secondary to B1 and B1b.
+  \item \textbf{B3: Agent regressions.} Patches from published SWE-bench agents that break a test that passed before the patch, reproduced in our environments: the \ph{449} sampled earlier, re-run in the frozen setup, extended to about \ph{1,000}. Ground truth is the full suite, not SWE-bench's test lists.
+  \item \textbf{B4: Agents in the loop.} \ph{Design to be settled with Dr Li: tasks, agents, arms, budget.}
 \end{itemize}
 
 
 \subsection{Tools}
-We compare Proviso v2.3.1 with: running every test; \textbf{pytest-testmon} \ph{version}, the most used coverage-based Python tool; \textbf{NameRTS}~\cite{wang2026namerts}, with its published configuration; \textbf{EkstaP}, the Ekstazi-style Python baseline \ph{if available}; \textbf{TDAD}~\cite{alonso2026tdad}, a static test map for agents capped at 50 tests; and Proviso's \textbf{traditional} variant, which selects every test that executed changed code, import-time code included. Every tool uses its data from the parent commit, in the same environment.
+We compare \tool v2.3.1 with: running every test; pytest-testmon \ph{version}, the most used coverage-based Python tool; NameRTS~\cite{wang2026namerts}, with its published configuration; EkstaP, the Ekstazi-style Python baseline \ph{if available}; TDAD~\cite{alonso2026tdad}, a static test map for agents capped at 50 tests; and \tool's \emph{traditional} variant, which selects every test that executed changed code, import-time code included. Every tool uses its data from the parent commit, in the same environment.
 
 
 \subsection{Ground truth and metrics}
 \begin{itemize}
-  \item \textbf{Failures} (main measure). Tests that fail after the change and passed at the parent, confirmed by failing in 3 reruns of the change and passing in 3 reruns at the parent; other failures are flaky and excluded (counted). A tool \emph{misses} a failure if it does not select that test. We report changes with at least one missed failure and failing tests missed.
-  \item \textbf{Affected tests} (the classic safety measure). Tests whose recorded execution at the parent ran changed code, with import-time code counted as run by every test (Ekstazi's rule) and without it (NameRTS's SafeR reference).
-  \item \textbf{NameRTS's own metrics} on its 500 pairs: SafeR, TestR and TimeR against its published ground truth.
-  \item \textbf{Cost.} Share of tests and of test time selected; end-to-end time (selection plus selected tests); for RQ7, one-time data collection and break-even.
+  \item \textbf{Failures (main measure).} Tests that fail after the change and passed at the parent, confirmed by failing in 3 reruns of the change and passing in 3 reruns at the parent; other failures are flaky and excluded (counted). A tool \emph{misses} a failure if it does not select that test. We report changes with at least one missed failure and failing tests missed.
+  \item \textbf{Affected tests (classic safety measure).} Tests whose recorded execution at the parent ran changed code, with import-time code counted as run by every test (Ekstazi's rule) and without it (NameRTS's SafeR reference).
+  \item \textbf{NameRTS's metrics.} On its 500 pairs: SafeR, TestR and TimeR against its published ground truth.
+  \item \textbf{Cost.} Share of tests and of test time selected; end-to-end time (selection plus selected tests); for RQ4, one-time data collection and break-even.
   \item \textbf{Statistics.} McNemar on paired detection, Wilcoxon signed-rank on paired cost, Wilson intervals on proportions, intervals clustered by project.
 \end{itemize}
 
 
 \subsection{Protocol}
-Every tool and Proviso were frozen before any run: Proviso at v2.3.1, the baselines at fixed versions. Each project has one pinned environment, checked so that every test file collects. Each test file runs in its own process for every tool that supports it. Timed runs use one machine type and parallelism. Every miss of every tool is traced to its root cause.
+Every tool and \tool were frozen before any run: \tool at v2.3.1, the baselines at fixed versions. Each project has one pinned environment, checked so that every test file collects. Each test file runs in its own process for every tool that supports it. Timed runs use one machine type and parallelism. Every miss of every tool is traced to its root cause.
 
 
 \section{Results}\label{sec:results}
@@ -204,7 +209,7 @@ All numbers below are placeholders until the runs finish; each subsection states
 
 
 \subsection{RQ1: Effectiveness on real changes}
-\ph{Finding in one sentence: Proviso misses X\% of failure-inducing changes vs Y\% (NameRTS) and Z\% (testmon), at T\% of test time.}
+\ph{Results paragraph: missed failures and cost per tool (Table~\ref{tab:t2}).}
 
 \begin{table}[t]
 \footnotesize
@@ -215,7 +220,7 @@ All numbers below are placeholders until the runs finish; each subsection states
 \textbf{Tool} & \textbf{Failure-inducing changes with a missed failure (B1, S)} & \textbf{Failing tests missed (B1, S)} & \textbf{B1b bugs missed} & \textbf{Median \% of test time (B1)} & \textbf{End-to-end vs run all} \\
 \midrule
 Run all & 0 & 0 & 0 & 100\% & 100\% \\
-Proviso & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
+\tool & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 Traditional & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 NameRTS & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 testmon & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
@@ -227,13 +232,13 @@ TDAD & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 
 \ph{Figure 2: safety against cost, one point per tool, pooled over B1, with per-project spread.}
 
-\textbf{On NameRTS's benchmark, with its metrics.} \ph{SafeR, TestR, TimeR for Proviso and NameRTS on its 500 pairs; explain every pair where the two disagree.}
+\para{On NameRTS's benchmark, with its metrics.}\ph{SafeR, TestR, TimeR for \tool and NameRTS on its 500 pairs; explain every pair where the two disagree.}
 
-\textbf{Root causes.} \ph{Table: each missed failure by cause, per tool.}
+\para{Root causes.}\ph{Table: each missed failure by cause, per tool.}
 
-\textbf{Import-time changes.} How often real changes touch import-time statements, and each tool on those changes against the rest.
+\para{Import-time changes.}How often real changes touch import-time statements, and each tool on those changes against the rest.
 
-\ph{Finding: X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while Proviso ...}
+\ph{X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while \tool ... (Table~\ref{tab:t3}).}
 
 \begin{table}[t]
 \footnotesize
@@ -241,7 +246,7 @@ TDAD & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 \label{tab:t3}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
-\textbf{Change touches import-time code} & \textbf{Changes} & \textbf{Proviso missed} & \textbf{NameRTS missed} & \textbf{testmon missed} & \textbf{Proviso \% time} & \textbf{Traditional \% time} \\
+\textbf{Change touches import-time code} & \textbf{Changes} & \textbf{\tool missed} & \textbf{NameRTS missed} & \textbf{testmon missed} & \textbf{\tool \% time} & \textbf{Traditional \% time} \\
 \midrule
 Yes & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 No & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
@@ -249,23 +254,25 @@ No & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 \end{tabularx}
 \end{table}
 
-\textbf{Targeted changes}\textbf{ (B2).}
+\para{Targeted changes (B2).}\ph{Which change kinds each tool misses, from B2's mutants. Table: change kind by tool, missed / total.}
 
-\ph{Finding: which change kinds each tool misses, from B2's mutants. Table: change kind by tool, missed / total.}
+\begin{answerbox}{1}
+\ph{\tool misses X\% of failure-inducing changes against Y\% for NameRTS and Z\% for testmon, at T\% of test time. On changes that touch import-time state, ...}
+\end{answerbox}
 
 
 \subsection{RQ2: Ablation}
-\ph{Finding: the snapshot is the part that carries safety; the traditional rule is about as safe at much higher cost.}
+\ph{Results paragraph: each part switched off in turn (Table~\ref{tab:t4}).}
 
 \begin{table}[t]
 \small
-\caption{RQ2: Proviso with one part switched off, and the traditional rule (B1).}
+\caption{RQ2: \tool with one part switched off, and the traditional rule (B1).}
 \label{tab:t4}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.40\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Variant} & \textbf{Failure-inducing changes missed} & \textbf{Median \% of test time} \\
 \midrule
-Proviso & \ph{ } & \ph{ } \\
+\tool & \ph{ } & \ph{ } \\
 without the import-time snapshot & \ph{ } & \ph{ } \\
 without fixture attribution & \ph{ } & \ph{ } \\
 without file dependencies & \ph{ } & \ph{ } \\
@@ -277,10 +284,12 @@ Traditional (every test that executed changed code) & \ph{ } & \ph{ } \\
 \end{table}
 
 
-\subsection{RQ3: AI agents}
-\textbf{Agent regressions (B3).}
+\begin{answerbox}{2}
+\ph{The import-time snapshot carries most of the safety; the traditional rule is about as safe at much higher cost.}
+\end{answerbox}
 
-\ph{Finding: regressions with every broken test missed, and broken tests missed, per tool, on the full suite.}
+\subsection{RQ3: AI agents}
+\para{Agent regressions (B3).}\ph{Regressions with every broken test missed, and broken tests missed, per tool, on the full suite (Table~\ref{tab:t5}).}
 
 \begin{table}[t]
 \small
@@ -290,7 +299,7 @@ Traditional (every test that executed changed code) & \ph{ } & \ph{ } \\
 \toprule
 \textbf{Tool} & \textbf{Regressions detected (at least one broken test selected)} & \textbf{Broken tests missed (full suite)} & \textbf{Median \% of test time} \\
 \midrule
-Proviso & \ph{ } & \ph{ } & \ph{ } \\
+\tool & \ph{ } & \ph{ } & \ph{ } \\
 NameRTS & \ph{ } & \ph{ } & \ph{ } \\
 testmon & \ph{ } & \ph{ } & \ph{ } \\
 TDAD & \ph{ } & \ph{ } & \ph{ } \\
@@ -298,13 +307,15 @@ TDAD & \ph{ } & \ph{ } & \ph{ } \\
 \end{tabularx}
 \end{table}
 
-\textbf{Agents in the loop}\textbf{ (B4).}
+\para{Agents in the loop (B4).}\ph{Depends on B4's design. Report outcomes (resolved, tests broken at the end), time and cost per arm, with paired tests; a null result is reported as such.}
 
-\ph{Depends on B4's design. Report outcomes (resolved, tests broken at the end), time and cost per arm, with paired tests; a null result is reported as such.}
+\begin{answerbox}{3}
+\ph{On agent regressions \tool misses X\% of broken tests against Y\% for NameRTS. In the loop, ...}
+\end{answerbox}
 
 
 \subsection{RQ4: Overhead}
-\ph{Finding: recording takes R minutes per base commit; selection a median of S seconds; recording pays for itself after K test runs, and an agent task with about 9 test runs costs P\% of running everything. Small, fast suites do not pay back within one task.}
+\ph{Results paragraph: recording, selection and break-even per project (Table~\ref{tab:t6}).}
 
 \begin{table}[t]
 \footnotesize
@@ -312,7 +323,7 @@ TDAD & \ph{ } & \ph{ } & \ph{ } \\
 \label{tab:t6}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
-\textbf{Project} & \textbf{Run all (s)} & \textbf{Proviso recording (s)} & \textbf{Selection (s)} & \textbf{One run with Proviso (s)} & \textbf{Break-even (runs)} & \textbf{Agent task vs run all} \\
+\textbf{Project} & \textbf{Run all (s)} & \textbf{\tool recording (s)} & \textbf{Selection (s)} & \textbf{One run with \tool (s)} & \textbf{Break-even (runs)} & \textbf{Agent task vs run all} \\
 \midrule
 \ph{per project} & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 \bottomrule
@@ -321,41 +332,45 @@ TDAD & \ph{ } & \ph{ } & \ph{ } \\
 
 Other tools' one-time costs (testmon's recording run, NameRTS's initial run, TDAD's index) are reported in the same table.
 
+\begin{answerbox}{4}
+\ph{Recording takes R minutes per base commit and selection a median of S seconds; recording pays for itself after K test runs, and an agent task with about 9 test runs costs P\% of running everything. Small, fast suites do not pay back within one task.}
+\end{answerbox}
+
 
 \section{Threats to validity}\label{sec:threats-to-validity}
-\textbf{Tuning to the benchmarks.} Proviso's rules were developed over several versions on our earlier benchmarks. To limit overfitting, we froze Proviso before any run reported here, evaluate on 6 projects and on commits never used during development, and report every remaining miss with its cause.
+\para{Tuning to the benchmarks.}\tool's rules were developed over several versions on our earlier benchmarks. To limit overfitting, we froze \tool before any run reported here, evaluate on 6 projects and on commits never used during development, and report every remaining miss with its cause.
 
-\textbf{Ground truth.} A test that fails after a change may fail for reasons unrelated to it, and a test that should fail may pass by chance. We confirm failures by rerunning them 3 times at both commits and exclude flaky ones. Different ground truths favour different tools: NameRTS's ground truth counts tests that ran a modified function, not tests that fail. We therefore report both, and NameRTS's own metrics on its own pairs.
+\para{Ground truth.}A test that fails after a change may fail for reasons unrelated to it, and a test that should fail may pass by chance. We confirm failures by rerunning them 3 times at both commits and exclude flaky ones. Different ground truths favour different tools: NameRTS's ground truth counts tests that ran a modified function, not tests that fail. We therefore report both, and NameRTS's own metrics on its own pairs.
 
-\textbf{One recording.} A single recorded run can miss code that a test reaches only in some runs: random inputs, hash-seed-dependent iteration order, caches. We measured how often records differ across three hash seeds: \ph{per project; container pre-check: sqlglot 0 of 1,104 tests, pygments 78 of 5,342, all random-input tests}. Tools based on one recorded run share this limit.
+\para{One recording.}A single recorded run can miss code that a test reaches only in some runs: random inputs, hash-seed-dependent iteration order, caches. We measured how often records differ across three hash seeds: \ph{per project; container pre-check: sqlglot 0 of 1,104 tests, pygments 78 of 5,342, all random-input tests}. Tools based on one recorded run share this limit.
 
-\textbf{Test-order dependence.} Proviso, like every RTS tool, assumes tests do not depend on each other except through idempotent one-time work such as caches. Tests that depend on state left by earlier tests can fail or pass depending on which tests are selected~\cite{lam2020dependent}; such failures count as flaky in our protocol.
+\para{Test-order dependence.}\tool, like every RTS tool, assumes tests do not depend on each other except through idempotent one-time work such as caches. Tests that depend on state left by earlier tests can fail or pass depending on which tests are selected~\cite{lam2020dependent}; such failures count as flaky in our protocol.
 
-\textbf{Environment.} Every tool runs in the same pinned environment per project, checked so that every test file collects. Results on other Python versions or package versions may differ.
+\para{Environment.}Every tool runs in the same pinned environment per project, checked so that every test file collects. Results on other Python versions or package versions may differ.
 
-\textbf{Generality.} Our projects are pure-Python packages tested with pytest. Projects with compiled extensions, other test runners, or suites that start services may behave differently. Agent regressions come from published SWE-bench agents; agents working in other settings may break tests differently.
+\para{Generality.}Our projects are pure-Python packages tested with pytest. Projects with compiled extensions, other test runners, or suites that start services may behave differently. Agent regressions come from published SWE-bench agents; agents working in other settings may break tests differently.
 
-\textbf{Baselines.} We ran each baseline with its published configuration and confirmed its setup on its own benchmark where one exists. \ph{Note any baseline that could not run on a project and why, e.g. NameRTS's initial run on sympy.}
+\para{Baselines.}We ran each baseline with its published configuration and confirmed its setup on its own benchmark where one exists. \ph{Note any baseline that could not run on a project and why, e.g. NameRTS's initial run on sympy.}
 
 
 \section{Related work}\label{sec:related-work}
-\textbf{RTS for Java.} Ekstazi~\cite{gligoric2015ekstazi} records the classes and files each test depends on, including external resources, and counts static initialisers for every test that triggers them; we adopt its file dependencies. STARTS~\cite{legunsen2017starts} reads dependencies statically and can miss reflection, which later work addresses~\cite{shi2019reflection}. FineEkstazi~\cite{liu2023fineekstazi} ignores changes that cannot alter behaviour but treats any change to a static initialiser as affecting every dependent test. Static method-level RTS can cost more than running all tests~\cite{legunsen2016static}. All of these decide from the code that changed; Proviso decides import-time changes from the values that changed. RTSCheck~\cite{zhu2019rtscheck} found bugs in mature RTS tools by checking them on evolving programs; our failure-based ground truth follows its approach.
+\para{RTS for Java.}Ekstazi~\cite{gligoric2015ekstazi} records the classes and files each test depends on, including external resources, and counts static initialisers for every test that triggers them; we adopt its file dependencies. STARTS~\cite{legunsen2017starts} reads dependencies statically and can miss reflection, which later work addresses~\cite{shi2019reflection}. FineEkstazi~\cite{liu2023fineekstazi} ignores changes that cannot alter behaviour but treats any change to a static initialiser as affecting every dependent test. Static method-level RTS can cost more than running all tests~\cite{legunsen2016static}. All of these decide from the code that changed; \tool decides import-time changes from the values that changed. RTSCheck~\cite{zhu2019rtscheck} found bugs in mature RTS tools by checking them on evolving programs; our failure-based ground truth follows its approach.
 
-\textbf{RTS for Python.} NameRTS~\cite{wang2026namerts} propagates names statically at file and function level and is the state of the art; we use its benchmark and its metrics. pytest-testmon and pytest-rts record coverage per test~\cite{kauhanen2021rts} and miss code that runs at import. BabelRTS is language-agnostic and file-level. Proviso is the first to compare import-time state across versions.
+\para{RTS for Python.}NameRTS~\cite{wang2026namerts} propagates names statically at file and function level and is the state of the art; we use its benchmark and its metrics. pytest-testmon and pytest-rts record coverage per test~\cite{kauhanen2021rts} and miss code that runs at import. BabelRTS is language-agnostic and file-level. \tool is the first to compare import-time state across versions.
 
-\textbf{State and test dependence.} PolDet~\cite{gyori2015poldet} fingerprints the state reachable from static fields to find tests that pollute it; we adopt its abstraction of heap state, but compare across versions to select tests. uRTS~\cite{wang2023urts} reruns tests whose configuration values changed, through a configuration API. VMVM~\cite{bell2014vmvm} isolates static state between tests; work on dependent tests shows that RTS can turn order dependence into flaky failures~\cite{lam2020dependent}.
+\para{State and test dependence.}PolDet~\cite{gyori2015poldet} fingerprints the state reachable from static fields to find tests that pollute it; we adopt its abstraction of heap state, but compare across versions to select tests. uRTS~\cite{wang2023urts} reruns tests whose configuration values changed, through a configuration API. VMVM~\cite{bell2014vmvm} isolates static state between tests; work on dependent tests shows that RTS can turn order dependence into flaky failures~\cite{lam2020dependent}.
 
-\textbf{Keeping dependency data up to date.} Chittimalli and Harrold~\cite{chittimalli2009recomputing} re-run tests that reach changed code to keep per-test coverage current, and iJaCoCo~\cite{wang2024ijacoco} updates coverage incrementally after selection. Proviso records once per base commit, which suits agent tasks that start from a fixed commit; incremental recording is future work.
+\para{Keeping dependency data up to date.}Chittimalli and Harrold~\cite{chittimalli2009recomputing} re-run tests that reach changed code to keep per-test coverage current, and iJaCoCo~\cite{wang2024ijacoco} updates coverage incrementally after selection. \tool records once per base commit, which suits agent tasks that start from a fixed commit; incremental recording is future work.
 
-\textbf{Tests and coding agents.} TDAD~\cite{alonso2026tdad} gives agents a static test map capped at 50 tests. TestPrune~\cite{chen2026oldtests} picks tests from the issue before any patch exists. Lin et al.~\cite{lin2026runornot} find that agents run tests often and that execution is costly; we take this as the case for cheap, safe selection. Lou et al.~\cite{lou2024apr} apply RTS to patches from automated program repair in Java. Industrial tools (Datadog Test Impact Analysis, CloudBees Smart Tests, predictive test selection~\cite{machalica2019predictive}) trade safety for speed or work at file level.
+\para{Tests and coding agents.}TDAD~\cite{alonso2026tdad} gives agents a static test map capped at 50 tests. TestPrune~\cite{chen2026oldtests} picks tests from the issue before any patch exists. Lin et al.~\cite{lin2026runornot} find that agents run tests often and that execution is costly; we take this as the case for cheap, safe selection. Lou et al.~\cite{lou2024apr} apply RTS to patches from automated program repair in Java. Industrial tools (Datadog Test Impact Analysis, CloudBees Smart Tests, predictive test selection~\cite{machalica2019predictive}) trade safety for speed or work at file level.
 
 
 \section{Conclusion}\label{sec:conclusion}
-Python packages build much of their behaviour at import, and existing Python RTS either links that state to every test or cannot see it. Proviso compares the import-time state of two versions and links only the changed values to the tests that use them, and it credits shared execution to every test that relies on it. On \ph{B1: N} real commits, \ph{B1b: N} real bugs and \ph{B3: N} agent regressions, it misses \ph{X\%} of failure-inducing changes against \ph{Y\%} for the state of the art, at \ph{T\%} of test time. As agents write more code and run tests more often, cheap and safe selection is what keeps running the right tests affordable.
+Python packages build much of their behaviour at import, and existing Python RTS either links that state to every test or cannot see it. \tool compares the import-time state of two versions and links only the changed values to the tests that use them, and it credits shared execution to every test that relies on it. On \ph{B1: N} real commits, \ph{B1b: N} real bugs and \ph{B3: N} agent regressions, it misses \ph{X\%} of failure-inducing changes against \ph{Y\%} for the state of the art, at \ph{T\%} of test time. As agents write more code and run tests more often, cheap and safe selection is what keeps running the right tests affordable.
 
 
 \section*{Data Availability}
-\ph{Not counted in the 18 pages.} Proviso's source code, the experiment harnesses, every benchmark's commit list and sampled instances, the result rows of every run, the scripts that produce each table and figure, and the environment definitions are available at \ph{anonymous.4open.science link}. SWE-bench environments are rebuilt by our scripts from SWE-bench's published data; agent trajectories from published submissions are referenced by their source. Each main claim can be regenerated from the result rows with one command per table. \ph{Scrub before upload: usernames, host names and paths in result files, git author lines, repository names that identify the author.}
+\ph{Not counted in the 18 pages.} \tool's source code, the experiment harnesses, every benchmark's commit list and sampled instances, the result rows of every run, the scripts that produce each table and figure, and the environment definitions are available at \ph{anonymous.4open.science link}. SWE-bench environments are rebuilt by our scripts from SWE-bench's published data; agent trajectories from published submissions are referenced by their source. Each main claim can be regenerated from the result rows with one command per table. \ph{Scrub before upload: usernames, host names and paths in result files, git author lines, repository names that identify the author.}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
