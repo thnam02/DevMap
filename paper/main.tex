@@ -184,7 +184,7 @@ RQ1 uses B1 and B1b, with B2 as a secondary benchmark for change kinds; RQ2 uses
   \item \textbf{B1b:} \emph{Real bugs.} \ph{N} SWE-bench tasks sampled by repository. Starting from the fixed version with its tests, we reverse the reference fix's source changes; this reintroduces a real developer's bug whose failing tests are known, as RTSCheck built DefectsEP from Defects4J~\cite{zhu2019rtscheck}.
   \item \textbf{B2:} \emph{Targeted changes.} \ph{About 750} mutants planted in the kinds of code where tools differ: import-time tables and constants, class attributes, fixtures, data files and configuration. Secondary to B1 and B1b.
   \item \textbf{B3:} \emph{Agent regressions.} Patches from published SWE-bench agents that break a test that passed before the patch, reproduced in our environments: the \ph{449} sampled earlier, re-run in the frozen setup, extended to about \ph{1,000}. Ground truth is the full suite, not SWE-bench's test lists.
-  \item \textbf{B4:} \emph{Agents in the loop.} \ph{Design to be settled with Dr Li: tasks, agents, arms, budget.}
+  \item \textbf{B4:} \emph{Agents in the loop.}
 \end{itemize}
 
 
