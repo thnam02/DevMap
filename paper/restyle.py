@@ -77,46 +77,21 @@ for c in ["C1. Detecting import-time changes.", "C2. Linking changed values to t
 for t in ["changed functions", "changed import-time values", "changed files", "new tests"]:
     R(r"\item \textbf{%s}" % t, r"\item \emph{%s}" % t)
 
-# ---------- evaluation setup: RQs as a list ----------
-i = s.index(r"\subsection{Research questions}")
-j = s.index(r"\subsection{Benchmarks}")
-s = s[:i] + r"""\subsection{Research questions}
-We answer four research questions.
-
-\begin{description}
-  \item[RQ1 (Effectiveness):] How often does each tool miss a failing test on real changes, and at what cost? We split the results by whether the change touches import-time state.
-  \item[RQ2 (Ablation):] What does each part of \tool contribute, and what does the traditional rule cost?
-  \item[RQ3 (AI agents):] Does each tool select the tests that AI agents actually break, and does \tool in the loop change agent outcomes, time or cost?
-  \item[RQ4 (Overhead):] What do recording and selection cost, and when does recording pay for itself?
-\end{description}
-
-RQ1 uses B1 and B1b, with B2 as a secondary benchmark for change kinds; RQ2 uses B1 and B2; RQ3 uses B3 and B4; RQ4 uses B1 and B1b.
-
-
-""" + s[j:]
-for a, b in [("B1, real history.", "B1: Real history."), ("B1b, real bugs.", "B1b: Real bugs."),
-             ("B2, targeted changes.", "B2: Targeted changes."), ("B3, agent regressions.", "B3: Agent regressions."),
-             ("B4, agents in the loop.", "B4: Agents in the loop.")]:
-    R(r"\textbf{%s}" % a, r"\textbf{%s}" % b)
-R(r"two scenarios: \textbf{S}, the commit's", r"two scenarios: \emph{S}, the commit's")
-R(r"and \textbf{F}, the whole commit", r"and \emph{F}, the whole commit")
-for t in ["pytest-testmon", "NameRTS", "EkstaP", "TDAD"]:
-    R(r"\textbf{%s}" % t, t)
-R(r"\tool's \textbf{traditional} variant", r"\tool's \emph{traditional} variant")
-R(r"\item \textbf{Failures} (main measure). Tests that fail", r"\item \textbf{Failures (main measure).} Tests that fail")
-R(r"\item \textbf{Affected tests} (the classic safety measure). Tests whose",
-  r"\item \textbf{Affected tests (classic safety measure).} Tests whose")
-R(r"\item \textbf{NameRTS's own metrics} on its 500 commits: SafeR,", r"\item \textbf{NameRTS's metrics.} On its 500 commits: SafeR,")
-R(r"for RQ7, one-time data collection", r"for RQ4, one-time data collection")
+# ---------- evaluation setup: the RQ bullets become a description list with bold labels ----------
+m = re.search(r"\\begin\{itemize\}\n(  \\item \\textbf\{RQ1 .*?)\\end\{itemize\}", s, flags=re.S)
+assert m, "RQ list"
+items = re.sub(r"\\item \\textbf\{(RQ\d \([^{}]*\):)\} ", r"\\item[\1] ", m.group(1))
+assert items.count(r"\item[RQ") == 4, "RQ items"
+s = s[:m.start()] + "\\begin{description}\n" + items + "\\end{description}" + s[m.end():]
 
 # ---------- results: a results placeholder at the top, an answer box at the end of each RQ ----------
 R(r"""\subsection{RQ1: Effectiveness on real changes}
 \ph{Finding in one sentence: \tool misses X\% of failure-inducing changes vs Y\% (NameRTS) and Z\% (testmon), at T\% of test time.}
 """, r"""\subsection{RQ1: Effectiveness on real changes}
-\ph{Results paragraph: missed failures and cost per tool (Table~\ref{tab:t2}).}
+\ph{Results paragraph: missed failures and cost per tool (Table~\ref{tab:rq1}).}
 """)
 R(r"""\ph{Finding: X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while \tool ...}""",
-  r"""\ph{X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while \tool ... (Table~\ref{tab:t3}).}""")
+  r"""\ph{X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while \tool ... (Table~\ref{tab:rq1-import}).}""")
 R(r"""\textbf{Targeted changes}\textbf{ (B2).}
 
 \ph{Finding: which change kinds each tool misses, from B2's mutants. Table: change kind by tool, missed / total.}
@@ -129,7 +104,7 @@ R(r"""\textbf{Targeted changes}\textbf{ (B2).}
 R(r"""\subsection{RQ2: Ablation}
 \ph{Finding: the snapshot is the part that carries safety; the traditional rule is about as safe at much higher cost.}
 """, r"""\subsection{RQ2: Ablation}
-\ph{Results paragraph: each part switched off in turn (Table~\ref{tab:t4}).}
+\ph{Results paragraph: each part switched off in turn (Table~\ref{tab:rq2}).}
 """)
 R(r"""\subsection{RQ3: AI agents}""", r"""\begin{answerbox}{2}
 \ph{The import-time snapshot carries most of the safety; the traditional rule is about as safe at much higher cost.}
@@ -139,7 +114,7 @@ R(r"""\subsection{RQ3: AI agents}""", r"""\begin{answerbox}{2}
 R(r"""\textbf{Agent regressions (B3).}
 
 \ph{Finding: regressions with every broken test missed, and broken tests missed, per tool, on the full suite.}
-""", r"""\para{Agent regressions (B3).}\ph{Regressions with every broken test missed, and broken tests missed, per tool, on the full suite (Table~\ref{tab:t5}).}
+""", r"""\para{Agent regressions (B3).}\ph{Regressions with every broken test missed, and broken tests missed, per tool, on the full suite (Table~\ref{tab:rq3}).}
 """)
 R(r"""\textbf{Agents in the loop}\textbf{ (B4).}
 
@@ -153,7 +128,7 @@ R(r"""\textbf{Agents in the loop}\textbf{ (B4).}
 R(r"""\subsection{RQ4: Overhead}
 \ph{Finding: recording takes R minutes per base commit; selection a median of S seconds; recording pays for itself after K test runs, and an agent task with about 9 test runs costs P\% of running everything. Small, fast suites do not pay back within one task.}
 """, r"""\subsection{RQ4: Overhead}
-\ph{Results paragraph: recording, selection and break-even per project (Table~\ref{tab:t6}).}
+\ph{Results paragraph: recording, selection and break-even per project (Table~\ref{tab:rq4}).}
 """)
 R(r"""Other tools' one-time costs (testmon's recording run, NameRTS's initial run, TDAD's index) are reported in the same table.
 """, r"""Other tools' one-time costs (testmon's recording run, NameRTS's initial run, TDAD's index) are reported in the same table.
@@ -175,7 +150,7 @@ def _lead(m):
         return r"\item \textbf{%s:} \emph{%s}" % (idm.group(1), idm.group(2))
     return r"\item \emph{%s}" % lead
 s = re.sub(r"\\item \\textbf\{([^{}]+\.)\}", _lead, s)
-assert n == 15, ("list-item leads", n)
+assert n == 5, ("list-item leads", n)
 
 # ---------- run-in paragraph headings at the start of a line -> \para ----------
 s = re.sub(r"(?m)^\\textbf\{([^{}]*\.)\} ", lambda m: "\\para{%s}" % m.group(1), s)

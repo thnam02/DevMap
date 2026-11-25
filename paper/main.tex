@@ -166,44 +166,98 @@ For each changed value, \tool finds the functions that name it, through an index
 \section{Evaluation setup}\label{sec:evaluation-setup}
 
 \subsection{Research questions}
-We answer four research questions.
+We answer four research questions. RQ1 and RQ4 follow NameRTS's protocol, so its published numbers and ours can be compared directly~\cite{wang2026namerts}.
 
 \begin{description}
-  \item[RQ1 (Effectiveness):] How often does each tool miss a failing test on real changes, and at what cost? We split the results by whether the change touches import-time state.
+  \item[RQ1 (Effectiveness):] On real changes, how often does each tool miss a failing test, and at what cost? We report the results overall and split by whether the change touches import-time state.
   \item[RQ2 (Ablation):] What does each part of \tool contribute, and what does the traditional rule cost?
-  \item[RQ3 (AI agents):] Does each tool select the tests that AI agents actually break, and does \tool in the loop change agent outcomes, time or cost?
+  \item[RQ3 (AI agents):] Does each tool select the tests that AI agents actually break, and does \tool in the loop change what agents deliver and what it costs?
   \item[RQ4 (Overhead):] What do recording and selection cost, and when does recording pay for itself?
 \end{description}
 
-RQ1 uses B1 and B1b, with B2 as a secondary benchmark for change kinds; RQ2 uses B1 and B2; RQ3 uses B3 and B4; RQ4 uses B1 and B1b.
-
 
 \subsection{Benchmarks}
-\begin{itemize}
-  \item \textbf{B1:} \emph{Real history.} 20 Python projects: the 10 of NameRTS's benchmark, the 4 we used during development (sqlglot, pygments, SQLAlchemy, datasette) and 6 held-out projects never used during development \ph{list}. For NameRTS's projects we use its own 500 published commits and its ground truth; for the others, the 50 most recent first-parent commits before a fixed date that change at least one non-test Python file of the package and whose suite runs at the parent. Each pair is evaluated in two scenarios: \emph{S}, the commit's source changes applied to the parent with the parent's tests (old tests see new behaviour), and \emph{F}, the whole commit with its own tests.
-  \item \textbf{B1b:} \emph{Real bugs.} \ph{N} SWE-bench tasks sampled by repository. Starting from the fixed version with its tests, we reverse the reference fix's source changes; this reintroduces a real developer's bug whose failing tests are known, as RTSCheck built DefectsEP from Defects4J~\cite{zhu2019rtscheck}.
-  \item \textbf{B2:} \emph{Targeted changes.} \ph{About 750} mutants planted in the kinds of code where tools differ: import-time tables and constants, class attributes, fixtures, data files and configuration. Secondary to B1 and B1b.
-  \item \textbf{B3:} \emph{Agent regressions.} Patches from published SWE-bench agents that break a test that passed before the patch, reproduced in our environments: the \ph{449} sampled earlier, re-run in the frozen setup, extended to about \ph{1,000}. Ground truth is the full suite, not SWE-bench's test lists.
-  \item \textbf{B4:} \emph{Agents in the loop.}
-\end{itemize}
+We use five benchmarks, one per kind of evidence: real history (B1), real bugs (B1b), targeted changes (B2), real agent regressions (B3) and agents at work (B4). Table~\ref{tab:benchmarks} summarises them.
+
+\begin{table}[t]
+\small
+\caption{The five benchmarks.}
+\label{tab:benchmarks}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Benchmark} & \textbf{Changes} & \textbf{Ground truth} & \textbf{RQs} \\
+\midrule
+B1: Real history & \ph{1,000} consecutive commits from 20 projects & Affected tests; failing tests in scenarios S and F & RQ1, RQ2, RQ4 \\
+B1b: Real bugs & \ph{About 500} reversed SWE-bench fixes & The fix's failing tests and any other failing test & RQ1 \\
+B2: Targeted changes & \ph{About 750} mutants in 5 projects, stratified by kind & Failing tests & RQ1 (secondary), RQ2 \\
+B3: Agent regressions & \ph{449, extended to about 1,000} agent patches that break a test & Failing tests on the full suite & RQ3 \\
+B4: Agents in the loop & \ph{300} tasks, \ph{2} agents, 7 arms & Failing tests of each final patch on the full suite & RQ3 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\para{B1: Real history.}B1 follows the design of NameRTS's benchmark at twice its size. Its 20 projects (Table~\ref{tab:projects}) are Python projects tested with pytest whose suites run longer than 30 seconds, with at least 20 test files and no network access in tests; at least 6 have suites longer than 5 minutes, where selection matters most. For NameRTS's 10 projects we use its 500 published commits and its ground truth. For the others we take the 50 most recent consecutive commits on the main branch before \ph{date} that build and change at least one non-test Python file of the package. In scikit-learn and matplotlib, a commit that changes compiled code sends \tool to the full suite, and we report it as such.
+
+\begin{table}[t]
+\small
+\caption{The 20 projects of B1.}
+\label{tab:projects}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Group} & \textbf{Projects} & \textbf{Why included} \\
+\midrule
+NameRTS's benchmark & sympy, scikit-learn, matplotlib, dask, xarray, sphinx, pylint, seaborn, pvlib, loguru & Comparison with NameRTS on its own commits, metrics and ground truth \\
+Used during development & sqlglot, pygments, SQLAlchemy, datasette & Table- and dispatch-heavy code, where import-time state matters \\
+Held out & \ph{6 of networkx, mypy, astropy, hypothesis, black, pandas} & Never used while \tool was built \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Each commit is evaluated in two scenarios. In \emph{S}, the commit's source changes are applied to the parent with the parent's tests, so old tests see new behaviour; in \emph{F}, the whole commit runs with its own tests. A failure in S is a behaviour change that the old tests detect, not necessarily a bug. We report the field's standard measures on all commits, and missed failures on the commits that break a test, with the commits that touch import-time code broken out.
+
+\para{B1b: Real bugs.}Reversing a fix reintroduces a real developer's bug whose failing tests are known; RTSCheck built DefectsEP from Defects4J the same way~\cite{zhu2019rtscheck}. We sample \ph{about 500} SWE-bench tasks by repository from the 8 repositories with working environments (sympy, sphinx, xarray, pytest, pylint, seaborn, flask, requests). Starting from the fixed version with its tests, we reverse the source part of the reference fix. The ground truth is the task's FAIL\_TO\_PASS tests plus any other test that fails. B1b shares its environments with B3.
+
+\para{B2: Targeted changes.}B2 stresses the kinds of code where tools differ, as a secondary check beside the real changes of B1 and B1b. On 5 of B1's projects we plant mutants stratified by where the change lands: a function body, a class attribute, a module-level table or constant, a decorator or default argument, and an import, about 30 per kind and project. The operators are fixed in advance (flip a comparison, change a constant, delete or swap a table entry, change a default, drop an import), and locations are sampled uniformly within each kind, so no location is hand-picked. We report all mutants, the subset that breaks a test, and the results weighted by how often each kind occurs in B1's commits.
+
+\para{B3: Agent regressions.}Of the patches that published agents submitted to SWE-bench on eight pure-Python repositories, \ph{6,912} break a test that passed before the patch. We reproduce a sample drawn by repository, \ph{449 cases, extended to about 1,000}, in our environments. The ground truth is every test of the full suite that fails after the patch, not only the tests on SWE-bench's own lists.
+
+\para{B4: Agents in the loop.}\ph{2} agents, for example Claude Code, solve \ph{300} SWE-bench Verified tasks from repositories with slow suites, in seven arms: the agent as is, a full-suite finish check, and a finish check with each of the five selection tools. New failures go back to the agent, at most twice. Each final patch is run against the full suite, so regressions outside SWE-bench's own test lists still count.
 
 
 \subsection{Tools}
-We compare \tool v2.3.1 with: running every test; pytest-testmon \ph{version}, the most used coverage-based Python tool; NameRTS~\cite{wang2026namerts}, with its published configuration; EkstaP, the Ekstazi-style Python baseline \ph{if available}; TDAD~\cite{alonso2026tdad}, a static test map for agents capped at 50 tests; and \tool's \emph{traditional} variant, which selects every test that executed changed code, import-time code included. Every tool uses its data from the parent commit, in the same environment.
+We compare \tool v2.3.1 with running every test and with four selection tools: pytest-testmon \ph{version}, the most used coverage-based Python tool, which selects at line level; NameRTS~\cite{wang2026namerts}, which propagates names statically at function level, with its published configuration; EkstaP, a dynamic file-level tool in the style of Ekstazi \ph{if available}; and TDAD~\cite{alonso2026tdad}, a static test map built for agents and capped at 50 tests. RQ2 adds \tool's \emph{traditional} variant, which selects every test that executed changed code, import-time code included, and one variant for each part switched off. Every tool runs at a fixed version, in the same environment, from data recorded at the parent commit, with each test file in its own process where the tool allows it. We leave out TestPrune~\cite{chen2026oldtests}, which selects tests from an issue's text that B1 and B2 do not have, and BabelRTS, which NameRTS outperforms and which works at file level like EkstaP.
 
 
 \subsection{Ground truth and metrics}
-\begin{itemize}
-  \item \emph{Failures (main measure).} Tests that fail after the change and passed at the parent, confirmed by failing in 3 reruns of the change and passing in 3 reruns at the parent; other failures are flaky and excluded (counted). A tool \emph{misses} a failure if it does not select that test. We report changes with at least one missed failure and failing tests missed.
-  \item \emph{Affected tests (classic safety measure).} Tests whose recorded execution at the parent ran changed code, with import-time code counted as run by every test (Ekstazi's rule) and without it (NameRTS's SafeR reference).
-  \item \emph{NameRTS's metrics.} On its 500 commits: SafeR, TestR and TimeR against its published ground truth.
-  \item \emph{Cost.} Share of tests and of test time selected; end-to-end time (selection plus selected tests); for RQ4, one-time data collection and break-even.
-  \item \emph{Statistics.} McNemar on paired detection, Wilcoxon signed-rank on paired cost, Wilson intervals on proportions, intervals clustered by project.
-\end{itemize}
+\para{Failures.}A test fails because of a change if it fails after the change and passed at the parent, in each of 3 reruns at both commits; other failures are flaky, excluded and counted. A tool \emph{misses} a failure if it does not select that test. Missed failures are our main safety measure.
+
+\para{Affected tests.}The classic safety measure counts the tests whose recorded execution at the parent ran changed code, at test and at test-file level, with code run at import counted for every test (Ekstazi's rule~\cite{gligoric2015ekstazi}) and without it (NameRTS's SafeR reference).
+
+Table~\ref{tab:measures} lists every measure with its precedent, so each number has a counterpart in related work.
+
+\begin{table}[t]
+\small
+\caption{Measures, each with its precedent in related work.}
+\label{tab:measures}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Property} & \textbf{Measure} & \textbf{Precedent} \\
+\midrule
+Safety (outcome) & Changes with a missed failing test; failing tests missed & RTSCheck~\cite{zhu2019rtscheck}; Kauhanen et al.~\cite{kauhanen2021rts} \\
+Safety (affected tests) & SafeR: commits where every affected test file is selected; share of affected tests skipped & NameRTS~\cite{wang2026namerts}; Ekstazi~\cite{gligoric2015ekstazi} \\
+Selection & Share of tests selected; TestR (share of test files skipped); Precision & Ekstazi; STARTS~\cite{legunsen2017starts}; FineEkstazi~\cite{liu2023fineekstazi}; NameRTS \\
+Cost & Share of test time; end-to-end time (analysis, collection and execution) against running all tests; TimeR & Ekstazi; NameRTS \\
+Overhead & Recording, snapshot and selection time; break-even in commits and per agent task; peak memory & NameRTS \\
+Agents & Regressions left in final patches; resolve rate; wall time; tokens and cost & Lin et al.~\cite{lin2026runornot} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\para{Statistics.}We report per project, then pooled. Tools are compared on the same changes with paired tests: exact McNemar for safety and Wilcoxon signed-rank for cost, with odds ratios and matched-pairs rank-biserial correlations as effect sizes. Rates carry 95\% Wilson intervals, medians bootstrap intervals from 10,000 resamples, and pooled shares intervals that resample by project.
 
 
 \subsection{Protocol}
-Every tool and \tool were frozen before any run: \tool at v2.3.1, the baselines at fixed versions. Each project has one pinned environment, checked so that every test file collects. Each test file runs in its own process for every tool that supports it. Timed runs use one machine type and parallelism. Every miss of every tool is traced to its root cause.
+Every number comes from one setup, run fresh for this paper; no result of earlier runs is reported. \tool was frozen at v2.3.1 before any run, with no rule change afterwards, and every baseline was fixed at one version. Each project has one pinned environment, used by every tool and checked so that every test file collects; the versions are released with the artifact. Timed runs use one machine type and the same parallelism, and on a 10\% sample each timing is repeated 3 times to measure its noise. Every miss of every tool is traced to its root cause.
 
 
 \section{Results}\label{sec:results}
@@ -211,12 +265,12 @@ All numbers below are placeholders until the runs finish; each subsection states
 
 
 \subsection{RQ1: Effectiveness on real changes}
-\ph{Results paragraph: missed failures and cost per tool (Table~\ref{tab:t2}).}
+\ph{Results paragraph: missed failures and cost per tool (Table~\ref{tab:rq1}).}
 
 \begin{table}[t]
 \footnotesize
 \caption{RQ1: missed failures and cost on real changes (B1, scenario S; B1b).}
-\label{tab:t2}
+\label{tab:rq1}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Tool} & \textbf{Failure-inducing changes with a missed failure (B1, S)} & \textbf{Failing tests missed (B1, S)} & \textbf{B1b bugs missed} & \textbf{Median \% of test time (B1)} & \textbf{End-to-end vs run all} \\
@@ -240,12 +294,12 @@ TDAD & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 
 \para{Import-time changes.}How often real changes touch import-time statements, and each tool on those changes against the rest.
 
-\ph{X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while \tool ... (Table~\ref{tab:t3}).}
+\ph{X\% of B1 commits change import-time statements; on those changes NameRTS misses Y\% and the traditional rule runs Z\% of test time, while \tool ... (Table~\ref{tab:rq1-import}).}
 
 \begin{table}[t]
 \footnotesize
 \caption{RQ1: changes that touch import-time state against the rest (B1).}
-\label{tab:t3}
+\label{tab:rq1-import}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Change touches import-time code} & \textbf{Changes} & \textbf{\tool missed} & \textbf{NameRTS missed} & \textbf{testmon missed} & \textbf{\tool \% time} & \textbf{Traditional \% time} \\
@@ -264,12 +318,12 @@ No & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 
 
 \subsection{RQ2: Ablation}
-\ph{Results paragraph: each part switched off in turn (Table~\ref{tab:t4}).}
+\ph{Results paragraph: each part switched off in turn (Table~\ref{tab:rq2}).}
 
 \begin{table}[t]
 \small
 \caption{RQ2: \tool with one part switched off, and the traditional rule (B1).}
-\label{tab:t4}
+\label{tab:rq2}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.40\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Variant} & \textbf{Failure-inducing changes missed} & \textbf{Median \% of test time} \\
@@ -291,12 +345,12 @@ Traditional (every test that executed changed code) & \ph{ } & \ph{ } \\
 \end{answerbox}
 
 \subsection{RQ3: AI agents}
-\para{Agent regressions (B3).}\ph{Regressions with every broken test missed, and broken tests missed, per tool, on the full suite (Table~\ref{tab:t5}).}
+\para{Agent regressions (B3).}\ph{Regressions with every broken test missed, and broken tests missed, per tool, on the full suite (Table~\ref{tab:rq3}).}
 
 \begin{table}[t]
 \small
 \caption{RQ3: agent regressions (B3), full-suite ground truth.}
-\label{tab:t5}
+\label{tab:rq3}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Tool} & \textbf{Regressions detected (at least one broken test selected)} & \textbf{Broken tests missed (full suite)} & \textbf{Median \% of test time} \\
@@ -317,12 +371,12 @@ TDAD & \ph{ } & \ph{ } & \ph{ } \\
 
 
 \subsection{RQ4: Overhead}
-\ph{Results paragraph: recording, selection and break-even per project (Table~\ref{tab:t6}).}
+\ph{Results paragraph: recording, selection and break-even per project (Table~\ref{tab:rq4}).}
 
 \begin{table}[t]
 \footnotesize
 \caption{RQ4: overhead and break-even per project (B1).}
-\label{tab:t6}
+\label{tab:rq4}
 \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{Project} & \textbf{Run all (s)} & \textbf{\tool recording (s)} & \textbf{Selection (s)} & \textbf{One run with \tool (s)} & \textbf{Break-even (runs)} & \textbf{Agent task vs run all} \\

@@ -87,30 +87,39 @@ def heading_title(t: str) -> str:
     return re.sub(r"^\d+(\.\d+)*\s+", "", t)
 
 
+# Tables are named by their header row, so adding a table does not renumber the others' labels.
+TABLES = [  # (header cells start with, label, caption, first-column width)
+    (("Benchmark", "Changes"), "benchmarks", "The five benchmarks.", 0.22),
+    (("Group", "Projects"), "projects", "The 20 projects of B1.", 0.22),
+    (("Property", "Measure"), "measures", "Measures, each with its precedent in related work.", 0.20),
+    (("Tool", "Failure-inducing"), "rq1", "RQ1: missed failures and cost on real changes (B1, scenario S; B1b).", 0.16),
+    (("Change touches import-time code",), "rq1-import", "RQ1: changes that touch import-time state against the rest (B1).", 0.16),
+    (("Variant",), "rq2", "RQ2: ValueRTS with one part switched off, and the traditional rule (B1).", 0.40),
+    (("Tool", "Regressions detected"), "rq3", "RQ3: agent regressions (B3), full-suite ground truth.", 0.16),
+    (("Project", "Run all"), "rq4", "RQ4: overhead and break-even per project (B1).", 0.16),
+]
+labels = []  # in order of appearance, for "Table N" in the text
+
+
 def table(el, n) -> str:
     rows = el.findall("row")
-    cols = len(rows[0].findall("cell"))
-    head = rows[0]
-    widths = ">{\\raggedright\\arraybackslash}p{%.2f\\linewidth}" % FIRST_COL.get(n, 0.16) + ">{\\raggedright\\arraybackslash}X" * (cols - 1)
-    lines = ["\\begin{table}[t]", "\\small" if cols < 5 else "\\footnotesize", "\\caption{%s}" % TABLE_CAPTIONS.get(n, "\\ph{caption}"),
-             "\\label{tab:t%d}" % n, "\\begin{tabularx}{\\linewidth}{%s}" % widths, "\\toprule"]
-    lines.append(" & ".join("\\textbf{%s}" % runs(c) for c in head.findall("cell")) + " \\\\")
+    head = [runs(c) for c in rows[0].findall("cell")]
+    cols = len(head)
+    plain = ["".join(c.itertext()).strip() for c in rows[0].findall("cell")]
+    hit = [t for t in TABLES if all(p.startswith(k) for p, k in zip(plain, t[0]))]
+    assert len(hit) == 1, ("unknown table header", plain)
+    _, label, caption, first = hit[0]
+    labels.append(label)
+    widths = ">{\\raggedright\\arraybackslash}p{%.2f\\linewidth}" % first + ">{\\raggedright\\arraybackslash}X" * (cols - 1)
+    lines = ["\\begin{table}[t]", "\\small" if cols < 5 else "\\footnotesize", "\\caption{%s}" % caption,
+             "\\label{tab:%s}" % label, "\\begin{tabularx}{\\linewidth}{%s}" % widths, "\\toprule"]
+    lines.append(" & ".join("\\textbf{%s}" % h for h in head) + " \\\\")
     lines.append("\\midrule")
     for r in rows[1:]:
         lines.append(" & ".join(runs(c) for c in r.findall("cell")) + " \\\\")
     lines += ["\\bottomrule", "\\end{tabularx}", "\\end{table}"]
     return "\n".join(lines)
 
-
-FIRST_COL = {1: 0.18, 4: 0.40}
-TABLE_CAPTIONS = {
-    1: "Research questions and the benchmarks that answer them.",
-    2: "RQ1: missed failures and cost on real changes (B1, scenario S; B1b).",
-    3: "RQ1: changes that touch import-time state against the rest (B1).",
-    4: "RQ2: ValueRTS with one part switched off, and the traditional rule (B1).",
-    5: "RQ3: agent regressions (B3), full-suite ground truth.",
-    6: "RQ4: overhead and break-even per project (B1).",
-}
 
 body, abstract, title = [], [], ""
 in_abstract = skip = False
@@ -136,8 +145,6 @@ while i < len(children):
             body.append("\n\\section{%s}\\label{sec:%s}" % (esc(heading_title(t)), re.sub(r"\W+", "-", heading_title(t).lower()).strip("-")))
         else:
             body.append("\n\\subsection{%s}" % brackets(esc(heading_title(t))))
-            if heading_title(t) == "Research questions":
-                body.append("Table~\\ref{tab:t1} lists the four research questions and the benchmarks that answer each.\n")
         continue
     if skip:
         continue
@@ -208,5 +215,6 @@ SECS = ["introduction", "background-and-motivating-example", "approach", "implem
         "results", "threats-to-validity", "related-work", "conclusion"]
 tex = re.sub(r"Section (\d)\b", lambda m: "Section~\\ref{sec:%s}" % SECS[int(m.group(1)) - 1], tex)
 tex = tex.replace("(Figure 1)", "(Figure~\\ref{fig:overview})").replace("Figure 1 ", "Figure~\\ref{fig:overview} ")
+tex = re.sub(r"Table (\d)\b", lambda m: "Table~\\ref{tab:%s}" % labels[int(m.group(1)) - 1], tex)
 open(OUT, "w").write(tex)
 print("written", OUT, "tables", tcount, "cites used", sorted(used))
