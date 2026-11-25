@@ -118,11 +118,11 @@ Suppose a change maps \texttt{"us"} to a different function. \texttt{render} is 
 Selecting few tests in Python without missing failures raises five challenges.
 
 \begin{itemize}
-  \item \textbf{C1: Detecting import-time changes.} The values a package builds at import are arbitrary objects (functions, classes, closures, large tables), and some come out in a different order on each run: sympy's dispatch tables are ordered by memory address. Comparing them must be stable, so that run-to-run noise is not mistaken for a change.
-  \item \textbf{C2: Linking changed values to tests.} Tests read values through names and attributes, not calls, so a record of the functions each test ran does not show them. Code that reads a value often runs once and caches its result, so later tests reach it only through the cache.
-  \item \textbf{C3: Execution shared between tests.} A module-scoped fixture runs once for all its users, and a cache is filled by whichever test runs first. Coverage tools credit both to the first test only.
-  \item \textbf{C4: Dependencies outside Python code.} Tests read JSON data, templates, expected outputs and configuration, sometimes while pytest collects or parametrises tests, and some \texttt{.py} files are read as data rather than executed.
-  \item \textbf{C5: Precision must cost less than it saves.} Finer analysis selects fewer tests but costs more per change: method-level static RTS has been measured at 695\% of the time of running all tests~\cite{legunsen2016static}. Deciding whether import-time state changed requires importing two versions of the package and fingerprinting every module-level value, about 57,000 in sympy.
+  \item \textbf{C1:} \emph{Detecting import-time changes.} The values a package builds at import are arbitrary objects (functions, classes, closures, large tables), and some come out in a different order on each run: sympy's dispatch tables are ordered by memory address. Comparing them must be stable, so that run-to-run noise is not mistaken for a change.
+  \item \textbf{C2:} \emph{Linking changed values to tests.} Tests read values through names and attributes, not calls, so a record of the functions each test ran does not show them. Code that reads a value often runs once and caches its result, so later tests reach it only through the cache.
+  \item \textbf{C3:} \emph{Execution shared between tests.} A module-scoped fixture runs once for all its users, and a cache is filled by whichever test runs first. Coverage tools credit both to the first test only.
+  \item \textbf{C4:} \emph{Dependencies outside Python code.} Tests read JSON data, templates, expected outputs and configuration, sometimes while pytest collects or parametrises tests, and some \texttt{.py} files are read as data rather than executed.
+  \item \textbf{C5:} \emph{Precision must cost less than it saves.} Finer analysis selects fewer tests but costs more per change: method-level static RTS has been measured at 695\% of the time of running all tests~\cite{legunsen2016static}. Deciding whether import-time state changed requires importing two versions of the package and fingerprinting every module-level value, about 57,000 in sympy.
 \end{itemize}
 
 
@@ -180,11 +180,11 @@ RQ1 uses B1 and B1b, with B2 as a secondary benchmark for change kinds; RQ2 uses
 
 \subsection{Benchmarks}
 \begin{itemize}
-  \item \textbf{B1: Real history.} 20 Python projects: the 10 of NameRTS's benchmark, the 4 we used during development (sqlglot, pygments, SQLAlchemy, datasette) and 6 held-out projects never used during development \ph{list}. For NameRTS's projects we use its own 500 published commits and its ground truth; for the others, the 50 most recent first-parent commits before a fixed date that change at least one non-test Python file of the package and whose suite runs at the parent. Each pair is evaluated in two scenarios: \emph{S}, the commit's source changes applied to the parent with the parent's tests (old tests see new behaviour), and \emph{F}, the whole commit with its own tests.
-  \item \textbf{B1b: Real bugs.} \ph{N} SWE-bench tasks sampled by repository. Starting from the fixed version with its tests, we reverse the reference fix's source changes; this reintroduces a real developer's bug whose failing tests are known, as RTSCheck built DefectsEP from Defects4J~\cite{zhu2019rtscheck}.
-  \item \textbf{B2: Targeted changes.} \ph{About 750} mutants planted in the kinds of code where tools differ: import-time tables and constants, class attributes, fixtures, data files and configuration. Secondary to B1 and B1b.
-  \item \textbf{B3: Agent regressions.} Patches from published SWE-bench agents that break a test that passed before the patch, reproduced in our environments: the \ph{449} sampled earlier, re-run in the frozen setup, extended to about \ph{1,000}. Ground truth is the full suite, not SWE-bench's test lists.
-  \item \textbf{B4: Agents in the loop.} \ph{Design to be settled with Dr Li: tasks, agents, arms, budget.}
+  \item \textbf{B1:} \emph{Real history.} 20 Python projects: the 10 of NameRTS's benchmark, the 4 we used during development (sqlglot, pygments, SQLAlchemy, datasette) and 6 held-out projects never used during development \ph{list}. For NameRTS's projects we use its own 500 published commits and its ground truth; for the others, the 50 most recent first-parent commits before a fixed date that change at least one non-test Python file of the package and whose suite runs at the parent. Each pair is evaluated in two scenarios: \emph{S}, the commit's source changes applied to the parent with the parent's tests (old tests see new behaviour), and \emph{F}, the whole commit with its own tests.
+  \item \textbf{B1b:} \emph{Real bugs.} \ph{N} SWE-bench tasks sampled by repository. Starting from the fixed version with its tests, we reverse the reference fix's source changes; this reintroduces a real developer's bug whose failing tests are known, as RTSCheck built DefectsEP from Defects4J~\cite{zhu2019rtscheck}.
+  \item \textbf{B2:} \emph{Targeted changes.} \ph{About 750} mutants planted in the kinds of code where tools differ: import-time tables and constants, class attributes, fixtures, data files and configuration. Secondary to B1 and B1b.
+  \item \textbf{B3:} \emph{Agent regressions.} Patches from published SWE-bench agents that break a test that passed before the patch, reproduced in our environments: the \ph{449} sampled earlier, re-run in the frozen setup, extended to about \ph{1,000}. Ground truth is the full suite, not SWE-bench's test lists.
+  \item \textbf{B4:} \emph{Agents in the loop.} \ph{Design to be settled with Dr Li: tasks, agents, arms, budget.}
 \end{itemize}
 
 
@@ -194,11 +194,11 @@ We compare \tool v2.3.1 with: running every test; pytest-testmon \ph{version}, t
 
 \subsection{Ground truth and metrics}
 \begin{itemize}
-  \item \textbf{Failures (main measure).} Tests that fail after the change and passed at the parent, confirmed by failing in 3 reruns of the change and passing in 3 reruns at the parent; other failures are flaky and excluded (counted). A tool \emph{misses} a failure if it does not select that test. We report changes with at least one missed failure and failing tests missed.
-  \item \textbf{Affected tests (classic safety measure).} Tests whose recorded execution at the parent ran changed code, with import-time code counted as run by every test (Ekstazi's rule) and without it (NameRTS's SafeR reference).
-  \item \textbf{NameRTS's metrics.} On its 500 commits: SafeR, TestR and TimeR against its published ground truth.
-  \item \textbf{Cost.} Share of tests and of test time selected; end-to-end time (selection plus selected tests); for RQ4, one-time data collection and break-even.
-  \item \textbf{Statistics.} McNemar on paired detection, Wilcoxon signed-rank on paired cost, Wilson intervals on proportions, intervals clustered by project.
+  \item \emph{Failures (main measure).} Tests that fail after the change and passed at the parent, confirmed by failing in 3 reruns of the change and passing in 3 reruns at the parent; other failures are flaky and excluded (counted). A tool \emph{misses} a failure if it does not select that test. We report changes with at least one missed failure and failing tests missed.
+  \item \emph{Affected tests (classic safety measure).} Tests whose recorded execution at the parent ran changed code, with import-time code counted as run by every test (Ekstazi's rule) and without it (NameRTS's SafeR reference).
+  \item \emph{NameRTS's metrics.} On its 500 commits: SafeR, TestR and TimeR against its published ground truth.
+  \item \emph{Cost.} Share of tests and of test time selected; end-to-end time (selection plus selected tests); for RQ4, one-time data collection and break-even.
+  \item \emph{Statistics.} McNemar on paired detection, Wilcoxon signed-rank on paired cost, Wilson intervals on proportions, intervals clustered by project.
 \end{itemize}
 
 

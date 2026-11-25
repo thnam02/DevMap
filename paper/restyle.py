@@ -163,6 +163,20 @@ R(r"""Other tools' one-time costs (testmon's recording run, NameRTS's initial ru
 \end{answerbox}
 """)
 
+# ---------- list-item leads: bold only for an ID (C1, B1b), the name in italics; no ID -> italics ----------
+# Bold is kept for run-in paragraph headings (\para) and table headers.
+n = 0
+def _lead(m):
+    global n
+    n += 1
+    lead = m.group(1)
+    idm = re.match(r"((?:C|B)\d+b?):\s+(.*)", lead)
+    if idm:
+        return r"\item \textbf{%s:} \emph{%s}" % (idm.group(1), idm.group(2))
+    return r"\item \emph{%s}" % lead
+s = re.sub(r"\\item \\textbf\{([^{}]+\.)\}", _lead, s)
+assert n == 15, ("list-item leads", n)
+
 # ---------- run-in paragraph headings at the start of a line -> \para ----------
 s = re.sub(r"(?m)^\\textbf\{([^{}]*\.)\} ", lambda m: "\\para{%s}" % m.group(1), s)
 # the tool's name where it starts a caption or a table header (the \\w lookbehind above skips "{Proviso")
