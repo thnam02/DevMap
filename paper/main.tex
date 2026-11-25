@@ -7,6 +7,8 @@
 \usepackage{xcolor}
 \usepackage{xspace}
 \usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\setlist[itemize,enumerate]{leftmargin=*,topsep=2pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
 \lstset{basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,frame=single,showstringspaces=false}
 \newcommand{\ph}[1]{\textcolor{red}{[#1]}}
 % Style conventions (as in recent ISSTA/ICSE/ASE RTS papers):
@@ -66,11 +68,11 @@ We evaluate \tool against pytest-testmon, NameRTS, EkstaP, TDAD and the traditio
 In summary, this paper makes the following contributions:
 
 \begin{itemize}
-  \item \textbf{Technique.} We propose, to our knowledge, the first RTS technique that compares, across versions, the program state a package builds at import and links the changed values to the tests that use them. Unlike uRTS~\cite{wang2023urts} it needs no configuration API, and unlike PolDet~\cite{gyori2015poldet} it compares state across versions rather than between tests in one run.
-  \item \textbf{Attribution.} We record shared execution per test, crediting fixture set-up and cached readers to every test that relies on them, which coverage-based Python tools do not.
-  \item \textbf{Tool.} We implement \tool, an open-source RTS tool for pytest that combines these with established practice (a fresh process per test file, as in NameRTS; file dependencies, as in Ekstazi) and runs as a finish check for coding agents.
-  \item \textbf{Evaluation.} We evaluate six tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.
-  \item \textbf{Benchmark.} We release \ph{B3: N} real agent regressions from published SWE-bench agents, reproduced with a full-suite ground truth.
+  \item We propose, to our knowledge, the first RTS technique that compares, across versions, the program state a package builds at import and links the changed values to the tests that use them. Unlike uRTS~\cite{wang2023urts} it needs no configuration API, and unlike PolDet~\cite{gyori2015poldet} it compares state across versions rather than between tests in one run.
+  \item We record shared execution per test, crediting fixture set-up and cached readers to every test that relies on them, which coverage-based Python tools do not.
+  \item We implement \tool, an open-source RTS tool for pytest that combines these with established practice (a fresh process per test file, as in NameRTS; file dependencies, as in Ekstazi) and runs as a finish check for coding agents.
+  \item We evaluate six tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.
+  \item We release \ph{B3: N} real agent regressions from published SWE-bench agents, reproduced with a full-suite ground truth.
 \end{itemize}
 
 

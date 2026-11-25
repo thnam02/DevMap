@@ -18,6 +18,8 @@ R(r"""\usepackage{xcolor}
 """, r"""\usepackage{xcolor}
 \usepackage{xspace}
 \usepackage[most]{tcolorbox}
+\usepackage{enumitem}
+\setlist[itemize,enumerate]{leftmargin=*,topsep=2pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
 """)
 R(r"""\newcommand{\ph}[1]{\textcolor{red}{[#1]}}
 """, r"""\newcommand{\ph}[1]{\textcolor{red}{[#1]}}
@@ -60,6 +62,11 @@ R(r"We evaluate on real history, real bugs and real agent regressions, six tools
 R(r"""\item \textbf{A benchmark of \ph{B3: N} real agent regressions} from published SWE-bench agents, reproduced and released with a full-suite ground truth.
 \end{enumerate}""", r"""\item \textbf{Benchmark.} We release \ph{B3: N} real agent regressions from published SWE-bench agents, reproduced with a full-suite ground truth.
 \end{itemize}""")
+
+# contributions: plain bullets starting with "We ...", as in NameRTS (ISSTA 2026); no bold labels
+n_before = s.count(r"\item \textbf{")
+s = re.sub(r"\\item \\textbf\{(Technique|Attribution|Tool|Evaluation|Benchmark)\.\} ", r"\\item ", s)
+assert n_before - s.count(r"\item \textbf{") == 5, "contribution labels"
 
 # ---------- approach ----------
 R(r"\textbf{record} once at a base commit, \textbf{snapshot} the import-time state, \textbf{compare} after each change, and \textbf{select}.",
