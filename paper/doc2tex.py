@@ -188,8 +188,21 @@ tex = r"""%% ValueRTS: ISSTA 2027 submission draft, generated from the paper dra
 
 %% Title chosen 26 Nov 2026; confirm with Dr Li (it cannot change after submission).
 \title{%(title)s}
-\author{Anonymous Author(s)}
-\affiliation{\institution{Anonymous Institution}\country{Anonymous}}
+%% Authors: hidden in the submission by the anonymous option (ISSTA 2027 is double-anonymous); shown once it is removed.
+\author{Hai Nam Tran}
+\affiliation{%%
+  \institution{UNSW Sydney}
+  \department{School of Computer Science and Engineering}
+  \city{Sydney}
+  \country{Australia}}
+%% \email{...}  (university address, for the camera-ready)
+\author{Yuekang Li}
+\affiliation{%%
+  \institution{UNSW Sydney}
+  \department{School of Computer Science and Engineering}
+  \city{Sydney}
+  \country{Australia}}
+%% \email{...}
 
 \begin{abstract}
 %(abstract)s\end{abstract}
