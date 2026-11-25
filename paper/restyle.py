@@ -24,11 +24,11 @@ R(r"""\usepackage{xcolor}
 R(r"""\newcommand{\ph}[1]{\textcolor{red}{[#1]}}
 """, r"""\newcommand{\ph}[1]{\textcolor{red}{[#1]}}
 % Style conventions (as in recent ISSTA/ICSE/ASE RTS papers):
-% - our tool's name in small caps through one macro; baselines keep their authors' spelling, in plain text;
+% - the tool's name through one macro, in plain text like NameRTS and BabelRTS;
 % - run-in paragraph headings in bold sentence case ending with a period, through one macro;
 % - italics only for a term at its definition and for the key insight; no bold inside sentences;
 % - research questions as a list with bold labels; each RQ ends with a shaded "Answer to RQn" box.
-\newcommand{\tool}{\textsc{Proviso}\xspace}
+\newcommand{\tool}{ValueRTS\xspace}
 \newcommand{\para}[1]{\smallskip\noindent\textbf{#1}\hspace{0.4em}}
 \newtcolorbox{answerbox}[1]{enhanced,breakable,colback=black!5,colframe=black!45,boxrule=0.5pt,arc=1.5pt,
   left=5pt,right=5pt,top=3pt,bottom=3pt,fontupper=\small,before skip=6pt,after skip=6pt,
@@ -36,12 +36,12 @@ R(r"""\newcommand{\ph}[1]{\textcolor{red}{[#1]}}
 """)
 
 # ---------- tool name -> \tool in the body (not the title or comments) ----------
-s = s.replace(r"\textbf{Proviso}", "Proviso")
+s = s.replace(r"\textbf{ValueRTS}", "ValueRTS")
 head, body = s.split(r"\begin{abstract}", 1)
 out = []
 for ln in body.split("\n"):
     if not ln.lstrip().startswith("%"):
-        ln = re.sub(r"(?<![\w{/\\-])Proviso(?![\w-])", r"\\tool", ln)
+        ln = re.sub(r"(?<![\w{/\\-])ValueRTS(?![\w-])", r"\\tool", ln)
     out.append(ln)
 s = head + r"\begin{abstract}" + "\n".join(out)
 s = s.replace(r"\textbf{\tool}", r"\tool")
@@ -179,10 +179,10 @@ assert n == 15, ("list-item leads", n)
 
 # ---------- run-in paragraph headings at the start of a line -> \para ----------
 s = re.sub(r"(?m)^\\textbf\{([^{}]*\.)\} ", lambda m: "\\para{%s}" % m.group(1), s)
-# the tool's name where it starts a caption or a table header (the \\w lookbehind above skips "{Proviso")
-s = s.replace(r"\caption{Proviso end to end", r"\caption{\tool end to end")
-for h in ["Proviso missed", "Proviso recording (s)", r"Proviso \% time"]:
-    s = s.replace(r"\textbf{%s}" % h, r"\textbf{%s}" % h.replace("Proviso", r"\tool"))
+# the tool's name where it starts a caption or a table header (the \\w lookbehind above skips "{ValueRTS")
+s = s.replace(r"\caption{ValueRTS end to end", r"\caption{\tool end to end")
+for h in ["ValueRTS missed", "ValueRTS recording (s)", r"ValueRTS \% time"]:
+    s = s.replace(r"\textbf{%s}" % h, r"\textbf{%s}" % h.replace("ValueRTS", r"\tool"))
 open(p, "w").write(s)
 body = s.split(r"\maketitle")[1]
 left = [ln[:90] for ln in body.split("\n") if r"\textbf" in ln and not ln.lstrip().startswith((r"\item", "&")) and r"& \textbf" not in ln]

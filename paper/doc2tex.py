@@ -1,4 +1,4 @@
-"""Convert the Proviso paper draft (Claude Docs XML) into an acmart LaTeX file."""
+"""Convert the ValueRTS paper draft (Claude Docs XML) into an acmart LaTeX file."""
 import html
 import re
 import sys
@@ -107,7 +107,7 @@ TABLE_CAPTIONS = {
     1: "Research questions and the benchmarks that answer them.",
     2: "RQ1: missed failures and cost on real changes (B1, scenario S; B1b).",
     3: "RQ1: changes that touch import-time state against the rest (B1).",
-    4: "RQ2: Proviso with one part switched off, and the traditional rule (B1).",
+    4: "RQ2: ValueRTS with one part switched off, and the traditional rule (B1).",
     5: "RQ3: agent regressions (B3), full-suite ground truth.",
     6: "RQ4: overhead and break-even per project (B1).",
 }
@@ -162,9 +162,9 @@ while i < len(children):
         cap = runs(children[i]) if i < len(children) and children[i].tag == "paragraph" else ""
         i += 1
         body.append("\\begin{figure}[t]\n\\centering\n\\includegraphics[width=\\linewidth]{figures/overview.png}\n"
-                    "\\caption{Proviso end to end. %s}\n\\label{fig:overview}\n\\end{figure}\n" % cap)
+                    "\\caption{ValueRTS end to end. %s}\n\\label{fig:overview}\n\\end{figure}\n" % cap)
 
-tex = r"""%% Proviso: ISSTA 2027 submission draft, generated from the paper draft doc on 26 Nov 2026.
+tex = r"""%% ValueRTS: ISSTA 2027 submission draft, generated from the paper draft doc on 26 Nov 2026.
 %% Red [..] marks are placeholders, filled after the 13 Dec run freeze.
 \documentclass[acmsmall,screen,review,anonymous]{acmart}
 \usepackage{booktabs}
@@ -179,7 +179,7 @@ tex = r"""%% Proviso: ISSTA 2027 submission draft, generated from the paper draf
 
 \begin{document}
 
-%% Working title, not yet agreed: settle it with Dr Li (it cannot change after submission).
+%% Title chosen 26 Nov 2026; confirm with Dr Li (it cannot change after submission).
 \title{%(title)s}
 \author{Anonymous Author(s)}
 \affiliation{\institution{Anonymous Institution}\country{Anonymous}}
@@ -203,7 +203,7 @@ tex = r"""%% Proviso: ISSTA 2027 submission draft, generated from the paper draf
 \bibliography{references}
 
 \end{document}
-""" % {"title": "Proviso: Regression Test Selection for Python That Sees Import-Time State", "abstract": "\n".join(abstract), "body": "\n".join(body)}
+""" % {"title": "ValueRTS: Safe Regression Test Selection for AI Coding Agents in Python", "abstract": "\n".join(abstract), "body": "\n".join(body)}
 SECS = ["introduction", "background-and-motivating-example", "approach", "implementation", "evaluation-setup",
         "results", "threats-to-validity", "related-work", "conclusion"]
 tex = re.sub(r"Section (\d)\b", lambda m: "Section~\\ref{sec:%s}" % SECS[int(m.group(1)) - 1], tex)
