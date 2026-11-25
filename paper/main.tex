@@ -31,7 +31,7 @@
 \affiliation{\institution{Anonymous Institution}\country{Anonymous}}
 
 \begin{abstract}
-AI coding agents rely on a project's tests to check their changes, yet they rarely run the whole suite, and the tests they skip are where their regressions hide. Regression test selection (RTS) runs only the tests a change can affect, but Python RTS tools are blind to a central part of Python programs: the state a package builds when it is imported, such as lookup tables, registries and constants. Coverage-based tools credit this code to no test, and static, name-based tools either link it to every test or miss it.
+Nowadays, AI coding agents often rely on the project's tests to check their changes,  they rarely run the whole suite, and the tests they skip are where their regressions hide. Regression test selection (RTS) runs only the tests a change can affect, but Python RTS tools are blind to a central part of Python programs: the state a package builds when it is imported, such as lookup tables, registries and constants. Coverage-based tools credit this code to no test, and static, name-based tools either link it to every test or miss it.
 
 We present \tool, an RTS technique for Python that compares import-time state across versions. \tool records each test's execution once, fingerprints the values a package builds at import, and after a change selects the tests whose recorded execution ran changed code, used a changed value, or read a changed file. It credits shared execution, such as fixture set-up, to every test that relies on it.
 
