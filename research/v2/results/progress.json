@@ -10,17 +10,17 @@
  {
   "benchmark": "B1",
   "item": "pygments",
-  "done": 45,
+  "done": 50,
   "total": 50,
-  "status": "running",
-  "hours_left": 0.2
+  "status": "done",
+  "hours_left": 0.0
  },
  {
   "benchmark": "B1",
   "item": "datasette",
   "done": 0,
   "total": 50,
-  "status": "queued",
+  "status": "running",
   "hours_left": 5.3
  },
  {
@@ -98,10 +98,10 @@
  {
   "benchmark": "B1b",
   "item": "reversed SWE-bench fixes",
-  "done": 30,
+  "done": 39,
   "total": 437,
-  "status": "running (1 skip, 9 error)",
-  "hours_left": 9.3
+  "status": "paused (1 skip, 10 error)",
+  "hours_left": 8.2
  },
  {
   "benchmark": "B3",
