@@ -110,8 +110,12 @@ def candidates(limit):
     """[(P, C, info)] newest first."""
     C = PL.CFG
     if C["source"] == "namerts":
-        return [(p["true_parent"], p["current"], {"namerts_gt": p["gt"], "namerts_total": p["total_tests"],
-                                                   "namerts_published": p["namerts"]}) for p in NB.pairs(PL.REPO)][:limit]
+        got = [(p["true_parent"], p["current"], {"namerts_gt": p["gt"], "namerts_total": p["total_tests"],
+                                                  "namerts_published": p["namerts"]}) for p in NB.pairs(PL.REPO)][:limit]
+        # pairs can name commits outside the clone's branches (merged PR heads): fetch them by hash, as nrbench does,
+        # into the source clone the trees are cloned from
+        NB.ensure_commits(PL.src_repo(), *[x for p, c, _ in got for x in (p, c)])
+        return got
     src = PL.src_repo()
     until = _resolve_until(src, C["until"])
     out = []
