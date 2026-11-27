@@ -2,10 +2,10 @@
  {
   "benchmark": "B1",
   "item": "sqlglot",
-  "done": 34,
+  "done": 41,
   "total": 50,
   "status": "running",
-  "hours_left": 0.9
+  "hours_left": 0.5
  },
  {
   "benchmark": "B1",
