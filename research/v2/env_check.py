@@ -72,6 +72,12 @@ def check(name: str, commit: str | None, skips: bool) -> dict:
                 k = m.group(3)[:200]
                 reasons[k] = reasons.get(k, 0) + int(m.group(1))
         result["run_s"] = round(time.time() - t, 1)
+        # did the suite run to the end? (a crash, e.g. a segfault, or a usage error otherwise looks like 0 skips);
+        # pytest exit codes: 0 all passed, 1 some failed, 2 interrupted, 3 internal error, 4 usage error, <0 signal
+        result["run_exit"] = r.returncode
+        result["run_summary"] = next((l.strip("= ") for l in reversed(r.stdout.splitlines()) if l.startswith("=")
+                                      and (" passed" in l or " failed" in l or " error" in l or "no tests" in l)), None)
+        result["run_completed"] = r.returncode in (0, 1) and result["run_summary"] is not None
         result["skipped_at_run"] = sum(reasons.values())
         result["skip_reasons"] = dict(sorted(reasons.items(), key=lambda kv: -kv[1])[:40])
         result["skip_missing_modules"] = sorted({m for k in reasons for m in _missing(k)} |
@@ -100,6 +106,7 @@ def main():
     if "skipped_at_run" in r:
         print(f"  run: {r['skipped_at_run']} tests skipped; reasons naming a module: "
               f"{', '.join(r['skip_missing_modules']) or 'none'}")
+        print(f"  run: exit {r['run_exit']}, completed: {r['run_completed']}: {r['run_summary']}")
     sys.exit(1 if r["files_failing_to_collect"] else 0)
 
 
