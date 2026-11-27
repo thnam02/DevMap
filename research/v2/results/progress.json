@@ -10,10 +10,10 @@
  {
   "benchmark": "B1",
   "item": "pygments",
-  "done": 17,
+  "done": 27,
   "total": 50,
   "status": "running",
-  "hours_left": 1.6
+  "hours_left": 1.1
  },
  {
   "benchmark": "B1",
@@ -98,10 +98,10 @@
  {
   "benchmark": "B1b",
   "item": "reversed SWE-bench fixes",
-  "done": 9,
+  "done": 18,
   "total": 437,
-  "status": "running",
-  "hours_left": 48.7
+  "status": "running (1 skip, 3 error)",
+  "hours_left": 17.3
  },
  {
   "benchmark": "B3",
