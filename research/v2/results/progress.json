@@ -2,10 +2,10 @@
  {
   "benchmark": "B1",
   "item": "sqlglot",
-  "done": 41,
+  "done": 49,
   "total": 50,
   "status": "running",
-  "hours_left": 0.5
+  "hours_left": 0.1
  },
  {
   "benchmark": "B1",
@@ -98,7 +98,7 @@
  {
   "benchmark": "B1b",
   "item": "reversed SWE-bench fixes",
-  "done": 0,
+  "done": 2,
   "total": 437,
   "status": "paused",
   "hours_left": null
