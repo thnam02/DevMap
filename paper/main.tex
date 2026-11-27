@@ -76,7 +76,7 @@ Existing Python RTS handles this state either coarsely or not at all. Coverage-b
 
 We present \tool, an RTS technique for Python built on one key insight: \emph{compare the values a package builds at import across versions, and link only the changed values to the tests that use them}. \tool records each test's execution once, under Python 3.12's low-overhead monitoring, each test file in a fresh process. It fingerprints every module-level value and class attribute, in a form stable across runs. After a change it selects the tests that ran changed code, ran code that names a changed value, or read a changed file. Fixture set-up and cached results are credited to every test that relies on them, not only to the first. Where no dependency can be established, \tool runs more tests rather than fewer.
 
-We evaluate \tool against pytest-testmon, NameRTS, TDAD and the traditional rule of selecting every test that executes changed code, on four benchmarks: \ph{B1: 1,000} consecutive real commits from 20 projects, including all 500 commits of NameRTS's benchmark scored with NameRTS's own metric; \ph{B1b: 500} real bugs obtained by reversing SWE-bench fixes; \ph{B3: N} regressions that published agents introduced on SWE-bench, with a full-suite ground truth; and \ph{B4: scope} agent runs with \tool in the loop. \tool and every baseline were frozen before any run, and 6 of the 20 projects were never used during development. \tool misses a failing test on \ph{B1: X\%} of failure-inducing commits, against \ph{B1: Y\%} for NameRTS and \ph{B1: Z\%} for testmon, at \ph{B1: T\%} of test time. On changes that touch import-time state, the gap is \ph{RQ1: ...}.
+We evaluate \tool against pytest-testmon, NameRTS, EkstaP, TDAD and the traditional rule of selecting every test that executes changed code, on four benchmarks: \ph{B1: 1,000} consecutive real commits from 20 projects, including all 500 commits of NameRTS's benchmark scored with NameRTS's own metric; \ph{B1b: 500} real bugs obtained by reversing SWE-bench fixes; \ph{B3: N} regressions that published agents introduced on SWE-bench, with a full-suite ground truth; and \ph{B4: scope} agent runs with \tool in the loop. \tool and every baseline were frozen before any run, and 6 of the 20 projects were never used during development. \tool misses a failing test on \ph{B1: X\%} of failure-inducing commits, against \ph{B1: Y\%} for NameRTS and \ph{B1: Z\%} for testmon, at \ph{B1: T\%} of test time. On changes that touch import-time state, the gap is \ph{RQ1: ...}.
 
 In summary, this paper makes the following contributions:
 
@@ -84,7 +84,7 @@ In summary, this paper makes the following contributions:
   \item We propose, to our knowledge, the first RTS technique that compares, across versions, the program state a package builds at import and links the changed values to the tests that use them. Unlike uRTS~\cite{wang2023urts} it needs no configuration API, and unlike PolDet~\cite{gyori2015poldet} it compares state across versions rather than between tests in one run.
   \item We record shared execution per test, crediting fixture set-up and cached readers to every test that relies on them, which coverage-based Python tools do not.
   \item We implement \tool, an open-source RTS tool for pytest that combines these with established practice (a fresh process per test file, as in NameRTS; file dependencies, as in Ekstazi) and runs as a finish check for coding agents.
-  \item We evaluate five tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.
+  \item We evaluate six tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.
   \item We release \ph{B3: N} real agent regressions from published SWE-bench agents, reproduced with a full-suite ground truth.
 \end{itemize}
 
@@ -204,7 +204,7 @@ B1: Real history & \ph{1,000} consecutive commits from 20 projects & Affected te
 B1b: Real bugs & \ph{About 500} reversed SWE-bench fixes & The fix's failing tests and any other failing test & RQ1 \\
 B2: Targeted changes & \ph{About 750} mutants in 5 projects, stratified by kind & Failing tests & RQ1 (secondary), RQ2 \\
 B3: Agent regressions & \ph{449, extended to about 1,000} agent patches that break a test & Failing tests on the full suite & RQ3 \\
-B4: Agents in the loop & \ph{300} tasks, \ph{2} agents, 6 arms & Failing tests of each final patch on the full suite & RQ3 \\
+B4: Agents in the loop & \ph{300} tasks, \ph{2} agents, 7 arms & Failing tests of each final patch on the full suite & RQ3 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -234,11 +234,11 @@ Each commit is evaluated in two scenarios. In \emph{S}, the commit's source chan
 
 \para{B3: Agent regressions.}Of the patches that published agents submitted to SWE-bench on eight pure-Python repositories, \ph{6,912} break a test that passed before the patch. We reproduce a sample drawn by repository, \ph{449 cases, extended to about 1,000}, in our environments. The ground truth is every test of the full suite that fails after the patch, not only the tests on SWE-bench's own lists.
 
-\para{B4: Agents in the loop.}\ph{2} agents, for example Claude Code, solve \ph{300} SWE-bench Verified tasks from repositories with slow suites, in six arms: the agent as is, a full-suite finish check, and a finish check with each of the four selection tools. New failures go back to the agent, at most twice. Each final patch is run against the full suite, so regressions outside SWE-bench's own test lists still count.
+\para{B4: Agents in the loop.}\ph{2} agents, for example Claude Code, solve \ph{300} SWE-bench Verified tasks from repositories with slow suites, in seven arms: the agent as is, a full-suite finish check, and a finish check with each of the five selection tools. New failures go back to the agent, at most twice. Each final patch is run against the full suite, so regressions outside SWE-bench's own test lists still count.
 
 
 \subsection{Tools}
-We compare \tool v2.3.1 with running every test and with three selection tools: pytest-testmon \ph{version}, the most used coverage-based Python tool, which selects at line level; NameRTS~\cite{wang2026namerts}, which propagates names statically at function level, with its published configuration; and TDAD~\cite{alonso2026tdad}, a static test map built for agents and capped at 50 tests. RQ2 adds \tool's \emph{traditional} variant, which selects every test that executed changed code, import-time code included, and one variant for each part switched off. Every tool runs at a fixed version, in the same environment, from data recorded at the parent commit, with each test file in its own process where the tool allows it. We leave out TestPrune~\cite{chen2026oldtests}, which selects tests from an issue's text that B1 and B2 do not have, and BabelRTS, which NameRTS outperforms. We found no evaluated Ekstazi-style tool for Python; the traditional variant applies that rule, every test that executed changed code, at function level.
+We compare \tool v2.3.1 with running every test and with four selection tools: pytest-testmon \ph{version}, the most used coverage-based Python tool, which selects at line level; NameRTS~\cite{wang2026namerts}, which propagates names statically at function level, with its published configuration; EkstaP, NameRTS's safe file-level baseline based on Ekstazi, from NameRTS's artifact~\cite{wang2026namerts}; and TDAD~\cite{alonso2026tdad}, a static test map built for agents and capped at 50 tests. RQ2 adds \tool's \emph{traditional} variant, which selects every test that executed changed code, import-time code included, and one variant for each part switched off. Every tool runs at a fixed version, in the same environment, from data recorded at the parent commit, with each test file in its own process where the tool allows it. We leave out TestPrune~\cite{chen2026oldtests}, which selects tests from an issue's text that B1 and B2 do not have, and BabelRTS, which NameRTS outperforms and which, like EkstaP, works at file level.
 
 
 \subsection{Ground truth and metrics}
@@ -293,6 +293,7 @@ Run all & 0 & 0 & 0 & 100\% & 100\% \\
 Traditional & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 NameRTS & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 testmon & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
+EkstaP & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 TDAD & \ph{ } & \ph{ } & \ph{ } & \ph{ } & \ph{ } \\
 \bottomrule
 \end{tabularx}
@@ -370,6 +371,7 @@ Traditional (every test that executed changed code) & \ph{ } & \ph{ } \\
 \tool & \ph{ } & \ph{ } & \ph{ } \\
 NameRTS & \ph{ } & \ph{ } & \ph{ } \\
 testmon & \ph{ } & \ph{ } & \ph{ } \\
+EkstaP & \ph{ } & \ph{ } & \ph{ } \\
 TDAD & \ph{ } & \ph{ } & \ph{ } \\
 \bottomrule
 \end{tabularx}

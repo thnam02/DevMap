@@ -57,8 +57,8 @@ R(r"\item \textbf{Per-test attribution of shared execution.} A dynamic recording
 R(r"\item \tool, an open-source RTS tool for pytest", r"\item \textbf{Tool.} We implement \tool, an open-source RTS tool for pytest")
 R(r"\item \textbf{An evaluation at the field's standard and beyond:} real history,",
   r"\item \textbf{Evaluation.} We evaluate on real history,")
-R(r"We evaluate on real history, real bugs and real agent regressions, five tools, one frozen setup, held-out projects, missed failures and the classic safety measure side by side.",
-  r"We evaluate five tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.")
+R(r"We evaluate on real history, real bugs and real agent regressions, six tools, one frozen setup, held-out projects, missed failures and the classic safety measure side by side.",
+  r"We evaluate six tools on real history, real bugs and real agent regressions, in one frozen setup with held-out projects, and report missed failures and the classic safety measure side by side.")
 R(r"""\item \textbf{A benchmark of \ph{B3: N} real agent regressions} from published SWE-bench agents, reproduced and released with a full-suite ground truth.
 \end{enumerate}""", r"""\item \textbf{Benchmark.} We release \ph{B3: N} real agent regressions from published SWE-bench agents, reproduced with a full-suite ground truth.
 \end{itemize}""")
