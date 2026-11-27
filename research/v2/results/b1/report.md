@@ -1,5 +1,37 @@
 # B1: real consecutive history
 
+## sphinx
+
+Pairs: 5 ok, 0 skipped (do not build here), 0 errors. Environment hashes: ['07322e6247b0029e'].
+
+### Scenario S (behaviour change): 5 pairs, 0 break a test; flaky failures dropped 0, flaky at parent 0
+
+| Tool | Pairs | Breaking pairs with a missed failure | Failing tests missed | SafeR (func, files) | Skipped exec tests (median) | Median % tests | Median % time | Mean TestR | Full suite |
+|---|---|---|---|---|---|---|---|---|---|
+| namerts | 5 | 0/0 | 0/0 | 2/5 | 1591 | 19.2 | 53.1 | 74.7 | 0 |
+| proviso | 5 | 0/0 | 0/0 | 5/5 | 0 | 77.9 | 95.7 | 22.0 | 2 |
+| run_all | 5 | 0/0 | 0/0 | 5/5 | 0 | 100.0 | 100.0 | 0.0 | 0 |
+| tdad | 5 | 0/0 | 0/0 | 1/5 | 2108 | 4.8 | 8.3 | 96.6 | 0 |
+| testmon | 5 | 0/0 | 0/0 | 5/5 | 682 | 70.6 | 95.2 | 43.5 | 0 |
+| traditional | 5 | 0/0 | 0/0 | 5/5 | 0 | 100.0 | 100.0 | 19.3 | 4 |
+
+### Scenario F (full commit): 5 pairs, 0 break a test; flaky failures dropped 0, flaky at parent 0
+
+| Tool | Pairs | Breaking pairs with a missed failure | Failing tests missed | SafeR (func, files) | Skipped exec tests (median) | Median % tests | Median % time | Mean TestR | Full suite |
+|---|---|---|---|---|---|---|---|---|---|
+| namerts | 5 | 0/0 | 0/0 | 2/5 | 1585 | 19.2 | 53.1 | 74.6 | 0 |
+| proviso | 5 | 0/0 | 0/0 | 5/5 | 0 | 78.2 | 95.7 | 21.9 | 2 |
+| run_all | 5 | 0/0 | 0/0 | 5/5 | 0 | 100.0 | 100.0 | 0.0 | 0 |
+| tdad | 5 | 0/0 | 0/0 | 1/5 | 2108 | 4.8 | 8.3 | 96.5 | 0 |
+| testmon | 5 | 0/0 | 0/0 | 5/5 | 676 | 70.8 | 95.2 | 43.4 | 0 |
+| traditional | 5 | 0/0 | 0/0 | 5/5 | 0 | 100.0 | 100.0 | 19.3 | 4 |
+
+### Overhead (seconds, median over ok pairs)
+
+| Plain suite at P | Proviso recording | Proviso selection (cold / warm) | testmon recording | NameRTS init | TDAD index |
+|---|---|---|---|---|---|
+| 79.1 | 38.1 | 1.6 / 1.2 | 165.2 | 98.3 | 1.7 |
+
 ## sqlglot
 
 Pairs: 5 ok, 0 skipped (do not build here), 0 errors. Environment hashes: ['7c1d39129f10abf7'].
