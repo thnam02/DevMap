@@ -135,6 +135,8 @@ def env(tree, extra=(), **kw):
     for k in ("PROVISO_OFF", "PROVISO_MODE"):   # ablation switches reach the recorder (covplugin)
         if os.environ.get(k):
             e[k] = os.environ[k]
+    if os.environ.get("TMPDIR"):   # where test runs put temporary files (e.g. tmpfs, when fsync is slow), if set
+        e["TMPDIR"] = os.environ["TMPDIR"]
     e.update(kw)
     return e
 
