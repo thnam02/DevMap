@@ -1,5 +1,39 @@
 # B1: real consecutive history
 
+## pygments
+
+Pairs: 52 ok, 0 skipped (do not build here), 0 errors. Environment hashes: ['7c1d39129f10abf7'].
+
+### Scenario S (behaviour change): 52 pairs, 8 break a test; flaky failures dropped 0, flaky at parent 0
+
+| Tool | Pairs | Breaking pairs with a missed failure | Failing tests missed | SafeR (func, files) | Skipped exec tests (median) | Median % tests | Median % time | Mean TestR | Full suite |
+|---|---|---|---|---|---|---|---|---|---|
+| ekstap | 52 | 7/8 | 8/9 | 43/51 | 5301.5 | 0.0 | 0.0 | 99.8 | 0 |
+| namerts | 52 | 7/8 | 8/9 | 43/51 | 5305.0 | 0.0 | 0.0 | 100.0 | 0 |
+| proviso | 52 | 0/8 | 0/9 | 50/51 | 5281.0 | 0.3 | 1.9 | 91.5 | 0 |
+| run_all | 52 | 0/8 | 0/9 | 51/51 | 0.0 | 100.0 | 100.0 | 0.0 | 0 |
+| tdad | 52 | 8/8 | 9/9 | 42/51 | 5144.5 | 3.2 | 0.4 | 99.8 | 0 |
+| testmon | 52 | 4/8 | 4/9 | 49/51 | 5249.5 | 1.1 | 4.7 | 96.5 | 0 |
+| traditional | 52 | 0/8 | 0/9 | 51/51 | 0.0 | 100.0 | 100.0 | 10.3 | 46 |
+
+### Scenario F (full commit): 52 pairs, 2 break a test; flaky failures dropped 0, flaky at parent 0
+
+| Tool | Pairs | Breaking pairs with a missed failure | Failing tests missed | SafeR (func, files) | Skipped exec tests (median) | Median % tests | Median % time | Mean TestR | Full suite |
+|---|---|---|---|---|---|---|---|---|---|
+| ekstap | 52 | 1/2 | 1/2 | 43/51 | 5301.0 | 0.0 | 0.0 | 99.8 | 0 |
+| namerts | 52 | 1/2 | 1/2 | 43/51 | 5305.0 | 0.0 | 0.0 | 100.0 | 0 |
+| proviso | 52 | 0/2 | 0/2 | 50/51 | 5273.5 | 0.5 | 2.2 | 83.7 | 5 |
+| run_all | 52 | 0/2 | 0/2 | 51/51 | 0.0 | 100.0 | 100.0 | 0.0 | 0 |
+| tdad | 52 | 2/2 | 2/2 | 44/51 | 5144.5 | 3.2 | 0.4 | 99.8 | 0 |
+| testmon | 52 | 2/2 | 2/2 | 49/51 | 5249.5 | 1.1 | 4.7 | 96.5 | 0 |
+| traditional | 52 | 0/2 | 0/2 | 51/51 | 0.0 | 100.0 | 100.0 | 10.3 | 46 |
+
+### Overhead (seconds, median over ok pairs)
+
+| Plain suite at P | Proviso recording | Proviso selection (cold / warm) | testmon recording | NameRTS init | TDAD index |
+|---|---|---|---|---|---|
+| 19.5 | 260.7 | 7.8 / 1.5 | 78.6 | 20.5 | 0.7 |
+
 ## sqlglot
 
 Pairs: 52 ok, 0 skipped (do not build here), 0 errors. Environment hashes: ['7c1d39129f10abf7'].
