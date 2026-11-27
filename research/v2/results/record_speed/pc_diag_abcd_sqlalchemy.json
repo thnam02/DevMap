@@ -1,0 +1,716 @@
+{
+ "repo": "sqlalchemy",
+ "runs": 2,
+ "noise_old1_old2": 15,
+ "patch": "--- /home/thnam/proviso-dev/src/dc_engine/covplugin.py\t2026-11-27 04:23:03.308984348 +0000\n+++ /home/thnam/proviso-scratch/src-nofastpath/dc_engine/covplugin.py\t2026-11-27 12:20:15.471351357 +0000\n@@ -201,7 +201,7 @@\n \n \n def _start(code, offset):\n-    m = _meth.get(id(code))\n+    m = None   # DIAGNOSTIC: v2.3.1 fast path off\n     if m is not None and _stack:\n         # (v2.3.1) the path below for a package method run inside a recording target, the hot case: methods stay\n         # switched on to record the classes they run on. Same records; each type's classes are added once per target.\n",
+ "variants": {
+  "A": [
+   {
+    "run": 0,
+    "times_file_before": true,
+    "seconds": 27.7,
+    "vs_old1": 9733,
+    "beyond_noise": 9719,
+    "same_global": true,
+    "fixture_records_differing": 105,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2138]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2145]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2360]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2424]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 3131]",
+        "[\"lib/sqlalchemy/dialects/sqlite/provision.py\", 126]",
+        "[\"lib/sqlalchemy/dialects/sqlite/provision.py\", 188]",
+        "[\"lib/sqlalchemy/engine/_result_cy.py\", 163]"
+       ],
+       "only_new": []
+      },
+      "classes": {
+       "only_old": [
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteDDLCompiler\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteDialect\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteExecutionContext\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteIdentifierPreparer\"",
+        "\"lib/sqlalchemy/dialects/sqlite/pysqlite.py:SQLiteDialect_pysqlite\"",
+        "\"lib/sqlalchemy/engine/_result_cy.py:BaseResultInternal\"",
+        "\"lib/sqlalchemy/engine/_row_cy.py:BaseRow\"",
+        "\"lib/sqlalchemy/engine/base.py:Connection\""
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_returning.py::InsertManyReturnDefaultsTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ]
+      }
+     }
+    }
+   },
+   {
+    "run": 1,
+    "times_file_before": true,
+    "seconds": 27.3,
+    "vs_old1": 9733,
+    "beyond_noise": 9719,
+    "same_global": true,
+    "fixture_records_differing": 28,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/engine/base.py\", 1157]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2607]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2699]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2724]",
+        "[\"lib/sqlalchemy/engine/default.py\", 953]",
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": [
+        "[\"lib/sqlalchemy/dialects/sqlite/pysqlite.py\", 829]",
+        "[\"lib/sqlalchemy/engine/base.py\", 1058]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2216]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2637]",
+        "[\"lib/sqlalchemy/engine/base.py\", 553]",
+        "[\"lib/sqlalchemy/engine/base.py\", 559]",
+        "[\"lib/sqlalchemy/engine/default.py\", 2084]",
+        "[\"lib/sqlalchemy/exc.py\", 49]"
+       ]
+      },
+      "classes": {
+       "only_old": [],
+       "only_new": [
+        "\"lib/sqlalchemy/exc.py:DBAPIError\"",
+        "\"lib/sqlalchemy/exc.py:DatabaseError\"",
+        "\"lib/sqlalchemy/exc.py:HasDescriptionCode\"",
+        "\"lib/sqlalchemy/exc.py:OperationalError\"",
+        "\"lib/sqlalchemy/exc.py:SQLAlchemyError\"",
+        "\"lib/sqlalchemy/exc.py:StatementError\""
+       ]
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::PositionalTextTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     }
+    }
+   }
+  ],
+  "B": [
+   {
+    "run": 0,
+    "times_file_before": false,
+    "seconds": 32.4,
+    "vs_old1": 9731,
+    "beyond_noise": 9719,
+    "same_global": true,
+    "fixture_records_differing": 28,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/engine/base.py\", 1157]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2607]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2699]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2724]",
+        "[\"lib/sqlalchemy/engine/default.py\", 953]",
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": [
+        "[\"lib/sqlalchemy/dialects/sqlite/pysqlite.py\", 829]",
+        "[\"lib/sqlalchemy/engine/base.py\", 1058]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2216]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2637]",
+        "[\"lib/sqlalchemy/engine/base.py\", 553]",
+        "[\"lib/sqlalchemy/engine/base.py\", 559]",
+        "[\"lib/sqlalchemy/engine/default.py\", 2084]",
+        "[\"lib/sqlalchemy/exc.py\", 49]"
+       ]
+      },
+      "classes": {
+       "only_old": [],
+       "only_new": [
+        "\"lib/sqlalchemy/exc.py:DBAPIError\"",
+        "\"lib/sqlalchemy/exc.py:DatabaseError\"",
+        "\"lib/sqlalchemy/exc.py:HasDescriptionCode\"",
+        "\"lib/sqlalchemy/exc.py:OperationalError\"",
+        "\"lib/sqlalchemy/exc.py:SQLAlchemyError\"",
+        "\"lib/sqlalchemy/exc.py:StatementError\""
+       ]
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::PositionalTextTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     }
+    }
+   },
+   {
+    "run": 1,
+    "times_file_before": false,
+    "seconds": 32.5,
+    "vs_old1": 9751,
+    "beyond_noise": 9737,
+    "same_global": true,
+    "fixture_records_differing": 107,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]",
+        "[\"lib/sqlalchemy/sql/util.py\", 570]",
+        "[\"lib/sqlalchemy/sql/util.py\", 636]",
+        "[\"lib/sqlalchemy/sql/util.py\", 650]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2138]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2145]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2360]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2424]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 3131]",
+        "[\"lib/sqlalchemy/dialects/sqlite/provision.py\", 126]",
+        "[\"lib/sqlalchemy/dialects/sqlite/provision.py\", 188]",
+        "[\"lib/sqlalchemy/engine/_result_cy.py\", 163]"
+       ],
+       "only_new": []
+      },
+      "classes": {
+       "only_old": [
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteDDLCompiler\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteDialect\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteExecutionContext\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteIdentifierPreparer\"",
+        "\"lib/sqlalchemy/dialects/sqlite/pysqlite.py:SQLiteDialect_pysqlite\"",
+        "\"lib/sqlalchemy/engine/_result_cy.py:BaseResultInternal\"",
+        "\"lib/sqlalchemy/engine/_row_cy.py:BaseRow\"",
+        "\"lib/sqlalchemy/engine/base.py:Connection\""
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::PositionalTextTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     }
+    }
+   }
+  ],
+  "C": [
+   {
+    "run": 0,
+    "times_file_before": true,
+    "seconds": 28.1,
+    "vs_old1": 9732,
+    "beyond_noise": 9719,
+    "same_global": true,
+    "fixture_records_differing": 28,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/engine/base.py\", 1157]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2607]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2699]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2724]",
+        "[\"lib/sqlalchemy/engine/default.py\", 953]",
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": [
+        "[\"lib/sqlalchemy/dialects/sqlite/pysqlite.py\", 829]",
+        "[\"lib/sqlalchemy/engine/base.py\", 1058]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2216]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2637]",
+        "[\"lib/sqlalchemy/engine/base.py\", 553]",
+        "[\"lib/sqlalchemy/engine/base.py\", 559]",
+        "[\"lib/sqlalchemy/engine/default.py\", 2084]",
+        "[\"lib/sqlalchemy/exc.py\", 49]"
+       ]
+      },
+      "classes": {
+       "only_old": [],
+       "only_new": [
+        "\"lib/sqlalchemy/exc.py:DBAPIError\"",
+        "\"lib/sqlalchemy/exc.py:DatabaseError\"",
+        "\"lib/sqlalchemy/exc.py:HasDescriptionCode\"",
+        "\"lib/sqlalchemy/exc.py:OperationalError\"",
+        "\"lib/sqlalchemy/exc.py:SQLAlchemyError\"",
+        "\"lib/sqlalchemy/exc.py:StatementError\""
+       ]
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::PositionalTextTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     }
+    }
+   },
+   {
+    "run": 1,
+    "times_file_before": true,
+    "seconds": 27.2,
+    "vs_old1": 9731,
+    "beyond_noise": 9719,
+    "same_global": true,
+    "fixture_records_differing": 29,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/engine/base.py\", 1157]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2607]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2699]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2724]",
+        "[\"lib/sqlalchemy/engine/default.py\", 953]",
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": [
+        "[\"lib/sqlalchemy/dialects/sqlite/pysqlite.py\", 829]",
+        "[\"lib/sqlalchemy/engine/base.py\", 1058]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2216]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2637]",
+        "[\"lib/sqlalchemy/engine/base.py\", 553]",
+        "[\"lib/sqlalchemy/engine/base.py\", 559]",
+        "[\"lib/sqlalchemy/engine/default.py\", 2084]",
+        "[\"lib/sqlalchemy/exc.py\", 49]"
+       ]
+      },
+      "classes": {
+       "only_old": [],
+       "only_new": [
+        "\"lib/sqlalchemy/exc.py:DBAPIError\"",
+        "\"lib/sqlalchemy/exc.py:DatabaseError\"",
+        "\"lib/sqlalchemy/exc.py:HasDescriptionCode\"",
+        "\"lib/sqlalchemy/exc.py:OperationalError\"",
+        "\"lib/sqlalchemy/exc.py:SQLAlchemyError\"",
+        "\"lib/sqlalchemy/exc.py:StatementError\""
+       ]
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::PositionalTextTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     }
+    }
+   }
+  ],
+  "D": [
+   {
+    "run": 0,
+    "times_file_before": false,
+    "seconds": 32.5,
+    "vs_old1": 9731,
+    "beyond_noise": 9719,
+    "same_global": true,
+    "fixture_records_differing": 106,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2138]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2145]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2360]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 2424]",
+        "[\"lib/sqlalchemy/dialects/sqlite/base.py\", 3131]",
+        "[\"lib/sqlalchemy/dialects/sqlite/provision.py\", 126]",
+        "[\"lib/sqlalchemy/dialects/sqlite/provision.py\", 188]",
+        "[\"lib/sqlalchemy/engine/_result_cy.py\", 163]"
+       ],
+       "only_new": []
+      },
+      "classes": {
+       "only_old": [
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteDDLCompiler\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteDialect\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteExecutionContext\"",
+        "\"lib/sqlalchemy/dialects/sqlite/base.py:SQLiteIdentifierPreparer\"",
+        "\"lib/sqlalchemy/dialects/sqlite/pysqlite.py:SQLiteDialect_pysqlite\"",
+        "\"lib/sqlalchemy/engine/_result_cy.py:BaseResultInternal\"",
+        "\"lib/sqlalchemy/engine/_row_cy.py:BaseRow\"",
+        "\"lib/sqlalchemy/engine/base.py:Connection\""
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_returning.py::InsertManyReturnDefaultsTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ]
+      }
+     }
+    }
+   },
+   {
+    "run": 1,
+    "times_file_before": false,
+    "seconds": 32.3,
+    "vs_old1": 9733,
+    "beyond_noise": 9720,
+    "same_global": true,
+    "fixture_records_differing": 26,
+    "fixture_examples": {
+     "<session>": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/exc.py\", 115]",
+        "[\"lib/sqlalchemy/exc.py\", 57]",
+        "[\"lib/sqlalchemy/exc.py\", 580]",
+        "[\"lib/sqlalchemy/exc.py\", 76]",
+        "[\"lib/sqlalchemy/pool/base.py\", 1505]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_tutorials.py::DocTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [],
+       "only_new": [
+        "[\"lib/sqlalchemy/pool/base.py\", 772]"
+       ]
+      }
+     },
+     "<setup/teardown>@test/base/test_utils.py::GenericReprTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 375]",
+        "[\"lib/sqlalchemy/util/langhelpers.py\", 397]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_query.py::RequiredBindTest": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::KeyTargetingTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/engine/base.py\", 1157]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2607]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2699]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2724]",
+        "[\"lib/sqlalchemy/engine/default.py\", 953]",
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": [
+        "[\"lib/sqlalchemy/dialects/sqlite/pysqlite.py\", 829]",
+        "[\"lib/sqlalchemy/engine/base.py\", 1058]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2216]",
+        "[\"lib/sqlalchemy/engine/base.py\", 2637]",
+        "[\"lib/sqlalchemy/engine/base.py\", 553]",
+        "[\"lib/sqlalchemy/engine/base.py\", 559]",
+        "[\"lib/sqlalchemy/engine/default.py\", 2084]",
+        "[\"lib/sqlalchemy/exc.py\", 49]"
+       ]
+      },
+      "classes": {
+       "only_old": [],
+       "only_new": [
+        "\"lib/sqlalchemy/exc.py:DBAPIError\"",
+        "\"lib/sqlalchemy/exc.py:DatabaseError\"",
+        "\"lib/sqlalchemy/exc.py:HasDescriptionCode\"",
+        "\"lib/sqlalchemy/exc.py:OperationalError\"",
+        "\"lib/sqlalchemy/exc.py:SQLAlchemyError\"",
+        "\"lib/sqlalchemy/exc.py:StatementError\""
+       ]
+      }
+     },
+     "<setup/teardown>@test/sql/test_resultset.py::PositionalTextTest_sqlite+pysqlite_3_45_1": {
+      "funcs": {
+       "only_old": [
+        "[\"lib/sqlalchemy/event/registry.py\", 104]"
+       ],
+       "only_new": []
+      }
+     }
+    }
+   }
+  ]
+ }
+}
