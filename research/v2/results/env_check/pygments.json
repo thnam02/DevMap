@@ -2,25 +2,30 @@
  "project": "pygments",
  "commit": "156d85fdd18d34427fe893527e71da91dcfb0eb5",
  "env": {
-  "python": "3.13.18",
-  "packages": 192,
-  "hash": "fbe62365de2c533e"
+  "python": "3.12.16",
+  "packages": 86,
+  "hash": "7c1d39129f10abf7"
  },
- "collect_s": 3.1,
+ "collect_s": 2.7,
  "test_files": 1541,
- "tests": 5345,
- "files_failing_to_collect": 1,
+ "tests": 5346,
+ "files_failing_to_collect": 0,
  "files_skipped_at_collection": 0,
- "missing_modules": [
-  "wcag_contrast_ratio"
- ],
- "failed": {
-  "tests/contrast/test_contrasts.py": {
-   "missing": [
-    "wcag_contrast_ratio"
-   ],
-   "message": "ure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/contrast/test_contrasts.py:17: in <module>\n    import wcag_contrast_ratio\nE   ModuleNotFoundError: No module named 'wcag_contrast_ratio'"
-  }
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 12.6,
+ "run_exit": 0,
+ "run_summary": "5330 passed, 16 skipped, 3 warnings in 13.06s",
+ "run_completed": true,
+ "skipped_at_run": 16,
+ "skip_reasons": {
+  "Python Imaging Library is required for this formatter": 8,
+  "Example file not strictly named '.SRCINFO'": 4,
+  "This is identified as T-SQL": 1,
+  "This is identified as MIME": 1,
+  "This is identified as Python": 1,
+  "[Errno 2] No such file or directory: 'latex'": 1
  },
- "skipped": {}
+ "skip_missing_modules": []
 }

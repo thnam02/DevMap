@@ -1,0 +1,31 @@
+{
+ "project": "loguru",
+ "commit": "940b7cfea0be455a3f060aaccd216871b41becd0",
+ "env": {
+  "python": "3.13.18",
+  "packages": 101,
+  "hash": "07ac6be4b356a695"
+ },
+ "collect_s": 1.0,
+ "test_files": 49,
+ "tests": 1542,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 70.3,
+ "run_exit": 1,
+ "run_summary": "67 failed, 1447 passed, 28 skipped in 71.47s (0:01:11)",
+ "run_completed": true,
+ "skipped_at_run": 28,
+ "skip_reasons": {
+  "Only Windows requires Colorama": 19,
+  "The fix is applied only on Windows": 5,
+  "Testing implementation specific to Windows": 3,
+  "No backport available or needed": 1
+ },
+ "skip_missing_modules": [
+  "Colorama"
+ ]
+}

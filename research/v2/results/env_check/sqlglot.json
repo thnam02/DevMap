@@ -2,38 +2,23 @@
  "project": "sqlglot",
  "commit": "7f1cf60c884868a295f76dfd42745b931dd9cfbb",
  "env": {
-  "python": "3.13.18",
-  "packages": 192,
-  "hash": "fbe62365de2c533e"
+  "python": "3.12.16",
+  "packages": 86,
+  "hash": "7c1d39129f10abf7"
  },
- "collect_s": 2.1,
+ "collect_s": 2.6,
  "test_files": 55,
- "tests": 1104,
- "files_failing_to_collect": 3,
+ "tests": 1324,
+ "files_failing_to_collect": 0,
  "files_skipped_at_collection": 0,
- "missing_modules": [
-  "duckdb",
-  "pytz"
- ],
- "failed": {
-  "tests/dialects/test_bigquery.py": {
-   "missing": [
-    "pytz"
-   ],
-   "message": "/test_bigquery.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/dialects/test_bigquery.py:3: in <module>\n    import pytz\nE   ModuleNotFoundError: No module named 'pytz'"
-  },
-  "tests/test_executor.py": {
-   "missing": [
-    "duckdb"
-   ],
-   "message": "ests/test_executor.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_executor.py:10: in <module>\n    import duckdb\nE   ModuleNotFoundError: No module named 'duckdb'"
-  },
-  "tests/test_optimizer.py": {
-   "missing": [
-    "duckdb"
-   ],
-   "message": "sts/test_optimizer.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_optimizer.py:9: in <module>\n    import duckdb\nE   ModuleNotFoundError: No module named 'duckdb'"
-  }
- },
- "skipped": {}
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 76.2,
+ "run_exit": 1,
+ "run_summary": "2 failed, 1324 passed, 20615 subtests passed in 77.85s (0:01:17)",
+ "run_completed": true,
+ "skipped_at_run": 0,
+ "skip_reasons": {},
+ "skip_missing_modules": []
 }

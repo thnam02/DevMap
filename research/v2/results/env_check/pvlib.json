@@ -1,0 +1,33 @@
+{
+ "project": "pvlib",
+ "commit": "b4916e11dd9a5cc3296ac8d6b7a8cbef5962bf02",
+ "env": {
+  "python": "3.13.18",
+  "packages": 100,
+  "hash": "a22c8d188e303cdb"
+ },
+ "collect_s": 2.3,
+ "test_files": 51,
+ "tests": 1436,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 39.9,
+ "run_exit": 1,
+ "run_summary": "5 failed, 1370 passed, 59 skipped, 2 xfailed, 35 warnings in 40.91s",
+ "run_completed": true,
+ "skipped_at_run": 59,
+ "skip_reasons": {
+  "need --remote-data option to run": 45,
+  "requires solaranywhere credentials": 6,
+  "requires spa_c": 5,
+  "requires bsrn credentials": 3
+ },
+ "skip_missing_modules": [
+  "bsrn",
+  "solaranywhere",
+  "spa_c"
+ ]
+}

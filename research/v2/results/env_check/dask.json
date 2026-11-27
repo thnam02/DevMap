@@ -1,0 +1,40 @@
+{
+ "project": "dask",
+ "commit": "8639b6e7edbb75f92218e35a8b4292a0b2485b0c",
+ "env": {
+  "python": "3.13.18",
+  "packages": 128,
+  "hash": "c5efda39da68c6f2"
+ },
+ "collect_s": 8.3,
+ "test_files": 163,
+ "tests": 17890,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 12,
+ "missing_modules": [
+  "cupy",
+  "pyspark"
+ ],
+ "failed": {},
+ "skipped": {
+  "dask/array/tests/test_cupy_core.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_core.py', 14, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_creation.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_creation.py', 13, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_gufunc.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_gufunc.py', 12, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_linalg.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_linalg.py', 12, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_overlap.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_overlap.py', 12, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_percentile.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_percentile.py', 11, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_random.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_random.py', 13, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_reductions.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_reductions.py', 14, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_routines.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_routines.py', 12, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_slicing.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_slicing.py', 12, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/array/tests/test_cupy_sparse.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/array/tests/test_cupy_sparse.py', 10, \"Skipped: could not import 'cupy': No module named 'cupy'\")",
+  "dask/tests/test_spark_compat.py": "('/home/thnam/proviso-work/v2/dask/trees/envcheck/dask/tests/test_spark_compat.py', 13, \"Skipped: could not import 'pyspark': No module named 'pyspark'\")"
+ },
+ "run_s": 834.8,
+ "run_exit": 1,
+ "run_summary": "\u001b[31m= \u001b[31m\u001b[1m31 failed\u001b[0m, \u001b[32m16025 passed\u001b[0m, \u001b[33m1249 skipped\u001b[0m, \u001b[33m282 xfailed\u001b[0m, \u001b[33m280 xpassed\u001b[0m, \u001b[33m155 warnings\u001b[0m, \u001b[31m\u001b[1m35 errors\u001b[0m, \u001b[33m10 rerun\u001b[0m\u001b[31m in 867.45s (0:14:27)\u001b[0m\u001b[31m =\u001b[0m",
+ "run_completed": true,
+ "skipped_at_run": 0,
+ "skip_reasons": {},
+ "skip_missing_modules": []
+}

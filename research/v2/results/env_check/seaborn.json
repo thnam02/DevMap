@@ -1,0 +1,30 @@
+{
+ "project": "seaborn",
+ "commit": "23860365816440b050e9211e1c395a966de3c403",
+ "env": {
+  "python": "3.13.18",
+  "packages": 40,
+  "hash": "e500703d5bb7602e"
+ },
+ "collect_s": 3.1,
+ "test_files": 35,
+ "tests": 2273,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 264.5,
+ "run_exit": 1,
+ "run_summary": "29 failed, 2233 passed, 5 skipped, 6 xfailed, 3002 warnings in 266.30s (0:04:26)",
+ "run_completed": true,
+ "skipped_at_run": 5,
+ "skip_reasons": {
+  "fastcluster not installed": 2,
+  "Verdana font is not present": 2,
+  "Test requires scipy's absence": 1
+ },
+ "skip_missing_modules": [
+  "scipy"
+ ]
+}

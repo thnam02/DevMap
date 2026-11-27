@@ -1,0 +1,15 @@
+sqlglot    7f1cf60c8 tests=  1324 files=  55 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=76.2 exit=1 completed=True | 2 failed, 1324 passed, 20615 subtests passed in 77.85s (0:01:17)
+pygments   156d85fdd tests=  5346 files=1541 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=12.6 exit=0 completed=True | 5330 passed, 16 skipped, 3 warnings in 13.06s
+datasette  a8e13cc48 tests=  2939 files=  84 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=144.2 exit=1 completed=True | 5 failed, 2827 passed, 86 skipped, 6 xfailed, 15 xpassed, 143 subtests passed in 148.81s (0:02:28)
+sqlalchemy 10f4d1e2d tests= 28280 files= 213 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=1053.7 exit=1 completed=True | 27163 passed, 1047 skipped, 1 warning, 70 errors in 1090.86s (0:18:10)
+loguru     940b7cfea tests=  1542 files=  49 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=70.3 exit=1 completed=True | 67 failed, 1447 passed, 28 skipped in 71.47s (0:01:11)
+pvlib      b4916e11d tests=  1436 files=  51 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=39.9 exit=1 completed=True | 5 failed, 1370 passed, 59 skipped, 2 xfailed, 35 warnings in 40.91s
+pylint     0a1044b1d tests=  2200 files=  79 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=104.3 exit=1 completed=True | 6 failed, 1970 passed, 219 skipped, 5 xfailed in 97.01s (0:01:37)
+seaborn    238603658 tests=  2273 files=  35 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=264.5 exit=1 completed=True | 29 failed, 2233 passed, 5 skipped, 6 xfailed, 3002 warnings in 266.30s (0:04:26)
+sphinx     342b30e1d tests=  2355 files= 138 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=88.0 exit=1 completed=True | 10 failed, 2309 passed, 36 skipped, 180 warnings in 90.49s (0:01:30)
+xarray     97fb90b27 tests= 22308 files=  71 FAIL_COLLECT=0 skip_coll=1 missing=cupy run_s=591.3 exit=1 completed=True | 55 failed, 20166 passed, 1751 skipped, 307 xfailed, 30 xpassed, 1011 warnings in 610.02s (0:10:10)
+dask       8639b6e7e tests= 17890 files= 163 FAIL_COLLECT=0 skip_coll=12 missing=cupy,pyspark run_s=834.8 exit=1 completed=True | [31m= [31m[1m31 failed[0m, [32m16025 passed[0m, [33m1249 skipped[0m, [33m282 xfailed[0m, [33m280 xpassed[0m, [33m155 warnings[0m, [31m[1m35 errors[0m, [33m10 rerun[0m[31m in 867.45s (0:14:27)[0m[31m =[0m
+sympy      d854b099d tests= 13635 files= 607 FAIL_COLLECT=0 skip_coll=0 missing=- run_s=1008.0 exit=1 completed=True | 2 failed, 12639 passed, 662 skipped, 199 deselected, 328 xfailed, 4 xpassed, 919219 warnings in 1043.40s (0:17:23)
+lane A: == ENVCHECK FINISHED sqlalchemy sqlglot pygments datasette 2026-11-27T13:33:01Z
+lane B: == ENVCHECK FINISHED dask loguru pylint seaborn 2026-11-27T13:29:03Z
+lane C: == ENVCHECK FINISHED sympy sphinx pvlib xarray 2026-11-27T13:39:48Z

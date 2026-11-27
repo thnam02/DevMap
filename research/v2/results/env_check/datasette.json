@@ -1,0 +1,31 @@
+{
+ "project": "datasette",
+ "commit": "a8e13cc489b41f2f9a5aa691f5eb1bedf99a0e0b",
+ "env": {
+  "python": "3.12.16",
+  "packages": 86,
+  "hash": "7c1d39129f10abf7"
+ },
+ "collect_s": 4.4,
+ "test_files": 84,
+ "tests": 2939,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 144.2,
+ "run_exit": 1,
+ "run_summary": "5 failed, 2827 passed, 86 skipped, 6 xfailed, 15 xpassed, 143 subtests passed in 148.81s (0:02:28)",
+ "run_completed": true,
+ "skipped_at_run": 86,
+ "skip_reasons": {
+  "need --playwright option to run": 75,
+  "TODO": 4,
+  "Requires compiled ext.c": 3,
+  "rm?": 2,
+  "psutil not installed": 1,
+  "Requires SpatiaLite": 1
+ },
+ "skip_missing_modules": []
+}

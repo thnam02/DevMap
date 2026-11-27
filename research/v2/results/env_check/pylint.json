@@ -1,0 +1,33 @@
+{
+ "project": "pylint",
+ "commit": "0a1044b1d06c4acb89b56c82587a101c19440959",
+ "env": {
+  "python": "3.13.18",
+  "packages": 36,
+  "hash": "bb3742ef662846f2"
+ },
+ "collect_s": 2.1,
+ "test_files": 79,
+ "tests": 2200,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 104.3,
+ "run_exit": 1,
+ "run_summary": "6 failed, 1970 passed, 219 skipped, 5 xfailed in 97.01s (0:01:37)",
+ "run_completed": true,
+ "skipped_at_run": 219,
+ "skip_reasons": {
+  "need --primer-stdlib option to run": 187,
+  "Test cannot run with Python 3.13.18.": 14,
+  "Primers are internal and will always be run for only one interpreter (currently (3, 11))": 5,
+  "Requires six to be present.": 4,
+  "Test cannot run with Python implementation 'CPython'": 4,
+  "don't run this": 2,
+  "Path type of windows": 2,
+  "too many dependencies need six :(": 1
+ },
+ "skip_missing_modules": []
+}

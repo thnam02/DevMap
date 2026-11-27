@@ -1,0 +1,40 @@
+{
+ "project": "sphinx",
+ "commit": "342b30e1de39074496f870803e7aceeab580be98",
+ "env": {
+  "python": "3.13.18",
+  "packages": 43,
+  "hash": "07322e6247b0029e"
+ },
+ "collect_s": 3.4,
+ "test_files": 138,
+ "tests": 2355,
+ "files_failing_to_collect": 0,
+ "files_skipped_at_collection": 0,
+ "missing_modules": [],
+ "failed": {},
+ "skipped": {},
+ "run_s": 88.0,
+ "run_exit": 1,
+ "run_summary": "10 failed, 2309 passed, 36 skipped, 180 warnings in 90.49s (0:01:30)",
+ "run_completed": true,
+ "skipped_at_run": 36,
+ "skip_reasons": {
+  "not running latex, the required styles do not seem to be installed": 11,
+  "graphviz \"dot\" is not available": 9,
+  "c:function does not support :no-index: option": 2,
+  "cpp:function does not support :no-index: option": 2,
+  "Requires dvisvgm\" binary": 2,
+  "Skipped because DO_EPUBCHECK is not set": 1,
+  "Skipped": 1,
+  "<Skipped instance>": 1,
+  "rst:directive does not support :no-index-entry: option": 1,
+  "cmdoption does not support :no-index-entry: option": 1,
+  "envvar does not support :no-index-entry: option": 1,
+  "Cython does not support Python 3.13 yet.": 1,
+  "image_converter \"convert\" is not available": 1,
+  "Requires dvipng\" binary": 1,
+  "Local time zone is GMT": 1
+ },
+ "skip_missing_modules": []
+}
