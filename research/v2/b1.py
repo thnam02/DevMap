@@ -211,11 +211,45 @@ def proviso_version():
     return _PV
 
 
+_EK = None
+
+
+def ekstap_on():
+    """EkstaP (NameRTS's file-level baseline, EkstaziP) runs when NameRTS is installed and it is switched on for the run:
+    B1_EKSTAP=1, or the file $PROVISO_WORK/ekstap.on. Read once per process, so every row of one project agrees."""
+    global _EK
+    if _EK is None:
+        _EK = PL.nr_available() and (os.environ.get("B1_EKSTAP") == "1" or
+                                     os.path.exists(os.path.join(PL.BASE_WORK, "ekstap.on")))
+    return _EK
+
+
+def ekstap(action, tree, cache):
+    """EkstaP through research/v2/ekstap_driver.py, in the environment NameRTS runs in (pipeline.namerts)."""
+    e = {**os.environ, **PL.nr_env(), "PROVISO_PY": PL.PY,
+         "PATH": os.path.dirname(PL.PY) + os.pathsep + os.environ.get("PATH", ""),
+         "NAMERTS_EXTRA_PATH": os.pathsep.join([os.path.join(tree, p) for p in PL.CFG["pythonpath"]] + [PL.PLUG] +
+                                               [x for x in os.environ.get("PROVISO_EXTRA_PATH", "").split(os.pathsep)
+                                                if x])}
+    if action == "init" and os.path.isfile(os.path.join(cache, "dependencies.json")):
+        return cache   # recorded at this parent by an earlier, interrupted run of the pair
+    r = subprocess.run([PL.PY, os.path.join(HERE, "ekstap_driver.py"), action, tree, cache, PL.CFG["nr_repo"]],
+                       capture_output=True, text=True, env=e, timeout=14400)
+    if action == "select":
+        for line in r.stdout.splitlines():
+            if line.startswith("EKSTAP_SELECTED "):
+                return json.loads(line[len("EKSTAP_SELECTED "):])
+        raise RuntimeError("EkstaP selection failed: " + (r.stdout + r.stderr)[-600:])
+    if not os.path.isfile(os.path.join(cache, "dependencies.json")):
+        raise RuntimeError("EkstaP init failed: " + (r.stdout + r.stderr)[-600:])
+    return cache
+
+
 def tools_available():
     return {"testmon": subprocess.run([PL.PY, "-c", "import testmon"], capture_output=True).returncode == 0,
             "namerts": PL.nr_available(),
             "tdad": os.path.isdir(os.environ.get("TDAD_SRC", os.path.expanduser("~/proviso-work/v2/TDAD/tdad/src"))),
-            "ekstap": bool(os.environ.get("EKSTAP_HOME"))}
+            "ekstap": ekstap_on()}
 
 
 # --------------------------------------------------------------------------------------------- one pair
@@ -309,8 +343,18 @@ def selections(tree, cov, universe, assets, p, apply_to, changed_src):
             sets["tdad"] = {"error": repr(e)[:300]}
     elif "tdad_error" in assets:
         sets["tdad"] = {"error": assets["tdad_error"]}
-    if tools_available()["ekstap"]:
-        sets["ekstap"] = {"error": "EkstaP integration not written yet"}
+    if assets.get("ek_cache"):
+        try:
+            apply_to(assets["ek_tree"])
+            got, secs = _timed(ekstap, "select", assets["ek_tree"], assets["ek_cache"])
+            sets["ekstap"] = {n for n in universe if n.split("::", 1)[0] in set(got)}
+            extra["ekstap"] = {"selection_s": secs, "files": len(set(got))}
+        except Exception as e:  # noqa: BLE001
+            sets["ekstap"] = {"error": repr(e)[:300]}
+        finally:
+            to_parent(assets["ek_tree"], p)
+    elif "ek_error" in assets:
+        sets["ekstap"] = {"error": assets["ek_error"]}
     return sets, extra
 
 
@@ -429,6 +473,15 @@ def prepare_assets(tree, p, i, d, avail, side_tree=None):
             a["nr_error"] = repr(e)[:300]
     else:
         a["nr_error"] = "not installed"
+    if avail.get("ekstap"):   # its own tree: EkstaziP writes its logger into the tree's conftest.py
+        try:
+            ek_tree = side_tree(f"b1-ek-w{i}")
+            t = time.time()
+            a["ek_cache"] = ekstap("init", ek_tree, os.path.join(d, "ek-cache"))
+            secs["ekstap_init_s"] = round(time.time() - t, 1)
+            a["ek_tree"] = ek_tree
+        except Exception as e:  # noqa: BLE001
+            a["ek_error"] = repr(e)[:300]
     if avail["tdad"] and PL.REPO not in PL.TDAD_SKIP:
         try:
             import tdad_select as T

@@ -27,7 +27,7 @@ sys.path.insert(0, HERE)
 import b1  # noqa: E402
 
 COLLECT = {"proviso": "record_s", "traditional": "record_s", "testmon": "testmon_record_s",
-           "namerts": "namerts_init_s", "tdad": "tdad_index_s", "run_all": None}
+           "namerts": "namerts_init_s", "ekstap": "ekstap_init_s", "tdad": "tdad_index_s", "run_all": None}
 
 
 def pair_costs(r: dict, k_runs: float, scenario: str = "S") -> dict:
