@@ -242,6 +242,11 @@ def worker(i: int, n: int, want: int, repos):
         for x in groups[key]:
             if x["instance_id"] in done:
                 continue
+            # pause between instances while the pause file exists (another job has priority); an instance is never
+            # stopped midway, so its timeouts stay valid
+            pause = os.environ.get("B1B_PAUSE_FILE", os.path.join(P.WORK, "b1b.pause"))
+            while os.path.exists(pause):
+                time.sleep(30)
             t = time.time()
             try:
                 configure(repo, envs[key])
