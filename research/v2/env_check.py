@@ -75,8 +75,9 @@ def check(name: str, commit: str | None, skips: bool) -> dict:
         # did the suite run to the end? (a crash, e.g. a segfault, or a usage error otherwise looks like 0 skips);
         # pytest exit codes: 0 all passed, 1 some failed, 2 interrupted, 3 internal error, 4 usage error, <0 signal
         result["run_exit"] = r.returncode
-        result["run_summary"] = next((l.strip("= ") for l in reversed(r.stdout.splitlines()) if l.startswith("=")
-                                      and (" passed" in l or " failed" in l or " error" in l or "no tests" in l)), None)
+        # the final line, e.g. "3 failed, 1200 passed, 5 skipped in 63.20s (0:01:03)" (with -q: no "=" borders)
+        result["run_summary"] = next((l.strip("= ") for l in reversed(r.stdout.splitlines())
+                                      if re.search(r"\b(passed|failed|errors?|no tests ran)\b.* in [\d.]+s", l)), None)
         result["run_completed"] = r.returncode in (0, 1) and result["run_summary"] is not None
         result["skipped_at_run"] = sum(reasons.values())
         result["skip_reasons"] = dict(sorted(reasons.items(), key=lambda kv: -kv[1])[:40])
