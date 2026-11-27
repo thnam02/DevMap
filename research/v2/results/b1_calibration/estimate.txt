@@ -1,0 +1,33 @@
+calibration pairs: 10
+pair            secs   base record testmon nr_init   tdad  S_run  F_run   rest
+7f1cf60c88       478     54     75     128      69      2     53     52     46
+f2b81bfb2d       507     54     72     128      68      2     53     51     80
+022bb41fc5       456     52     74     128      67      2     51     51     30
+aa64321744       509     52     74     127      67      2     52     52     83
+b7e515399a       444     52     75     127      68      2     53     54     14
+342b30e1de       573     81     39     165     100      2     79     79     29
+f265d50a14       549     79     38     165      98      2     78     78     10
+11a0ddca44       566     79     38     165      97      1     79     79     28
+c76c2ad63c       565     80     37     165      99      2     80     77     25
+9664829e1b       561     79     38     167      98      1     79     79     20
+
+fit secs = 316 + 3.11 * suite   |   component model: secs = 29 + 7.41 * suite
+base_s / env-check run_s: {'sqlglot': 0.68, 'sphinx': 0.9} -> scale 0.79
+
+project      suite_s  pair_s 50 pairs h
+sqlglot           60     478        6.6
+pygments          10     102        1.4
+datasette        114     872       12.1
+loguru            55     440        6.1
+pvlib             31     262        3.6
+pylint            82     639        8.9
+seaborn          209    1576       21.9
+sphinx            69     565        7.8
+xarray           467    3488       48.4
+dask             659    4912       68.2
+sqlalchemy       832    6193       86.0
+sympy            796    5925       82.3
+
+TOTAL 354 h = 14.7 days, one project at a time, --workers 1, 80% cap
+from 2026-11-27 16:02 UTC: finish ~2026-12-12 09:33 UTC; hours until 13 Dec 2026 end: 392 -> fits (margin +38 h)
+not included: history projects' candidates that do not build (one base run each), re-runs of failing tests beyond 3, timeouts, machine sleep/restarts
