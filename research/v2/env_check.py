@@ -36,6 +36,7 @@ def check(name: str, commit: str | None, skips: bool) -> dict:
     b1.use(name)
     rev = commit or PL.CFG.get("commit") or b1.candidates(1)[0][1]
     tree = PL.make_tree("envcheck", rev)
+    b1.use_targets(tree)
     if PL.CFG.get("sync"):   # the commit's own pinned test dependencies, as b1.run_pair applies them
         PL.CFG["sync"](tree, PL.PY)
     out = os.path.join(PL.WORK, "envcheck.json")

@@ -440,10 +440,18 @@ def prepare_assets(tree, p, i, d, avail, side_tree=None):
     return a, secs
 
 
+def use_targets(tree):
+    """The project's test targets that exist in this tree (test layouts move over history, e.g. pvlib's pvlib/tests ->
+    tests), as nrbench.run_pair does; pytest refuses a run naming a missing path."""
+    want = PROJECTS[PL.REPO]["targets"] if PL.REPO in PROJECTS else PL.CFG["targets"]
+    PL.CFG["targets"] = [t for t in want if os.path.exists(os.path.join(tree, t))] or list(want)
+
+
 def run_pair(p, c, info, i):
     d = os.path.join(PL.WORK, "b1", c[:12])
     os.makedirs(d, exist_ok=True)
     tree = PL.make_tree(f"b1-w{i}", p)
+    use_targets(tree)
     if PL.CFG.get("sync"):
         PL.CFG["sync"](tree, PL.PY)
     t = time.time()
