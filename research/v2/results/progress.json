@@ -1,0 +1,130 @@
+[
+ {
+  "benchmark": "B1",
+  "item": "sqlglot",
+  "done": 34,
+  "total": 50,
+  "status": "running",
+  "hours_left": 0.9
+ },
+ {
+  "benchmark": "B1",
+  "item": "pygments",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 0.6
+ },
+ {
+  "benchmark": "B1",
+  "item": "datasette",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 5.3
+ },
+ {
+  "benchmark": "B1",
+  "item": "loguru",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 2.7
+ },
+ {
+  "benchmark": "B1",
+  "item": "pvlib",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 1.6
+ },
+ {
+  "benchmark": "B1",
+  "item": "pylint",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 3.9
+ },
+ {
+  "benchmark": "B1",
+  "item": "seaborn",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 9.6
+ },
+ {
+  "benchmark": "B1",
+  "item": "sphinx",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 3.4
+ },
+ {
+  "benchmark": "B1",
+  "item": "xarray",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 21.2
+ },
+ {
+  "benchmark": "B1",
+  "item": "dask",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 29.8
+ },
+ {
+  "benchmark": "B1",
+  "item": "sqlalchemy",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 37.6
+ },
+ {
+  "benchmark": "B1",
+  "item": "sympy",
+  "done": 0,
+  "total": 50,
+  "status": "queued",
+  "hours_left": 36.0
+ },
+ {
+  "benchmark": "B1b",
+  "item": "reversed SWE-bench fixes",
+  "done": 0,
+  "total": 437,
+  "status": "paused",
+  "hours_left": null
+ },
+ {
+  "benchmark": "B3",
+  "item": "agent regressions",
+  "done": 0,
+  "total": 449,
+  "status": "queued",
+  "hours_left": null
+ },
+ {
+  "benchmark": "EkstaP",
+  "item": "integration and backfill",
+  "done": 0,
+  "total": 1,
+  "status": "running (integrated; backfill of finished pairs pending)",
+  "hours_left": null
+ },
+ {
+  "benchmark": "RQ2",
+  "item": "ablation from saved maps",
+  "done": 0,
+  "total": 600,
+  "status": "queued",
+  "hours_left": null
+ }
+]
