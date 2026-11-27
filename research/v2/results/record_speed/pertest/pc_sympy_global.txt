@@ -1,0 +1,2 @@
+maps with power.py:656 in __global__: {'new': '10/90', 'old': '8/90'}
+files 18: __global__ varies within old in 3, within new in 3, old-set != new-set in 3

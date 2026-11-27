@@ -1,0 +1,61 @@
+{
+ "repo": "datasette",
+ "runs": 5,
+ "files": {
+  "tests/test_auth.py": {
+   "seconds": {
+    "old": [
+     13.2,
+     13.4,
+     14.2,
+     13.9,
+     14.4
+    ],
+    "new": [
+     15.2,
+     16.0,
+     14.4,
+     14.5,
+     15.7
+    ]
+   }
+  },
+  "tests/test_stored_queries.py": {
+   "seconds": {
+    "old": [
+     153.5,
+     159.2,
+     177.6,
+     168.4,
+     175.3
+    ],
+    "new": [
+     194.1,
+     167.8,
+     169.0,
+     173.0,
+     168.2
+    ]
+   }
+  }
+ },
+ "tests": {
+  "tests/test_auth.py::test_cli_create_token[None]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "tests/test_stored_queries.py::test_magic_parameters[_random_chars_10-^\\\\w{10}$]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  }
+ },
+ "summary": {
+  "same": 2
+ }
+}

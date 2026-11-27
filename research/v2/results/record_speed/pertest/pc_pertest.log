@@ -1,0 +1,96 @@
+== pertest datasette runs=5 start 05:56:59
+same       old 1 distinct / new 1 distinct  tests/test_auth.py::test_cli_create_token[None]
+same       old 1 distinct / new 1 distinct  tests/test_stored_queries.py::test_magic_parameters[_random_chars_10-^\\w{10}$]
+{"same": 2}
+== pertest datasette exit 0 after 1853 s
+== pertest sqlalchemy runs=5 start 06:27:52
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]
+noise      old 2 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncAdaptedQueue::test_error_other_loop
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncAdaptedQueue::test_lazy_init
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_async_error
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_await_only_error
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_await_only_no_greenlet
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_contextvars
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_ok
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_propagate_cancelled
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_require_await
+same       old 1 distinct / new 1 distinct  test/base/test_concurrency.py::TestAsyncioCompat::test_sync_error
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_find_cycle_one
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_four
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_one
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_three
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_two
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_large_sort
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_one
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_three
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_two
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_sort_deterministic_one
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_sort_deterministic_two
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_sort_one
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_sort_three
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_sort_two
+same       old 1 distinct / new 1 distinct  test/base/test_dependency.py::DependencySortTest::test_ticket_1380
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::AcceptTargetsTest::test_target_accept
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_lis_multisub_lis
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_lis_subcalss_lis
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-False-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-False-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-True-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-True-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-False-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-False-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-True-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-True-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-False-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-False-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-True-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-True-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-False-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-False-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-True-False]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-True-True]
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::ClsLevelListenTest::test_two_sub_lis
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::CustomTargetsTest::test_indirect
+same       old 1 distinct / new 1 distinct  test/base/test_events.py::DisableClsPropagateTest::test_insert_invoke_clslevel
+{"same": 49, "noise": 1}
+== pertest sqlalchemy exit 0 after 116 s
+== pertest sympy runs=5 start 06:29:48
+noise      old 5 distinct / new 3 distinct  sympy/functions/combinatorial/tests/test_comb_factorials.py::test_rf_ff_eval_hiprec
+noise      old 2 distinct / new 3 distinct  sympy/functions/combinatorial/tests/test_comb_numbers.py::test_nC_nP_nT
+noise      old 4 distinct / new 4 distinct  sympy/functions/combinatorial/tests/test_comb_numbers.py::test_tribonacci
+noise      old 3 distinct / new 4 distinct  sympy/functions/elementary/tests/test_complexes.py::test_sign
+noise      old 5 distinct / new 4 distinct  sympy/functions/elementary/tests/test_exponential.py::test_exp_MatrixSymbol
+noise      old 5 distinct / new 4 distinct  sympy/functions/elementary/tests/test_exponential.py::test_log_apply_evalf
+noise      old 5 distinct / new 5 distinct  sympy/functions/elementary/tests/test_hyperbolic.py::test_acoth_nseries
+noise      old 4 distinct / new 2 distinct  sympy/functions/elementary/tests/test_hyperbolic.py::test_asinh_rewrite
+noise      old 4 distinct / new 2 distinct  sympy/functions/elementary/tests/test_hyperbolic.py::test_cosh_rewrite
+noise      old 2 distinct / new 4 distinct  sympy/functions/elementary/tests/test_hyperbolic.py::test_csch_rewrite
+noise      old 5 distinct / new 4 distinct  sympy/functions/elementary/tests/test_hyperbolic.py::test_issue_4136
+noise      old 3 distinct / new 3 distinct  sympy/functions/elementary/tests/test_miscellaneous.py::test_instantiation_evaluation
+noise      old 3 distinct / new 3 distinct  sympy/functions/elementary/tests/test_piecewise.py::test_issue_16715
+noise      old 4 distinct / new 3 distinct  sympy/functions/elementary/tests/test_trigonometric.py::test_acos_fdiff
+noise      old 5 distinct / new 4 distinct  sympy/functions/elementary/tests/test_trigonometric.py::test_acos_leading_term
+noise      old 2 distinct / new 2 distinct  sympy/functions/elementary/tests/test_trigonometric.py::test_atan_fdiff
+noise      old 4 distinct / new 4 distinct  sympy/functions/elementary/tests/test_trigonometric.py::test_cos_AccumBounds
+noise      old 2 distinct / new 2 distinct  sympy/functions/elementary/tests/test_trigonometric.py::test_cot_series
+noise      old 2 distinct / new 2 distinct  sympy/functions/special/tests/test_bessel.py::test_bessel_eval
+noise      old 3 distinct / new 3 distinct  sympy/functions/special/tests/test_bessel.py::test_besseli_leading_term
+noise      old 4 distinct / new 3 distinct  sympy/functions/special/tests/test_bessel.py::test_meromorphic
+noise      old 2 distinct / new 2 distinct  sympy/functions/special/tests/test_bsplines.py::test_3_points_degree_2
+noise      old 4 distinct / new 5 distinct  sympy/functions/special/tests/test_elliptic_functions.py::test_jtheta_derivative_identities
+noise      old 4 distinct / new 4 distinct  sympy/functions/special/tests/test_error_functions.py::test_erf2inv
+noise      old 4 distinct / new 3 distinct  sympy/functions/special/tests/test_error_functions.py::test_erfi
+noise      old 2 distinct / new 2 distinct  sympy/functions/special/tests/test_error_functions.py::test_integral_rewrites
+noise      old 5 distinct / new 5 distinct  sympy/functions/special/tests/test_error_functions.py::test_owent_rewrite
+noise      old 5 distinct / new 4 distinct  sympy/functions/special/tests/test_error_functions.py::test_si
+noise      old 3 distinct / new 3 distinct  sympy/functions/special/tests/test_gamma_functions.py::test_trigamma_expand_func
+noise      old 5 distinct / new 5 distinct  sympy/functions/special/tests/test_hyper.py::test_hyper_rewrite_sum
+noise      old 3 distinct / new 3 distinct  sympy/functions/special/tests/test_mathieu.py::test_mathieus
+noise      old 2 distinct / new 2 distinct  sympy/functions/special/tests/test_singularity_functions.py::test_fdiff
+noise      old 4 distinct / new 4 distinct  sympy/functions/special/tests/test_spec_polynomials.py::test_chebyshev
+noise      old 2 distinct / new 2 distinct  sympy/functions/special/tests/test_tensor_functions.py::test_kronecker_delta
+{"noise": 34}
+== pertest sympy exit 0 after 2657 s
+== PERTEST FINISHED 2026-11-27T07:14:05Z

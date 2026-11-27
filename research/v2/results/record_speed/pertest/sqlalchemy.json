@@ -1,0 +1,416 @@
+{
+ "repo": "sqlalchemy",
+ "runs": 5,
+ "files": {
+  "test/base/test_concurrency.py": {
+   "seconds": {
+    "old": [
+     4.8,
+     4.7,
+     4.7,
+     5.1,
+     4.8
+    ],
+    "new": [
+     3.9,
+     2.8,
+     3.7,
+     3.8,
+     3.7
+    ]
+   }
+  },
+  "test/base/test_dependency.py": {
+   "seconds": {
+    "old": [
+     3.1,
+     2.9,
+     3.8,
+     3.8,
+     3.7
+    ],
+    "new": [
+     2.8,
+     3.7,
+     3.5,
+     3.3,
+     3.3
+    ]
+   }
+  },
+  "test/base/test_events.py": {
+   "seconds": {
+    "old": [
+     3.8,
+     4.1,
+     4.5,
+     4.1,
+     4.1
+    ],
+    "new": [
+     3.1,
+     3.9,
+     3.8,
+     3.8,
+     2.9
+    ]
+   }
+  }
+ },
+ "tests": {
+  "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncAdaptedQueue::test_error_other_loop": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncAdaptedQueue::test_lazy_init": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_async_error": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_await_only_error": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_await_only_no_greenlet": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_contextvars": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_ok": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_propagate_cancelled": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_require_await": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_sync_error": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_find_cycle_one": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_four": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_one": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_three": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_two": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_large_sort": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_one": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_three": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_two": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_sort_deterministic_one": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_sort_deterministic_two": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_sort_one": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_sort_three": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_sort_two": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_dependency.py::DependencySortTest::test_ticket_1380": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::AcceptTargetsTest::test_target_accept": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_lis_multisub_lis": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_lis_subcalss_lis": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-False-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-False-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-True-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-True-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-False-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-False-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-True-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-True-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-False-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-False-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-True-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-True-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-False-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-False-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-True-False]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-True-True]": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::ClsLevelListenTest::test_two_sub_lis": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::CustomTargetsTest::test_indirect": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "test/base/test_events.py::DisableClsPropagateTest::test_insert_invoke_clslevel": {
+   "verdict": "same",
+   "distinct_old": 1,
+   "distinct_new": 1,
+   "missing_old": 0,
+   "missing_new": 0
+  }
+ },
+ "summary": {
+  "same": 49,
+  "noise": 1
+ }
+}

@@ -1,0 +1,573 @@
+{
+ "repo": "sympy",
+ "runs": 5,
+ "files": {
+  "sympy/functions/combinatorial/tests/test_comb_factorials.py": {
+   "seconds": {
+    "old": [
+     7.5,
+     7.3,
+     6.3,
+     7.3,
+     6.9
+    ],
+    "new": [
+     6.7,
+     6.3,
+     6.0,
+     6.0,
+     4.9
+    ]
+   }
+  },
+  "sympy/functions/combinatorial/tests/test_comb_numbers.py": {
+   "seconds": {
+    "old": [
+     16.0,
+     16.1,
+     14.9,
+     15.2,
+     15.4
+    ],
+    "new": [
+     12.6,
+     13.5,
+     13.7,
+     14.0,
+     13.8
+    ]
+   }
+  },
+  "sympy/functions/elementary/tests/test_complexes.py": {
+   "seconds": {
+    "old": [
+     7.6,
+     8.4,
+     8.3,
+     8.6,
+     8.5
+    ],
+    "new": [
+     7.1,
+     7.1,
+     6.3,
+     7.2,
+     6.2
+    ]
+   }
+  },
+  "sympy/functions/elementary/tests/test_exponential.py": {
+   "seconds": {
+    "old": [
+     14.3,
+     13.7,
+     12.0,
+     13.8,
+     13.9
+    ],
+    "new": [
+     11.9,
+     11.4,
+     11.3,
+     11.4,
+     10.2
+    ]
+   }
+  },
+  "sympy/functions/elementary/tests/test_hyperbolic.py": {
+   "seconds": {
+    "old": [
+     47.4,
+     45.0,
+     45.5,
+     43.6,
+     46.1
+    ],
+    "new": [
+     39.4,
+     37.3,
+     38.4,
+     36.7,
+     36.6
+    ]
+   }
+  },
+  "sympy/functions/elementary/tests/test_miscellaneous.py": {
+   "seconds": {
+    "old": [
+     6.7,
+     6.6,
+     5.6,
+     6.8,
+     6.5
+    ],
+    "new": [
+     5.9,
+     5.7,
+     5.8,
+     5.9,
+     5.7
+    ]
+   }
+  },
+  "sympy/functions/elementary/tests/test_piecewise.py": {
+   "seconds": {
+    "old": [
+     27.8,
+     28.8,
+     27.9,
+     27.0,
+     27.1
+    ],
+    "new": [
+     19.5,
+     21.4,
+     22.5,
+     22.0,
+     22.8
+    ]
+   }
+  },
+  "sympy/functions/elementary/tests/test_trigonometric.py": {
+   "seconds": {
+    "old": [
+     48.2,
+     47.5,
+     47.5,
+     47.3,
+     47.5
+    ],
+    "new": [
+     40.1,
+     38.2,
+     37.3,
+     38.0,
+     37.3
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_bessel.py": {
+   "seconds": {
+    "old": [
+     44.6,
+     46.4,
+     45.1,
+     45.8,
+     44.8
+    ],
+    "new": [
+     36.5,
+     40.6,
+     38.5,
+     37.8,
+     37.8
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_bsplines.py": {
+   "seconds": {
+    "old": [
+     6.1,
+     5.1,
+     5.9,
+     6.0,
+     5.0
+    ],
+    "new": [
+     4.9,
+     5.3,
+     5.3,
+     5.0,
+     5.2
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_elliptic_functions.py": {
+   "seconds": {
+    "old": [
+     6.2,
+     6.4,
+     5.4,
+     6.3,
+     6.4
+    ],
+    "new": [
+     5.4,
+     5.6,
+     5.5,
+     5.5,
+     4.7
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_error_functions.py": {
+   "seconds": {
+    "old": [
+     22.4,
+     21.5,
+     21.5,
+     22.0,
+     22.3
+    ],
+    "new": [
+     17.7,
+     19.0,
+     19.0,
+     17.1,
+     18.4
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_gamma_functions.py": {
+   "seconds": {
+    "old": [
+     11.6,
+     10.8,
+     10.8,
+     11.6,
+     10.5
+    ],
+    "new": [
+     9.7,
+     10.0,
+     10.0,
+     9.6,
+     9.9
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_hyper.py": {
+   "seconds": {
+    "old": [
+     7.0,
+     7.1,
+     7.1,
+     6.2,
+     7.4
+    ],
+    "new": [
+     5.4,
+     6.2,
+     6.3,
+     6.3,
+     6.3
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_mathieu.py": {
+   "seconds": {
+    "old": [
+     4.6,
+     4.6,
+     4.6,
+     4.6,
+     4.6
+    ],
+    "new": [
+     3.4,
+     4.1,
+     4.1,
+     4.1,
+     3.3
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_singularity_functions.py": {
+   "seconds": {
+    "old": [
+     4.9,
+     5.0,
+     4.9,
+     3.9,
+     4.9
+    ],
+    "new": [
+     4.4,
+     4.3,
+     4.3,
+     4.4,
+     4.4
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_spec_polynomials.py": {
+   "seconds": {
+    "old": [
+     5.7,
+     4.8,
+     5.7,
+     5.7,
+     4.9
+    ],
+    "new": [
+     4.9,
+     4.9,
+     5.0,
+     4.8,
+     4.8
+    ]
+   }
+  },
+  "sympy/functions/special/tests/test_tensor_functions.py": {
+   "seconds": {
+    "old": [
+     5.1,
+     5.0,
+     4.9,
+     4.9,
+     4.9
+    ],
+    "new": [
+     4.4,
+     4.4,
+     3.5,
+     4.6,
+     4.4
+    ]
+   }
+  }
+ },
+ "tests": {
+  "sympy/functions/combinatorial/tests/test_comb_factorials.py::test_rf_ff_eval_hiprec": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/combinatorial/tests/test_comb_numbers.py::test_nC_nP_nT": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/combinatorial/tests/test_comb_numbers.py::test_tribonacci": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_complexes.py::test_sign": {
+   "verdict": "noise",
+   "distinct_old": 3,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_exponential.py::test_exp_MatrixSymbol": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_exponential.py::test_log_apply_evalf": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_acoth_nseries": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 5,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_asinh_rewrite": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_cosh_rewrite": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_csch_rewrite": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_issue_4136": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_miscellaneous.py::test_instantiation_evaluation": {
+   "verdict": "noise",
+   "distinct_old": 3,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_piecewise.py::test_issue_16715": {
+   "verdict": "noise",
+   "distinct_old": 3,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_acos_fdiff": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_acos_leading_term": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_atan_fdiff": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_cos_AccumBounds": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_cot_series": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_bessel.py::test_bessel_eval": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_bessel.py::test_besseli_leading_term": {
+   "verdict": "noise",
+   "distinct_old": 3,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_bessel.py::test_meromorphic": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_bsplines.py::test_3_points_degree_2": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_elliptic_functions.py::test_jtheta_derivative_identities": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 5,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_error_functions.py::test_erf2inv": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_error_functions.py::test_erfi": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_error_functions.py::test_integral_rewrites": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_error_functions.py::test_owent_rewrite": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 5,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_error_functions.py::test_si": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_gamma_functions.py::test_trigamma_expand_func": {
+   "verdict": "noise",
+   "distinct_old": 3,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_hyper.py::test_hyper_rewrite_sum": {
+   "verdict": "noise",
+   "distinct_old": 5,
+   "distinct_new": 5,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_mathieu.py::test_mathieus": {
+   "verdict": "noise",
+   "distinct_old": 3,
+   "distinct_new": 3,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_singularity_functions.py::test_fdiff": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_spec_polynomials.py::test_chebyshev": {
+   "verdict": "noise",
+   "distinct_old": 4,
+   "distinct_new": 4,
+   "missing_old": 0,
+   "missing_new": 0
+  },
+  "sympy/functions/special/tests/test_tensor_functions.py::test_kronecker_delta": {
+   "verdict": "noise",
+   "distinct_old": 2,
+   "distinct_new": 2,
+   "missing_old": 0,
+   "missing_new": 0
+  }
+ },
+ "summary": {
+  "noise": 34
+ }
+}
