@@ -63,7 +63,7 @@ def check(name: str, commit: str | None, skips: bool) -> dict:
         t = time.time()
         r = subprocess.run([PL.PY, "-m", "pytest", "-q", "-rs", "--tb=no", "-p", "no:cacheprovider", "-p", "no:randomly",
                             "--continue-on-collection-errors", *PL.CFG["pytest_args"], *PL.CFG["targets"]],
-                           cwd=tree, env=PL.env(tree), capture_output=True, text=True,
+                           cwd=tree, env=PL.env(tree, [PL.PLUG]), capture_output=True, text=True,
                            timeout=int(os.environ.get("PROVISO_TEST_TIMEOUT", "1800")))
         reasons: dict = {}
         for line in r.stdout.splitlines():
