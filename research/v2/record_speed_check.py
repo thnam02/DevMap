@@ -50,6 +50,8 @@ import pipeline as PL
 assert REC.__file__.startswith({src!r}), REC.__file__
 PL.use({repo!r}); CFG = PL.CFG
 tree = os.path.join(PL.WORK, "trees", "incr")
+if not os.path.isdir(os.path.join(tree, ".git")):   # fresh machine: no incremental_check run yet
+    tree = PL.make_tree("incr", CFG["commit"])
 t = time.time()
 REC.record(tree, CFG["pkg"], {out!r}, PL.PY, CFG["targets"], {workers}, CFG["before_test"],
            ["-p", "no:randomly", *CFG["pytest_args"]], PL.env(tree, [PL.PLUG]))
