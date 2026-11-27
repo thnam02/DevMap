@@ -1,0 +1,23 @@
+sqlglot serial pairs (B1, --workers 1): 5, median 476 s
+sqlglot parallel pairs (--workers 3): 3, median 625 s, 604, 625, 631
+slowdown per pair 1.31x; wall time per pair = 0.438 x serial (2.29x throughput)
+
+project      serial h  done  left h (3 par)
+sqlglot           6.6     8             2.4
+pygments          1.4     0             0.6
+datasette        12.1     0             5.3
+loguru            6.1     0             2.7
+pvlib             3.6     0             1.6
+pylint            8.9     0             3.9
+seaborn          21.9     0             9.6
+sphinx            7.8     0             3.4
+xarray           48.4     0            21.2
+dask             68.2     0            29.8
+sqlalchemy       86.0     0            37.6
+sympy            82.3     0            36.0
+
+TOTAL left 154 h = 6.4 days -> finish ~2026-12-04 03:03 UTC; margin to 13 Dec end: +237 h
+assumes the big projects slow down per pair like sqlglot (1.3x); their suites are single-process, so 3 at a time fit in 12 CPUs, but memory is unmeasured for them yet (drop to 2 pairs on a memory kill: ~+50% time)
+
+measured on the first parallel round (sqlglot, 2026-11-27 16:44-16:55 UTC), 80% cap:
+  load5: avg 5.42, peak 7.11 (cap 12); memory peak 9375 MB of 24576 MB (MemoryMax); oom_kill 0
