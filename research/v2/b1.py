@@ -200,7 +200,8 @@ def proviso_version():
     global _PV
     if _PV is None:
         root = os.path.dirname(os.path.dirname(HERE))
-        _PV = {"version": I.VERSION, "commit": PL.git(root, "rev-parse", "HEAD").strip()[:12],
+        # the last commit that changed src/ (not HEAD: results commits move HEAD between and during benchmark runs)
+        _PV = {"version": I.VERSION, "commit": PL.git(root, "log", "-1", "--format=%H", "--", "src").strip()[:12],
                "src_dirty": bool(PL.git(root, "status", "--porcelain", "--", "src").strip())}
     return _PV
 
