@@ -3,7 +3,9 @@ per pair (status ok), EkstaP's init on a tree at P (its own dependency run, time
 scenarios S and F, scored with b1.score against the row's confirmed failures (affected-tests references from the pair's
 saved map). No other test run.
 
-  python research/v2/b1_ekstap_rows.py PROJECT [--dry-run] [--only ID ...]
+  python research/v2/b1_ekstap_rows.py PROJECT [--dry-run] [--only ID ...] [--pause-file F]
+
+--pause-file F: before each pair, wait while F does not exist or the 1-minute load is above GATE_MAX_LOAD (default 8).
 
 --dry-run prints (selected files vs the failing tests' files) and writes nothing. Run it only when no b1.py run on
 PROJECT is writing rows."""
@@ -26,6 +28,7 @@ def main():
     a = sys.argv[1:]
     name, dry = a[0], "--dry-run" in a
     only = set(a[a.index("--only") + 1:]) if "--only" in a else None
+    gate = a[a.index("--pause-file") + 1] if "--pause-file" in a else None
     b1.use(name)
     for path in sorted(glob.glob(os.path.join(b1.res(), "rows.w*.jsonl"))):
         rows = [json.loads(l) for l in open(path) if l.strip()]
@@ -35,6 +38,8 @@ def main():
                 continue
             if "ekstap" in (r.get("S") or {}).get("tools", {}):
                 continue
+            while gate and (not os.path.exists(gate) or os.getloadavg()[0] > float(os.environ.get("GATE_MAX_LOAD", "8"))):
+                time.sleep(60)
             p, c = r["parent"], r["id"]
             d = os.path.join(PL.WORK, "b1", c[:12])
             cov, base = PL.jload(os.path.join(d, "covmap.json")), PL.jload(os.path.join(d, "base_outcomes.json"))
