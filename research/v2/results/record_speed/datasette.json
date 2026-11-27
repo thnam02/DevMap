@@ -1,0 +1,21 @@
+{
+ "repo": "datasette",
+ "commit": "a8e13cc489b41f2f9a5aa691f5eb1bedf99a0e0b",
+ "seconds": {
+  "old1": 981.7,
+  "old2": 954.5,
+  "new": 988.8
+ },
+ "noise_tests": 967,
+ "old_vs_new_tests": 24,
+ "beyond_noise": [
+  "tests/test_auth.py::test_cli_create_token[None]",
+  "tests/test_stored_queries.py::test_magic_parameters[_random_chars_10-^\\\\w{10}$]"
+ ],
+ "same": {
+  "__global__": true,
+  "__collected__": true
+ },
+ "pass": false,
+ "tests": 2853
+}

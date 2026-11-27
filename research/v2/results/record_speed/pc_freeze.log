@@ -1,0 +1,161 @@
+== freeze check start 2026-11-27T04:48:41Z; HEAD 4d6f247; src dirty: 0
+== sqlalchemy start 04:48:41
+{
+ "repo": "sqlalchemy",
+ "commit": "10f4d1e2d706a7722ca78e79ce05b00333a7aa5b",
+ "seconds": {
+  "old1": 57.4,
+  "old2": 57.5,
+  "new": 35.8
+ },
+ "noise_tests": 15,
+ "old_vs_new_tests": 9732,
+ "beyond_noise": [
+  "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]",
+  "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]",
+  "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]",
+  "test/base/test_concurrency.py::TestAsyncAdaptedQueue::test_error_other_loop",
+  "test/base/test_concurrency.py::TestAsyncAdaptedQueue::test_lazy_init",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_async_error",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_await_only_error",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_await_only_no_greenlet",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_contextvars",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_ok",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_propagate_cancelled",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_require_await",
+  "test/base/test_concurrency.py::TestAsyncioCompat::test_sync_error",
+  "test/base/test_dependency.py::DependencySortTest::test_find_cycle_one",
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_four",
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_one",
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_three",
+  "test/base/test_dependency.py::DependencySortTest::test_find_multiple_cycles_two",
+  "test/base/test_dependency.py::DependencySortTest::test_large_sort",
+  "test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_one",
+  "test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_three",
+  "test/base/test_dependency.py::DependencySortTest::test_raise_on_cycle_two",
+  "test/base/test_dependency.py::DependencySortTest::test_sort_deterministic_one",
+  "test/base/test_dependency.py::DependencySortTest::test_sort_deterministic_two",
+  "test/base/test_dependency.py::DependencySortTest::test_sort_one",
+  "test/base/test_dependency.py::DependencySortTest::test_sort_three",
+  "test/base/test_dependency.py::DependencySortTest::test_sort_two",
+  "test/base/test_dependency.py::DependencySortTest::test_ticket_1380",
+  "test/base/test_events.py::AcceptTargetsTest::test_target_accept",
+  "test/base/test_events.py::ClsLevelListenTest::test_lis_multisub_lis",
+  "test/base/test_events.py::ClsLevelListenTest::test_lis_subcalss_lis",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-False-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-False-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-True-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-False-True-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-False-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-False-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-True-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[False-True-True-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-False-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-False-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-True-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-False-True-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-False-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-False-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-True-False]",
+  "test/base/test_events.py::ClsLevelListenTest::test_subclass_gen_after_clslisten[True-True-True-True]",
+  "test/base/test_events.py::ClsLevelListenTest::test_two_sub_lis",
+  "test/base/test_events.py::CustomTargetsTest::test_indirect",
+  "test/base/test_events.py::DisableClsPropagateTest::test_insert_invoke_clslevel"
+ ],
+ "same": {
+  "__global__": true,
+  "__collected__": true
+ },
+ "pass": false,
+ "tests": 9760
+}
+== sqlalchemy exit 0 after 157 s
+== datasette start 04:51:18
+---- restart after VM restart 2026-11-27T04:57:43Z ----
+== freeze check start 2026-11-27T04:57:43Z; HEAD 4d6f247; src dirty: 0
+== datasette start 04:57:43
+{
+ "repo": "datasette",
+ "commit": "a8e13cc489b41f2f9a5aa691f5eb1bedf99a0e0b",
+ "seconds": {
+  "old1": 981.7,
+  "old2": 954.5,
+  "new": 988.8
+ },
+ "noise_tests": 967,
+ "old_vs_new_tests": 24,
+ "beyond_noise": [
+  "tests/test_auth.py::test_cli_create_token[None]",
+  "tests/test_stored_queries.py::test_magic_parameters[_random_chars_10-^\\\\w{10}$]"
+ ],
+ "same": {
+  "__global__": true,
+  "__collected__": true
+ },
+ "pass": false,
+ "tests": 2853
+}
+== datasette exit 0 after 2926 s
+== sympy start 05:46:29
+{
+ "repo": "sympy",
+ "commit": "01c75e920fe969c9cbc4e2723ae7ceef89394a7f",
+ "seconds": {
+  "old1": 117.4,
+  "old2": 110.6,
+  "new": 89.7
+ },
+ "noise_tests": 392,
+ "old_vs_new_tests": 381,
+ "beyond_noise": [
+  "sympy/functions/combinatorial/tests/test_comb_factorials.py::test_rf_ff_eval_hiprec",
+  "sympy/functions/combinatorial/tests/test_comb_numbers.py::test_nC_nP_nT",
+  "sympy/functions/combinatorial/tests/test_comb_numbers.py::test_tribonacci",
+  "sympy/functions/elementary/tests/test_complexes.py::test_sign",
+  "sympy/functions/elementary/tests/test_exponential.py::test_exp_MatrixSymbol",
+  "sympy/functions/elementary/tests/test_exponential.py::test_log_apply_evalf",
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_acoth_nseries",
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_asinh_rewrite",
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_cosh_rewrite",
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_csch_rewrite",
+  "sympy/functions/elementary/tests/test_hyperbolic.py::test_issue_4136",
+  "sympy/functions/elementary/tests/test_miscellaneous.py::test_instantiation_evaluation",
+  "sympy/functions/elementary/tests/test_piecewise.py::test_issue_16715",
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_acos_fdiff",
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_acos_leading_term",
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_atan_fdiff",
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_cos_AccumBounds",
+  "sympy/functions/elementary/tests/test_trigonometric.py::test_cot_series",
+  "sympy/functions/special/tests/test_bessel.py::test_bessel_eval",
+  "sympy/functions/special/tests/test_bessel.py::test_besseli_leading_term",
+  "sympy/functions/special/tests/test_bessel.py::test_meromorphic",
+  "sympy/functions/special/tests/test_bsplines.py::test_3_points_degree_2",
+  "sympy/functions/special/tests/test_elliptic_functions.py::test_jtheta_derivative_identities",
+  "sympy/functions/special/tests/test_error_functions.py::test_erf2inv",
+  "sympy/functions/special/tests/test_error_functions.py::test_erfi",
+  "sympy/functions/special/tests/test_error_functions.py::test_integral_rewrites",
+  "sympy/functions/special/tests/test_error_functions.py::test_owent_rewrite",
+  "sympy/functions/special/tests/test_error_functions.py::test_si",
+  "sympy/functions/special/tests/test_gamma_functions.py::test_trigamma_expand_func",
+  "sympy/functions/special/tests/test_hyper.py::test_hyper_rewrite_sum",
+  "sympy/functions/special/tests/test_mathieu.py::test_mathieus",
+  "sympy/functions/special/tests/test_singularity_functions.py::test_fdiff",
+  "sympy/functions/special/tests/test_spec_polynomials.py::test_chebyshev",
+  "sympy/functions/special/tests/test_tensor_functions.py::test_kronecker_delta"
+ ],
+ "same": {
+  "__global__": false,
+  "__collected__": true
+ },
+ "pass": false,
+ "tests": 581
+}
+== sympy exit 0 after 319 s
+== FREEZE CHECK FINISHED 2026-11-27T05:51:48Z
+== sqlalchemy diagnostic start 05:51:48
+again {"env": {}, "seconds": 30.0, "vs_old1": 9751, "beyond_noise": 9737, "same_global": true, "same_collected": true, "example": ["test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"]}
+fork0 {"env": {"PROVISO_RECORD_FORK": "0"}, "seconds": 30.5, "vs_old1": 9731, "beyond_noise": 9719, "same_global": true, "same_collected": true, "example": ["test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"]}
+pycache0 {"env": {"PROVISO_RECORD_PYCACHE": "0"}, "seconds": 45.8, "vs_old1": 9751, "beyond_noise": 9737, "same_global": true, "same_collected": true, "example": ["test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"]}
+fork0-pycache0 {"env": {"PROVISO_RECORD_FORK": "0", "PROVISO_RECORD_PYCACHE": "0"}, "seconds": 45.1, "vs_old1": 9734, "beyond_noise": 9720, "same_global": true, "same_collected": true, "example": ["test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]", "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"]}
+== DIAG DONE sqlalchemy
+== ALL STEP 2 JOBS FINISHED 2026-11-27T05:54:32Z

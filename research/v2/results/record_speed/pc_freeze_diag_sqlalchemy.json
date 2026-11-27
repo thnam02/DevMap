@@ -1,0 +1,65 @@
+{
+ "repo": "sqlalchemy",
+ "noise_old1_old2": 15,
+ "variants": {
+  "again": {
+   "env": {},
+   "seconds": 30.0,
+   "vs_old1": 9751,
+   "beyond_noise": 9737,
+   "same_global": true,
+   "same_collected": true,
+   "example": [
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"
+   ]
+  },
+  "fork0": {
+   "env": {
+    "PROVISO_RECORD_FORK": "0"
+   },
+   "seconds": 30.5,
+   "vs_old1": 9731,
+   "beyond_noise": 9719,
+   "same_global": true,
+   "same_collected": true,
+   "example": [
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"
+   ]
+  },
+  "pycache0": {
+   "env": {
+    "PROVISO_RECORD_PYCACHE": "0"
+   },
+   "seconds": 45.8,
+   "vs_old1": 9751,
+   "beyond_noise": 9737,
+   "same_global": true,
+   "same_collected": true,
+   "example": [
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"
+   ]
+  },
+  "fork0-pycache0": {
+   "env": {
+    "PROVISO_RECORD_FORK": "0",
+    "PROVISO_RECORD_PYCACHE": "0"
+   },
+   "seconds": 45.1,
+   "vs_old1": 9734,
+   "beyond_noise": 9720,
+   "same_global": true,
+   "same_collected": true,
+   "example": [
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_not_imported-_exclusions_00]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_in_ext-_exclusions_01]",
+    "test/base/test_concurrency.py::GreenletImportTests::test_concurrency_fn[greenlet_setup_on_call-_exclusions_02]"
+   ]
+  }
+ }
+}
