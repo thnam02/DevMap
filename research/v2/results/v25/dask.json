@@ -1,0 +1,115 @@
+{
+ "project": "dask",
+ "commit": "08d1856d3",
+ "files": 180,
+ "base_seconds_off": 15.7,
+ "base_seconds_on": 37.7,
+ "keys": 5307,
+ "unstable_off": 1,
+ "unstable_on": 3,
+ "patterns": 3,
+ "pattern_samples": 11,
+ "import_errors": 72,
+ "mask": {
+  "dask.array.core:ARRAY_TEMPLATE": {
+   "exact": 366,
+   "shape": 0,
+   "kind": 1,
+   "any": 0
+  },
+  "dask.cli:cli": {
+   "exact": 573,
+   "shape": 0,
+   "kind": 1,
+   "any": 0
+  },
+  "dask.threaded:main_thread": {
+   "exact": 34,
+   "shape": 1,
+   "kind": 2,
+   "any": 0
+  }
+ },
+ "noop": {
+  "off": {
+   "trials": 20,
+   "trials_with_changes": 20,
+   "keys_ever_changed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ]
+  },
+  "on": {
+   "trials": 20,
+   "trials_with_changes": 0,
+   "keys_ever_changed": []
+  }
+ },
+ "mutate": {
+  "dask.array.core:ARRAY_TEMPLATE": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "dask.cli:cli": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "dask.threaded:main_thread": {
+   "edits": 300,
+   "detected": 294,
+   "undetected_by_kind": {
+    "leaf:repr:_thread._ThreadHandle": 1,
+    "leaf:int": 5
+   }
+  }
+ },
+ "seeded": [
+  {
+   "edit": "main_thread is another thread object",
+   "file": "dask/threaded.py",
+   "changed_on": [
+    "dask.threaded:main_thread"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 3,
+   "errors": []
+  },
+  {
+   "edit": "ordinary value next to it",
+   "file": "dask/threaded.py",
+   "changed_on": [
+    "dask.threaded:default_pool"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "dask.threaded:default_pool"
+   ],
+   "n_off": 4,
+   "errors": []
+  },
+  {
+   "edit": "cli option changed",
+   "file": "dask/cli.py",
+   "changed_on": [
+    "dask.cli:cli"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 3,
+   "errors": []
+  }
+ ]
+}

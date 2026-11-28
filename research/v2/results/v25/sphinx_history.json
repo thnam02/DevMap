@@ -1,0 +1,365 @@
+{
+ "project": "sphinx",
+ "start": "eaebbec4d1",
+ "rows": [
+  {
+   "commit": "eaebbec4d1",
+   "files_changed": 2,
+   "n_off": 4,
+   "n_on": 2,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.5
+  },
+  {
+   "commit": "719237f95c",
+   "files_changed": 1,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 35.2
+  },
+  {
+   "commit": "14717292b0",
+   "files_changed": 3,
+   "n_off": 2,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 35.0
+  },
+  {
+   "commit": "db46f0bea9",
+   "files_changed": 1,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [
+    "sphinx.builders.gettext:ctime"
+   ],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.6
+  },
+  {
+   "commit": "e8ab5cf1c5",
+   "files_changed": 3,
+   "n_off": 5,
+   "n_on": 2,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.0
+  },
+  {
+   "commit": "7814844055",
+   "files_changed": 6,
+   "n_off": 73,
+   "n_on": 71,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 33.6
+  },
+  {
+   "commit": "6c9e3209c4",
+   "files_changed": 9,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.3
+  },
+  {
+   "commit": "bda34f914d",
+   "files_changed": 3,
+   "n_off": 3,
+   "n_on": 1,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 32.9
+  },
+  {
+   "commit": "90fd2a2648",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 33.1
+  },
+  {
+   "commit": "fa172eab80",
+   "files_changed": 7,
+   "n_off": 2,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 33.0
+  },
+  {
+   "commit": "5f88652a5e",
+   "files_changed": 1,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [
+    "sphinx.builders.gettext:ctime"
+   ],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 31.8
+  },
+  {
+   "commit": "5b3d92e7c6",
+   "files_changed": 2,
+   "n_off": 2,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 32.5
+  },
+  {
+   "commit": "67047523bf",
+   "files_changed": 3,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [
+    "sphinx.builders.gettext:ctime"
+   ],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 33.0
+  },
+  {
+   "commit": "667925d2f3",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 32.6
+  },
+  {
+   "commit": "df5e28474a",
+   "files_changed": 2,
+   "n_off": 2,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 33.5
+  },
+  {
+   "commit": "3fc158804c",
+   "files_changed": 3,
+   "n_off": 4,
+   "n_on": 1,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 33.5
+  },
+  {
+   "commit": "7715d6f50e",
+   "files_changed": 4,
+   "n_off": 27,
+   "n_on": 25,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 32.7
+  },
+  {
+   "commit": "a1b80c795b",
+   "files_changed": 4,
+   "n_off": 31,
+   "n_on": 28,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.2
+  },
+  {
+   "commit": "4bed65e18f",
+   "files_changed": 3,
+   "n_off": 39,
+   "n_on": 37,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.2
+  },
+  {
+   "commit": "556a5f1095",
+   "files_changed": 4,
+   "n_off": 10,
+   "n_on": 7,
+   "only_on": [],
+   "removed": [
+    "sphinx.builders.gettext:ctime",
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "removed_not_covered": [
+    "sphinx.builders.gettext:ctime"
+   ],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 34.3
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+[
+ [
+  "template text edited",
+  "sphinx/writers/texinfo.py",
+  "@finalout\n",
+  "@finaloutx\n"
+ ],
+ [
+  "timestamp made another way, same shape (statement edit: guard)",
+  "sphinx/builders/gettext.py",
+  "    timestamp = time.localtime()",
+  "    timestamp = time.gmtime()"
+ ],
+ [
+  "timestamp replaced by a fixed value",
+  "sphinx/builders/gettext.py",
+  "    timestamp = time.localtime()",
+  "    timestamp = time.gmtime(0)"
+ ]
+]

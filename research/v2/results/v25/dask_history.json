@@ -1,0 +1,368 @@
+{
+ "project": "dask",
+ "start": "08d1856d3e",
+ "rows": [
+  {
+   "commit": "08d1856d3e",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.6
+  },
+  {
+   "commit": "062b249d88",
+   "files_changed": 3,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 60.2
+  },
+  {
+   "commit": "0fa5e18d51",
+   "files_changed": 1,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.9
+  },
+  {
+   "commit": "67e20237ab",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 58.3
+  },
+  {
+   "commit": "9c41044af1",
+   "files_changed": 5,
+   "n_off": 4,
+   "n_on": 1,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.2
+  },
+  {
+   "commit": "8d53292b05",
+   "files_changed": 2,
+   "n_off": 5,
+   "n_on": 2,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 58.5
+  },
+  {
+   "commit": "6787b280ff",
+   "files_changed": 4,
+   "n_off": 40,
+   "n_on": 37,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 58.0
+  },
+  {
+   "commit": "01202abc70",
+   "files_changed": 4,
+   "n_off": 13,
+   "n_on": 10,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.4
+  },
+  {
+   "commit": "a23bf0df3b",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.8
+  },
+  {
+   "commit": "d9a9dd7eae",
+   "files_changed": 2,
+   "n_off": 6,
+   "n_on": 3,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 58.8
+  },
+  {
+   "commit": "21b648b836",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.1
+  },
+  {
+   "commit": "d9e07f5278",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 57.7
+  },
+  {
+   "commit": "cebcc04c04",
+   "files_changed": 2,
+   "n_off": 11,
+   "n_on": 8,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [
+    "dask.array.core:ARRAY_TEMPLATE"
+   ],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 60.5
+  },
+  {
+   "commit": "5a3dfb42d4",
+   "files_changed": 5,
+   "n_off": 4,
+   "n_on": 1,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 58.1
+  },
+  {
+   "commit": "1221d345e5",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 57.4
+  },
+  {
+   "commit": "aa36d37309",
+   "files_changed": 8,
+   "n_off": 10,
+   "n_on": 7,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 57.1
+  },
+  {
+   "commit": "e0877d0a89",
+   "files_changed": 1,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 60.3
+  },
+  {
+   "commit": "82dc1dc587",
+   "files_changed": 2,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 59.1
+  },
+  {
+   "commit": "b2a4a2157c",
+   "files_changed": 29,
+   "n_off": 75,
+   "n_on": 72,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 61.0
+  },
+  {
+   "commit": "cc25aff1c7",
+   "files_changed": 1,
+   "n_off": 3,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "dask.array.core:ARRAY_TEMPLATE",
+    "dask.cli:cli",
+    "dask.threaded:main_thread"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 3,
+   "errors_on": [],
+   "seconds": 62.5
+  }
+ ]
+}

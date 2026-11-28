@@ -1,0 +1,426 @@
+{
+ "project": "sqlalchemy",
+ "start": "10f4d1e2d7",
+ "rows": [
+  {
+   "commit": "10f4d1e2d7",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 45.1
+  },
+  {
+   "commit": "69e49c9c07",
+   "files_changed": 4,
+   "n_off": 8,
+   "n_on": 2,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 44.7
+  },
+  {
+   "commit": "a4ceb755ab",
+   "files_changed": 2,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.6
+  },
+  {
+   "commit": "5707e5be02",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 44.6
+  },
+  {
+   "commit": "8e07827769",
+   "files_changed": 6,
+   "n_off": 15,
+   "n_on": 9,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.5
+  },
+  {
+   "commit": "f066a1ca3d",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.9
+  },
+  {
+   "commit": "8301becbe6",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 42.1
+  },
+  {
+   "commit": "cf951a246e",
+   "files_changed": 1,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 42.5
+  },
+  {
+   "commit": "7ca9b3d88a",
+   "files_changed": 5,
+   "n_off": 9,
+   "n_on": 3,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 42.9
+  },
+  {
+   "commit": "9a70d8961d",
+   "files_changed": 6,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.8
+  },
+  {
+   "commit": "624018f190",
+   "files_changed": 5,
+   "n_off": 11,
+   "n_on": 5,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.1
+  },
+  {
+   "commit": "75853e8375",
+   "files_changed": 5,
+   "n_off": 7,
+   "n_on": 1,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 42.0
+  },
+  {
+   "commit": "4a1bb7314b",
+   "files_changed": 4,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.4
+  },
+  {
+   "commit": "0c3d684e47",
+   "files_changed": 4,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.4
+  },
+  {
+   "commit": "3154ad86f2",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.8
+  },
+  {
+   "commit": "7b95e267c8",
+   "files_changed": 2,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.9
+  },
+  {
+   "commit": "e507ebee10",
+   "files_changed": 9,
+   "n_off": 7,
+   "n_on": 1,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 44.2
+  },
+  {
+   "commit": "a252cd5af3",
+   "files_changed": 2,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 44.0
+  },
+  {
+   "commit": "74c42373f4",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 43.4
+  },
+  {
+   "commit": "d1e074bd96",
+   "files_changed": 3,
+   "n_off": 6,
+   "n_on": 0,
+   "only_on": [],
+   "removed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ],
+   "removed_not_covered": [],
+   "removed_in_edited_module": [],
+   "guard_puts_back": [],
+   "patterns": 6,
+   "errors_on": [],
+   "seconds": 44.9
+  }
+ ]
+}

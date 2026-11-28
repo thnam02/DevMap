@@ -1,0 +1,222 @@
+{
+ "project": "xarray",
+ "commit": "60bc816c",
+ "files": 117,
+ "base_seconds_off": 7.3,
+ "base_seconds_on": 16.7,
+ "keys": 7539,
+ "unstable_off": 7,
+ "unstable_on": 7,
+ "patterns": 7,
+ "pattern_samples": 11,
+ "import_errors": 0,
+ "mask": {
+  "xarray.backends.h5netcdf_:HDF5_LOCK": {
+   "exact": 3,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  },
+  "xarray.backends.locks:HDF5_LOCK": {
+   "exact": 3,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  },
+  "xarray.backends.locks:NETCDFC_LOCK": {
+   "exact": 3,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  },
+  "xarray.backends.locks:SerializableLock._locks": {
+   "exact": 8,
+   "shape": 4,
+   "kind": 0,
+   "any": 0
+  },
+  "xarray.backends.netCDF4_:HDF5_LOCK": {
+   "exact": 3,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  },
+  "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK": {
+   "exact": 7,
+   "shape": 2,
+   "kind": 0,
+   "any": 0
+  },
+  "xarray.backends.netCDF4_:NETCDFC_LOCK": {
+   "exact": 3,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  }
+ },
+ "noop": {
+  "off": {
+   "trials": 20,
+   "trials_with_changes": 20,
+   "keys_ever_changed": [
+    "xarray.backends.h5netcdf_:HDF5_LOCK",
+    "xarray.backends.locks:HDF5_LOCK",
+    "xarray.backends.locks:NETCDFC_LOCK",
+    "xarray.backends.locks:SerializableLock._locks",
+    "xarray.backends.netCDF4_:HDF5_LOCK",
+    "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK",
+    "xarray.backends.netCDF4_:NETCDFC_LOCK"
+   ]
+  },
+  "on": {
+   "trials": 20,
+   "trials_with_changes": 0,
+   "keys_ever_changed": []
+  }
+ },
+ "mutate": {
+  "xarray.backends.h5netcdf_:HDF5_LOCK": {
+   "edits": 300,
+   "detected": 263,
+   "undetected_by_kind": {
+    "leaf:str": 37
+   }
+  },
+  "xarray.backends.locks:HDF5_LOCK": {
+   "edits": 300,
+   "detected": 258,
+   "undetected_by_kind": {
+    "leaf:str": 42
+   }
+  },
+  "xarray.backends.locks:NETCDFC_LOCK": {
+   "edits": 300,
+   "detected": 263,
+   "undetected_by_kind": {
+    "leaf:str": 37
+   }
+  },
+  "xarray.backends.locks:SerializableLock._locks": {
+   "edits": 300,
+   "detected": 261,
+   "undetected_by_kind": {
+    "leaf:str": 39
+   }
+  },
+  "xarray.backends.netCDF4_:HDF5_LOCK": {
+   "edits": 300,
+   "detected": 263,
+   "undetected_by_kind": {
+    "leaf:str": 37
+   }
+  },
+  "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK": {
+   "edits": 300,
+   "detected": 269,
+   "undetected_by_kind": {
+    "leaf:str": 31
+   }
+  },
+  "xarray.backends.netCDF4_:NETCDFC_LOCK": {
+   "edits": 300,
+   "detected": 267,
+   "undetected_by_kind": {
+    "leaf:str": 33
+   }
+  }
+ },
+ "seeded": [
+  {
+   "edit": "lock given a fixed token",
+   "file": "xarray/backends/locks.py",
+   "changed_on": [
+    "xarray.backends.h5netcdf_:HDF5_LOCK",
+    "xarray.backends.locks:HDF5_LOCK",
+    "xarray.backends.locks:SerializableLock._locks",
+    "xarray.backends.netCDF4_:HDF5_LOCK",
+    "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK"
+   ],
+   "n_changed_on": 5,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 7,
+   "errors": []
+  },
+  {
+   "edit": "token made another way, other shape (function edit)",
+   "file": "xarray/backends/locks.py",
+   "changed_on": [
+    "xarray.backends.h5netcdf_:HDF5_LOCK",
+    "xarray.backends.locks:HDF5_LOCK",
+    "xarray.backends.locks:NETCDFC_LOCK",
+    "xarray.backends.locks:SerializableLock._locks",
+    "xarray.backends.netCDF4_:HDF5_LOCK",
+    "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK",
+    "xarray.backends.netCDF4_:NETCDFC_LOCK"
+   ],
+   "n_changed_on": 7,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 7,
+   "errors": []
+  },
+  {
+   "edit": "token made another way, same shape (function edit; expected not visible in the snapshot)",
+   "file": "xarray/backends/locks.py",
+   "changed_on": [],
+   "n_changed_on": 0,
+   "guard_adds": [
+    "xarray.backends.locks:HDF5_LOCK",
+    "xarray.backends.locks:NETCDFC_LOCK",
+    "xarray.backends.locks:SerializableLock._locks"
+   ],
+   "detected_on": true,
+   "by": "guard",
+   "off_beyond_noise": [],
+   "n_off": 7,
+   "errors": []
+  },
+  {
+   "edit": "lock type changed (function edit)",
+   "file": "xarray/backends/locks.py",
+   "changed_on": [
+    "xarray.backends.h5netcdf_:HDF5_LOCK",
+    "xarray.backends.locks:HDF5_LOCK",
+    "xarray.backends.locks:NETCDFC_LOCK",
+    "xarray.backends.netCDF4_:HDF5_LOCK",
+    "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK",
+    "xarray.backends.netCDF4_:NETCDFC_LOCK"
+   ],
+   "n_changed_on": 6,
+   "guard_adds": [
+    "xarray.backends.locks:SerializableLock._locks"
+   ],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 7,
+   "errors": []
+  },
+  {
+   "edit": "one module lock removed from use",
+   "file": "xarray/backends/locks.py",
+   "changed_on": [
+    "xarray.backends.locks:SerializableLock._locks",
+    "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK"
+   ],
+   "n_changed_on": 2,
+   "guard_adds": [
+    "xarray.backends.locks:NETCDFC_LOCK"
+   ],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 7,
+   "errors": []
+  }
+ ]
+}

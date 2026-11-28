@@ -1,0 +1,222 @@
+{
+ "project": "sqlalchemy",
+ "commit": "10f4d1e2d",
+ "files": 218,
+ "base_seconds_off": 12.5,
+ "base_seconds_on": 29.8,
+ "keys": 28088,
+ "unstable_off": 6,
+ "unstable_on": 6,
+ "patterns": 6,
+ "pattern_samples": 11,
+ "import_errors": 0,
+ "mask": {
+  "sqlalchemy.event.registry:_collection_to_key": {
+   "exact": 327,
+   "shape": 0,
+   "kind": 0,
+   "any": 0
+  },
+  "sqlalchemy.event.registry:_key_to_collection": {
+   "exact": 332,
+   "shape": 0,
+   "kind": 0,
+   "any": 0
+  },
+  "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS": {
+   "exact": 16,
+   "shape": 0,
+   "kind": 0,
+   "any": 0
+  },
+  "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented": {
+   "exact": 1,
+   "shape": 0,
+   "kind": 0,
+   "any": 0
+  },
+  "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented": {
+   "exact": 1,
+   "shape": 0,
+   "kind": 0,
+   "any": 0
+  },
+  "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented": {
+   "exact": 1,
+   "shape": 0,
+   "kind": 0,
+   "any": 0
+  }
+ },
+ "noop": {
+  "off": {
+   "trials": 20,
+   "trials_with_changes": 20,
+   "keys_ever_changed": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS",
+    "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented",
+    "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented",
+    "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented"
+   ]
+  },
+  "on": {
+   "trials": 20,
+   "trials_with_changes": 0,
+   "keys_ever_changed": []
+  }
+ },
+ "mutate": {
+  "sqlalchemy.event.registry:_collection_to_key": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "sqlalchemy.event.registry:_key_to_collection": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "sqlalchemy.orm.collections:InstrumentedList._sa_instrumented": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  },
+  "sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented": {
+   "edits": 300,
+   "detected": 300,
+   "undetected_by_kind": {}
+  }
+ },
+ "seeded": [
+  {
+   "edit": "registry: listener removed (Index after_parent_attach)",
+   "file": "lib/sqlalchemy/sql/naming.py",
+   "changed_on": [
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.sql.base:SchemaEventTarget.dispatch",
+    "sqlalchemy.sql.events:DDLEvents.dispatch"
+   ],
+   "n_changed_on": 3,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "sqlalchemy.sql.base:SchemaEventTarget.dispatch",
+    "sqlalchemy.sql.events:DDLEvents.dispatch"
+   ],
+   "n_off": 8,
+   "errors": []
+  },
+  {
+   "edit": "registry: listener moved to another event name",
+   "file": "lib/sqlalchemy/sql/naming.py",
+   "changed_on": [
+    "sqlalchemy.event.registry:_collection_to_key",
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.sql.base:SchemaEventTarget.dispatch",
+    "sqlalchemy.sql.events:DDLEvents.dispatch"
+   ],
+   "n_changed_on": 4,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "sqlalchemy.sql.base:SchemaEventTarget.dispatch",
+    "sqlalchemy.sql.events:DDLEvents.dispatch"
+   ],
+   "n_off": 8,
+   "errors": []
+  },
+  {
+   "edit": "registry: listener moved to another class",
+   "file": "lib/sqlalchemy/sql/naming.py",
+   "changed_on": [
+    "sqlalchemy.event.registry:_key_to_collection",
+    "sqlalchemy.sql.base:SchemaEventTarget.dispatch",
+    "sqlalchemy.sql.events:DDLEvents.dispatch"
+   ],
+   "n_changed_on": 3,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "sqlalchemy.sql.base:SchemaEventTarget.dispatch",
+    "sqlalchemy.sql.events:DDLEvents.dispatch"
+   ],
+   "n_off": 8,
+   "errors": []
+  },
+  {
+   "edit": "id set: another symbol of the same type",
+   "file": "lib/sqlalchemy/orm/attributes.py",
+   "changed_on": [
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 6,
+   "errors": []
+  },
+  {
+   "edit": "id set: one symbol dropped",
+   "file": "lib/sqlalchemy/orm/attributes.py",
+   "changed_on": [
+    "sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 6,
+   "errors": []
+  },
+  {
+   "edit": "ordinary table value",
+   "file": "lib/sqlalchemy/sql/naming.py",
+   "changed_on": [
+    "sqlalchemy.sql.naming:_prefix_dict"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "sqlalchemy.sql.naming:_prefix_dict"
+   ],
+   "n_off": 7,
+   "errors": []
+  },
+  {
+   "edit": "ordinary value in another module",
+   "file": "lib/sqlalchemy/sql/schema.py",
+   "changed_on": [
+    "sqlalchemy.sql.schema:DEFAULT_NAMING_CONVENTION"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "sqlalchemy.sql.schema:DEFAULT_NAMING_CONVENTION"
+   ],
+   "n_off": 7,
+   "errors": []
+  }
+ ]
+}

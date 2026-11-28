@@ -1,0 +1,32 @@
+[
+ [
+  "lock given a fixed token",
+  "xarray/backends/locks.py",
+  "HDF5_LOCK = SerializableLock()",
+  "HDF5_LOCK = SerializableLock(\"hdf5\")"
+ ],
+ [
+  "token made another way, other shape (function edit)",
+  "xarray/backends/locks.py",
+  "self.token = token or str(uuid.uuid4())",
+  "self.token = token or uuid.uuid4().hex"
+ ],
+ [
+  "token made another way, same shape (function edit; expected not visible in the snapshot)",
+  "xarray/backends/locks.py",
+  "self.token = token or str(uuid.uuid4())",
+  "self.token = token or str(uuid.uuid1())"
+ ],
+ [
+  "lock type changed (function edit)",
+  "xarray/backends/locks.py",
+  "            self.lock = threading.Lock()\n            SerializableLock._locks",
+  "            self.lock = threading.RLock()\n            SerializableLock._locks"
+ ],
+ [
+  "one module lock removed from use",
+  "xarray/backends/locks.py",
+  "NETCDFC_LOCK = SerializableLock()",
+  "NETCDFC_LOCK = HDF5_LOCK"
+ ]
+]

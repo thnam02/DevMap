@@ -1,0 +1,44 @@
+[
+ [
+  "registry: listener removed (Index after_parent_attach)",
+  "lib/sqlalchemy/sql/naming.py",
+  "@event.listens_for(Constraint, \"after_parent_attach\")\n@event.listens_for(Index, \"after_parent_attach\")\n",
+  "@event.listens_for(Constraint, \"after_parent_attach\")\n"
+ ],
+ [
+  "registry: listener moved to another event name",
+  "lib/sqlalchemy/sql/naming.py",
+  "@event.listens_for(Constraint, \"after_parent_attach\")\n",
+  "@event.listens_for(Constraint, \"before_parent_attach\")\n"
+ ],
+ [
+  "registry: listener moved to another class",
+  "lib/sqlalchemy/sql/naming.py",
+  "@event.listens_for(Index, \"after_parent_attach\")\n",
+  "@event.listens_for(UniqueConstraint, \"after_parent_attach\")\n"
+ ],
+ [
+  "id set: another symbol of the same type",
+  "lib/sqlalchemy/orm/attributes.py",
+  "_NO_STATE_SYMBOLS = frozenset([id(PASSIVE_NO_RESULT), id(NO_VALUE)])",
+  "_NO_STATE_SYMBOLS = frozenset([id(PASSIVE_NO_RESULT), id(ATTR_EMPTY)])"
+ ],
+ [
+  "id set: one symbol dropped",
+  "lib/sqlalchemy/orm/attributes.py",
+  "_NO_STATE_SYMBOLS = frozenset([id(PASSIVE_NO_RESULT), id(NO_VALUE)])",
+  "_NO_STATE_SYMBOLS = frozenset([id(PASSIVE_NO_RESULT)])"
+ ],
+ [
+  "ordinary table value",
+  "lib/sqlalchemy/sql/naming.py",
+  "    Index: \"ix\",\n",
+  "    Index: \"idx\",\n"
+ ],
+ [
+  "ordinary value in another module",
+  "lib/sqlalchemy/sql/schema.py",
+  "{\"ix\": \"ix_%(column_0_label)s\"}",
+  "{\"ix\": \"ix_%(column_0_name)s\"}"
+ ]
+]

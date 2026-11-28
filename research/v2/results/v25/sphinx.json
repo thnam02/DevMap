@@ -1,0 +1,119 @@
+{
+ "project": "sphinx",
+ "commit": "eaebbec4d",
+ "files": 222,
+ "base_seconds_off": 8.8,
+ "base_seconds_on": 21.4,
+ "keys": 10940,
+ "unstable_off": 1,
+ "unstable_on": 3,
+ "patterns": 3,
+ "pattern_samples": 11,
+ "import_errors": 0,
+ "mask": {
+  "sphinx.builders.gettext:ctime": {
+   "exact": 0,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  },
+  "sphinx.builders.gettext:timestamp": {
+   "exact": 1,
+   "shape": 0,
+   "kind": 8,
+   "any": 0
+  },
+  "sphinx.writers.texinfo:TEMPLATE": {
+   "exact": 0,
+   "shape": 1,
+   "kind": 0,
+   "any": 0
+  }
+ },
+ "noop": {
+  "off": {
+   "trials": 20,
+   "trials_with_changes": 20,
+   "keys_ever_changed": [
+    "sphinx.builders.gettext:timestamp",
+    "sphinx.writers.texinfo:TEMPLATE"
+   ]
+  },
+  "on": {
+   "trials": 20,
+   "trials_with_changes": 0,
+   "keys_ever_changed": []
+  }
+ },
+ "mutate": {
+  "sphinx.builders.gettext:ctime": {
+   "edits": 300,
+   "detected": 126,
+   "undetected_by_kind": {
+    "leaf:str": 174
+   }
+  },
+  "sphinx.builders.gettext:timestamp": {
+   "edits": 300,
+   "detected": 176,
+   "undetected_by_kind": {
+    "leaf:int": 124
+   }
+  },
+  "sphinx.writers.texinfo:TEMPLATE": {
+   "edits": 300,
+   "detected": 295,
+   "undetected_by_kind": {
+    "leaf:str": 5
+   }
+  }
+ },
+ "seeded": [
+  {
+   "edit": "template text edited",
+   "file": "sphinx/writers/texinfo.py",
+   "changed_on": [
+    "sphinx.writers.texinfo:TEMPLATE"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [],
+   "n_off": 2,
+   "errors": []
+  },
+  {
+   "edit": "timestamp made another way, same shape (statement edit: guard)",
+   "file": "sphinx/builders/gettext.py",
+   "changed_on": [],
+   "n_changed_on": 0,
+   "guard_adds": [
+    "sphinx.builders.gettext:timestamp"
+   ],
+   "detected_on": true,
+   "by": "guard",
+   "off_beyond_noise": [],
+   "n_off": 2,
+   "errors": []
+  },
+  {
+   "edit": "timestamp replaced by a fixed value",
+   "file": "sphinx/builders/gettext.py",
+   "changed_on": [
+    "sphinx.builders.gettext:ctime"
+   ],
+   "n_changed_on": 1,
+   "guard_adds": [
+    "sphinx.builders.gettext:timestamp"
+   ],
+   "detected_on": true,
+   "by": "snapshot",
+   "off_beyond_noise": [
+    "sphinx.builders.gettext:ctime"
+   ],
+   "n_off": 3,
+   "errors": []
+  }
+ ]
+}

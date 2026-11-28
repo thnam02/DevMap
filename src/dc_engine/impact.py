@@ -628,11 +628,32 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     files = _snapshot_files(covmap)
     base = importstate.base_snapshot(root, files, python, os.path.join(root, STATE_DIR, "importstate_base.json"),
                                      rev=_BASE)
-    cur = importstate.snapshot(root, files, python) if base is not None else None
+    cur = importstate.snapshot(root, files, python, tree_keys=None if _off("volatile") else
+                               sorted(base.get("patterns") or {})) if base is not None else None
     if base is None or cur is None:
         return None, set(), {"reason": "could not compare import-time state"}
     importstate.keep_clean_snapshot(root, files, python, cur, os.path.join(root, STATE_DIR, "importstate_cur.json"))
     d = importstate.diff(base, cur, _new_top_level_defs(root, changed_files))
+    # (v2.5) a run-varying value was judged unchanged by its stable parts only; if the statement that binds it was
+    # edited, the varying part may now be made differently, so it counts as changed
+    if d.get("covered"):
+        prefix1 = _layout_prefix(files)
+        top_changed: dict = {}
+        back = []
+        for k in d["covered"]:
+            mod, qual = k.split(":", 1)
+            f = next((c for c in changed_files if _module_of(c, prefix1) == mod), None)
+            if f is None:
+                continue
+            if f not in top_changed:
+                try:
+                    top_changed[f] = _changed_top_names(_git(root, "show", f"{_BASE}:{f}"), _read(root, f))[0]
+                except Exception:  # noqa: BLE001
+                    top_changed[f] = None
+            if top_changed[f] is None or qual.split(".", 1)[0] in top_changed[f]:
+                back.append(k)
+        d["changed"] = d["changed"] + back
+        d["covered"] = [k for k in d["covered"] if k not in set(back)]
     # values of a module the base did not have (a new source file): new, so no existing code reads them
     base_mods = {k.split(":", 1)[0] for k in base["state"]}
     d["changed"] = [k for k in d["changed"] if k.split(":", 1)[0] in base_mods]
@@ -657,7 +678,8 @@ def _import_state_effect(root: str, covmap: dict, python: str, changed_files: se
     gained = {c for c in (_key_class(k, prefix) for k in reachable) if c}
     gained |= {c for c in (_key_class(k.rsplit(".", 1)[0] + ".x", prefix) for k in rebased) if c}
     gained |= {c.replace("/__init__.py:", ".py:") for c in gained}
-    return names, gained, {"import_state_changed": d["changed"][:200], "import_state_n": len(d["changed"])}
+    return names, gained, {"import_state_changed": d["changed"][:200], "import_state_n": len(d["changed"]),
+                           "import_state_covered": d.get("covered", [])[:200]}
 
 
 # (v2.2) the commit the change is measured from: the one the coverage map was recorded at (its "__base__" entry),
