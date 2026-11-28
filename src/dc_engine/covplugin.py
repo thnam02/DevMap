@@ -533,6 +533,9 @@ def _begin():
         # the recorded test process: its workers find the recording through the environment
         MPDIR = os.environ["COVMAP_OUT"] + ".mp"
         os.makedirs(MPDIR, exist_ok=True)
+        for old in os.listdir(MPDIR):   # records of an earlier recording to the same path must never be merged
+            if old.endswith(".rec"):
+                os.unlink(os.path.join(MPDIR, old))
         site = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_mpsite")
         os.environ.update({"PROVISO_MP_DIR": MPDIR, "PROVISO_MP_ROOT": ROOT, "PROVISO_MP_PARENT": str(os.getpid()),
                            "PYTHONPATH": os.pathsep.join([site] + [x for x in os.environ.get("PYTHONPATH", "")
