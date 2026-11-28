@@ -34,10 +34,10 @@
  {
   "benchmark": "B1",
   "item": "pvlib",
-  "done": 7,
+  "done": 18,
   "total": 50,
   "status": "running",
-  "hours_left": 1.7
+  "hours_left": 1.4
  },
  {
   "benchmark": "B1",
@@ -98,10 +98,10 @@
  {
   "benchmark": "B1b",
   "item": "reversed SWE-bench fixes",
-  "done": 162,
+  "done": 175,
   "total": 437,
-  "status": "running (27 skip)",
-  "hours_left": 10.1
+  "status": "running (32 skip)",
+  "hours_left": 9.7
  },
  {
   "benchmark": "B3",
