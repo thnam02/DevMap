@@ -37,7 +37,7 @@ if RESULTS:
 
 
 def _b1b():
-    B = _b1b()
+    import b1b as B
     if RESULTS:
         B.OUT = os.path.join(RESULTS, "b1b")
     return B
@@ -98,6 +98,28 @@ def select_b1(tag, name):
               flush=True)
 
 
+def _fetch_commit(tree_dir, src, want):
+    """The map's own fixed commit, fetched from the B1b worker trees that made it (its content can include untracked
+    state files the worker tree had then, so a rebuild may not reproduce it). '' if no worker tree has it."""
+    if not want:
+        return ""
+    if not os.path.isdir(os.path.join(tree_dir, ".git")):
+        os.makedirs(os.path.dirname(tree_dir), exist_ok=True)
+        subprocess.run(["git", "clone", "-q", "--shared", "--no-checkout", src, tree_dir], check=True)
+    # the worker trees' object stores as read-only alternates (the commit is often no longer referenced there)
+    alt = os.path.join(tree_dir, ".git", "objects", "info", "alternates")
+    have = open(alt).read().split() if os.path.exists(alt) else []
+    extra = [os.path.join(w, ".git", "objects") for w in sorted(glob.glob(os.path.join(PL.WORK, "trees", "w*")))
+             if os.path.isdir(os.path.join(w, ".git", "objects"))]
+    if any(e not in have for e in extra):
+        open(alt, "w").write("\n".join(have + [e for e in extra if e not in have]) + "\n")
+    if subprocess.run(["git", "-C", tree_dir, "cat-file", "-e", f"{want}^{{commit}}"], capture_output=True).returncode:
+        return ""
+    subprocess.run(["git", "-C", tree_dir, "checkout", "-q", "-f", want], check=True, capture_output=True)
+    subprocess.run(["git", "-C", tree_dir, "clean", "-q", "-fdx", "-e", ".dc-engine"], capture_output=True)
+    return want
+
+
 def _fixed_commit(tree_dir, src, x):
     """b1b.fixed_tree without the install: base commit + test patch + reference fix, committed with the same identity
     and dates (so the commit is the one the map was recorded at)."""
@@ -143,7 +165,8 @@ def select_b1b(tag, only=None):
         res = {"id": r["id"], "tag": tag}
         try:
             tree = os.path.join(PL.WORK, "trees", f"rs-{tag}")
-            fc = _fixed_commit(tree, P.repo_clone(repo), x)
+            want = ((cov or {}).get("__base__") or {}).get("commit", "")
+            fc = _fetch_commit(tree, P.repo_clone(repo), want) or _fixed_commit(tree, P.repo_clone(repo), x)
             if not cov or not base or (cov.get("__base__") or {}).get("commit") != fc:
                 raise RuntimeError(f"fixed commit {fc[:10]} is not the map's "
                                    f"{((cov or {}).get('__base__') or {}).get('commit', '?')[:10]}")
