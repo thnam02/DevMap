@@ -184,10 +184,13 @@ def _selections(tree, p, c, r, cov, universe):
     return out
 
 
+WHOLE = os.environ.get("V25_WHOLE", "1") == "1"   # re-record the whole test files (default), not only their always tests
+
+
 def partB(name):
     assert recorder_is_v25(), "run from a checkout with v2.5-dev's recorder"
     b1.use(name)
-    work = os.path.join(PL.WORK, "v25", "partB")
+    work = os.path.join(PL.WORK, "v25", "partB-whole" if WHOLE else "partB")
     os.makedirs(work, exist_ok=True)
     rows = sorted((r for r in b1.rows(name).values() if r.get("status") == "ok"), key=lambda r: r["rank"])
     for k, r in enumerate(rows):
@@ -217,17 +220,22 @@ def partB(name):
                 ts = time.time()
                 REC.record(tree, PL.CFG["pkg"], out, PL.PY, mpfiles, 1, PL.CFG["before_test"],
                            ["-p", "no:randomly", *PL.CFG["pytest_args"]], PL.env(tree, [PL.PLUG]),
-                           nodes={x: [n for n in nodes if n.startswith(x + "::")] for x in mpfiles})
+                           nodes=None if WHOLE else {x: [n for n in nodes if n.startswith(x + "::")] for x in mpfiles})
                 res["record_s"] = round(time.time() - ts, 1)
                 new = PL.jload(out, {})
-                cov2 = _replace(cov, new, nodes)
+                # whole files: every test of those files gets its new record (a worker that outlives its test makes
+                # the later tests of the process always: v2.5's leak rule)
+                replaced = sorted(n for n in I.tests_of(new) if n.split("::", 1)[0] in mpfiles) if WHOLE else nodes
+                cov2 = _replace(cov, new, replaced)
                 al2 = always_tests(cov2)
+                res["replaced"] = len(replaced)
                 res["released"] = sorted(set(nodes) - al2)
                 res["still_always"] = sorted(set(nodes) & al2)
+                res["newly_always"] = sorted((al2 - al) & set(replaced))
                 res["not_rerecorded"] = sorted(n for n in nodes if n not in new)
             else:
                 cov2 = cov
-                res["released"], res["still_always"], res["not_rerecorded"] = [], [], []
+                res["released"], res["still_always"], res["not_rerecorded"], res["newly_always"] = [], [], [], []
             universe = set(PL.universe_of(cov, PL.failing(base)))
             plain = {kk: tt for kk, (ok_, tt) in base.items()}
             before = _selections(tree, p, c, r, cov, universe)
@@ -298,44 +306,68 @@ def write():
                       + "; only in-process: " + (", ".join(f"`{p}:{ln}`" for p, ln in x["only_inproc"][:30]) or "none")]
         L.append("")
     L += ["## B. Safety and saving (every finished B1 pair)", "",
-          "Per pair: the saved map's always tests in test files that start worker processes, recorded again at the "
-          "parent with v2.5-dev; their records (and their file's fixture records) replaced in a copy of the map; "
-          "ValueRTS's selection for S and F with the original and the new map; scored against the B1 row's confirmed "
-          "failures. Median % tests = selected / universe; % test time = the selection's share of the universe's "
-          "plain-run time.", "",
-          "| Project | Pairs | Tests released from always (median per pair; distinct) | Still always | Pair-scenarios where "
-          "a released test is skipped | Missed failures before -> after | Median % tests before -> after | "
-          "Median % test time before -> after | Errors |", "|---|---|---|---|---|---|---|---|---|"]
+          "Per pair: the test files that start worker processes and hold an always test in the saved map are recorded "
+          "again at the parent with v2.5-dev; in a copy of the map, the records of their tests (and the files' fixture "
+          "records) are replaced; ValueRTS's selection for S and F is computed with the original and the new map and "
+          "scored against the B1 row's confirmed failures. Median % tests = selected / universe; % test time = the "
+          "selection's share of the universe's plain-run time.", ""]
     gains = []
-    for name in ("sqlglot", "loguru"):
-        fs = sorted(glob.glob(os.path.join(PL.BASE_WORK, name, "v25", "partB", "*.json")))
-        rs = [json.load(open(x)) for x in fs]
-        ok = [x for x in rs if "scenarios" in x]
-        if not rs:
-            L.append(f"| {name} | (not run) | | | | | | | |")
-            continue
-        rel = [len(x["released"]) for x in ok]
-        distinct = {n for x in ok for n in x["released"]}
-        still = {n for x in ok for n in x["still_always"]}
-        skipped = sum(bool(v["released_skipped"]) for x in ok for v in x["scenarios"].values())
-        mb = sum(len(v["before"]["missed"]) for x in ok for v in x["scenarios"].values())
-        ma = sum(len(v["after"]["missed"]) for x in ok for v in x["scenarios"].values())
-        pt = lambda w: statistics.median(100 * v[w]["selected"] / max(1, v["universe"]) for x in ok
-                                         for v in x["scenarios"].values())
-        tt = lambda w: statistics.median(100 * v[w]["time_share"] for x in ok for v in x["scenarios"].values())
-        L.append(f"| {name} | {len(ok)} | {statistics.median(rel) if rel else 0} ({len(distinct)}) | {len(still)} | "
-                 f"{skipped} | {mb} -> {ma} | {pt('before'):.1f} -> {pt('after'):.1f} | {tt('before'):.1f} -> "
-                 f"{tt('after'):.1f} | {len(rs) - len(ok)} |")
-        for x in ok:
-            for sc, v in x["scenarios"].items():
-                g = set(v["after"]["missed"]) - set(v["before"]["missed"])
-                if g:
-                    gains.append((name, x["id"][:10], sc, sorted(g)))
-        if still:
-            L.append(f"|  | still always after re-recording: {', '.join(sorted(still)[:8])} | | | | | | | |")
-    L += ["", "Missed failures gained: " + ("none." if not gains else "")]
+    for variant, label in (("partB-whole", "Whole test files re-recorded (every test of the file gets its v2.5 "
+                                           "record; this includes v2.5's leak rule)"),
+                           ("partB", "For comparison: only the always tests re-recorded (misses the leak rule's effect "
+                                     "on the file's other tests)")):
+        L += [f"### {label}", "",
+              "| Project | Pairs | Tests released from always (median per pair; distinct) | Still always | Newly always "
+              "(median per pair; pairs) | Pair-scenarios where a released test is skipped | Missed failures before -> "
+              "after | Median % tests before -> after | Median % test time before -> after | Errors |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        for name in ("sqlglot", "loguru"):
+            fs = sorted(glob.glob(os.path.join(PL.BASE_WORK, name, "v25", variant, "*.json")))
+            rs = [json.load(open(x)) for x in fs]
+            ok = [x for x in rs if "scenarios" in x]
+            if not ok:
+                L.append(f"| {name} | (not run{' yet' if variant == 'partB-whole' else ''}) | | | | | | | | |")
+                continue
+            rel = [len(x["released"]) for x in ok]
+            distinct = {n for x in ok for n in x["released"]}
+            still = {n for x in ok for n in x["still_always"]}
+            newly = [len(x.get("newly_always", [])) for x in ok]
+            skipped = sum(bool(v["released_skipped"]) for x in ok for v in x["scenarios"].values())
+            mb = sum(len(v["before"]["missed"]) for x in ok for v in x["scenarios"].values())
+            ma = sum(len(v["after"]["missed"]) for x in ok for v in x["scenarios"].values())
+            pt = lambda w: statistics.median(100 * v[w]["selected"] / max(1, v["universe"]) for x in ok
+                                             for v in x["scenarios"].values())
+            tt = lambda w: statistics.median(100 * v[w]["time_share"] for x in ok for v in x["scenarios"].values())
+            L.append(f"| {name} | {len(ok)} | {statistics.median(rel)} ({len(distinct)}) | {len(still)} | "
+                     f"{statistics.median(newly)} ({sum(1 for k in newly if k)}) | {skipped} | {mb} -> {ma} | "
+                     f"{pt('before'):.1f} -> {pt('after'):.1f} | {tt('before'):.1f} -> {tt('after'):.1f} | "
+                     f"{len(rs) - len(ok)} |")
+            for x in ok:
+                for sc, v in x["scenarios"].items():
+                    g = set(v["after"]["missed"]) - set(v["before"]["missed"])
+                    if g:
+                        gains.append((variant, name, x["id"][:10], sc, sorted(g)))
+            if still:
+                L.append(f"|  | still always: {', '.join(sorted(still)[:4])} | | | | | | | | |")
+        L.append("")
+    lk = PL.jload(os.path.join(PL.BASE_WORK, "sqlglot", "v25", "leak.json"))
+    if lk:
+        L += ["### Why test_canonicalize stays always (sqlglot)", "",
+              "At most sqlglot parents, TestOptimizer creates one process pool in `setUpClass` "
+              "(`ProcessPoolExecutor(mp_context=get_context(\"spawn\"))`, shut down at class cleanup). The first test "
+              "that submits work (test_canonicalize) starts the workers, which outlive it: v2.5 keeps that test always "
+              "(its workers are still alive when it ends) and, by its leak rule, every later test of the process. "
+              "v2.3 marked only the test that started the workers; the other tests ran their optimizer work in those "
+              "workers unseen. Whole-file recordings of tests/test_optimizer.py with v2.5:", "",
+              "| Pair (parent) | Tests in the file | Always, v2.3 map | Always, v2.5 | Their time / file time (s) |",
+              "|---|---|---|---|---|"]
+        for pair, x in lk.items():
+            L.append(f"| {pair} ({x['parent']}) | {x['tests_in_file']} | {x['always_v23']} | {x['always_v25']} | "
+                     f"{x['always_v25_time_s']} / {x['file_time_s']} |")
+        L.append("")
+    L += ["Missed failures gained: " + ("none." if not gains else "")]
     for g in gains:
-        L.append(f"- {g[0]} {g[1]} {g[2]}: {g[3]}")
+        L.append(f"- {g[0]} {g[1]} {g[2]} {g[3]}: {g[4]}")
     os.makedirs(OUT, exist_ok=True)
     open(os.path.join(OUT, "mprecord_eval.md"), "w").write("\n".join(L) + "\n")
     print("\n".join(L))
