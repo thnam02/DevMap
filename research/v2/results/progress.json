@@ -20,16 +20,16 @@
   "item": "datasette",
   "done": 0,
   "total": 50,
-  "status": "queued",
+  "status": "running",
   "hours_left": 5.3
  },
  {
   "benchmark": "B1",
   "item": "loguru",
-  "done": 49,
+  "done": 50,
   "total": 50,
-  "status": "running",
-  "hours_left": 0.1
+  "status": "done",
+  "hours_left": 0.0
  },
  {
   "benchmark": "B1",
@@ -122,7 +122,7 @@
  {
   "benchmark": "RQ2",
   "item": "ablation from saved maps",
-  "done": 104,
+  "done": 154,
   "total": 600,
   "status": "queued",
   "hours_left": null
