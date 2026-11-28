@@ -149,6 +149,106 @@ if __name__ == "__main__":
     unittest.main()
 
 
+PATHS = '''from pathlib import Path, PurePosixPath
+ROOT = Path(__file__).parent
+FILE = ROOT / "data" / "x.csv"
+NAME = FILE.name            # parsing the path fills its cached parts, which hold the tree's location
+PARTS = len(ROOT.parts)
+PURE = PurePosixPath("conf") / "a.ini"
+'''
+
+MODEL = '''from pydantic import BaseModel, field_validator
+
+
+class Column(BaseModel):
+    name: str
+    type: str = "text"
+    not_null: bool = False
+
+    @field_validator("name")
+    @classmethod
+    def strip(cls, v):
+        return v.strip()
+
+
+class Table(BaseModel):
+    columns: list[Column] = []
+'''
+
+
+class PathAndPydanticNoise(unittest.TestCase):
+    """(v2.3.2) Values that differ between two imports of the same code without any change: a pathlib path into the
+    tree (its cached parts hold the location: the base snapshot is an export in a temporary folder, the current one the
+    working tree) and pydantic models (references built from id(cls); validators and serializers printing pointers
+    and per-process field order). Real changes to either must still be reported."""
+
+    def make(self, files):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root, True)
+        os.makedirs(os.path.join(self.root, "pkg"))
+        open(os.path.join(self.root, "pkg", "__init__.py"), "w").write("")
+        for name, src in files.items():
+            open(os.path.join(self.root, "pkg", name), "w").write(src)
+        _git(self.root, "init", "-q")
+        _git(self.root, "add", "-A")
+        _git(self.root, "commit", "-qm", "base")
+        self.files = ["pkg/__init__.py"] + [f"pkg/{n}" for n in files]
+        self.base = S.base_snapshot(self.root, self.files, sys.executable, os.path.join(self.root, "base.json"))
+        self.assertIsNotNone(self.base)
+
+    def changed(self):
+        cur = S.snapshot(self.root, self.files, sys.executable)
+        self.assertIsNotNone(cur)
+        return set(S.diff(self.base, cur, set())["changed"])
+
+    def test_path_into_the_tree_is_not_a_change(self):
+        self.make({"paths.py": PATHS})
+        self.assertEqual(self.changed(), set())
+
+    def test_changed_path_is_a_change(self):
+        self.make({"paths.py": PATHS})
+        open(os.path.join(self.root, "pkg", "paths.py"), "w").write(PATHS.replace('"x.csv"', '"y.csv"'))
+        ch = self.changed()
+        self.assertIn("pkg.paths:FILE", ch)
+        self.assertIn("pkg.paths:NAME", ch)
+        self.assertNotIn("pkg.paths:ROOT", ch)
+
+    def test_changed_pure_path_is_a_change(self):
+        self.make({"paths.py": PATHS})
+        open(os.path.join(self.root, "pkg", "paths.py"), "w").write(PATHS.replace('"a.ini"', '"b.ini"'))
+        self.assertIn("pkg.paths:PURE", self.changed())
+
+    def test_pydantic_model_is_not_a_change(self):
+        try:
+            import pydantic  # noqa: F401
+        except ImportError:
+            self.skipTest("pydantic not installed")
+        self.make({"models.py": MODEL})
+        self.assertEqual(self.changed(), set())
+
+    def test_changed_pydantic_model_is_a_change(self):
+        try:
+            import pydantic  # noqa: F401
+        except ImportError:
+            self.skipTest("pydantic not installed")
+        self.make({"models.py": MODEL})
+        open(os.path.join(self.root, "pkg", "models.py"), "w").write(
+            MODEL.replace('    not_null: bool = False\n', '    not_null: bool = False\n    default: str | None = None\n'))
+        ch = self.changed()
+        self.assertIn("pkg.models:Column.__pydantic_core_schema__", ch)
+        self.assertIn("pkg.models:Column.__pydantic_fields__", ch)
+        self.assertIn("pkg.models:Column.__pydantic_validator__", ch)
+
+    def test_changed_pydantic_default_is_a_change(self):
+        try:
+            import pydantic  # noqa: F401
+        except ImportError:
+            self.skipTest("pydantic not installed")
+        self.make({"models.py": MODEL})
+        open(os.path.join(self.root, "pkg", "models.py"), "w").write(MODEL.replace('type: str = "text"', 'type: str = "int"'))
+        self.assertIn("pkg.models:Column.__pydantic_core_schema__", self.changed())
+
+
 ORDERED = '''class A: pass
 class B: pass
 class C: pass

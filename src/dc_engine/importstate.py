@@ -62,6 +62,7 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
     import functools
     import importlib
     import logging
+    import pathlib
     import re
     import types
     import warnings
@@ -69,6 +70,12 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
     warnings.filterwarnings("ignore")
     sys.setrecursionlimit(10000)
     addr = re.compile(r" at 0x[0-9a-fA-F]+")
+    # (v2.3.2) pydantic builds its core schema with references that embed id(cls) ("pkg.mod.Model:140231..."), and its
+    # compiled SchemaSerializer/SchemaValidator print raw pointers and their fields in a per-process hash-map order.
+    # Within pydantic values (pydantic's own objects, and the __pydantic_*__ attributes of models) those per-process
+    # parts are removed; the schema itself is still fingerprinted, so a changed model still counts.
+    pyd_ref = re.compile(r"\b([A-Za-z_][\w.]*):\d{4,}\b")
+    pyd_ptr = re.compile(r"0x[0-9a-fA-F]+")
     files = json.load(open(files_path))
     # import-time code may draw random numbers (sympy's combinatorics uses randomised algorithms); generators seeded
     # from the OS would make the state differ on every run, so unseeded generators get a fixed seed here
@@ -158,7 +165,7 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
     def dig(v, depth, seen):
         t = type(v)
         if t is str:
-            r = "str:" + repr(unroot(v))
+            r = "str:" + repr(unroot(pyd_ref.sub(r"\1:<id>", v) if mode["pyd"] else v))
             return r if len(r) <= 40 else "h:" + sha(r)
         if v is None or t in (bool, int, float, complex, bytes):
             r = t.__name__ + ":" + repr(v)
@@ -166,7 +173,7 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
         if depth > 80:
             impure[0] += 1
             return "<deep>"
-        key = (id(v), mode["ordered"])
+        key = (id(v), mode["ordered"], mode["pyd"])
         got = memo.get(key) if USE_MEMO else None
         if got is not None:
             if got[1]:
@@ -191,6 +198,12 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
                                             for k, x in items)) + "}"
 
     def body(v, t, depth, seen):
+        if not mode["pyd"] and (getattr(t, "__module__", None) or "").split(".", 1)[0] in ("pydantic", "pydantic_core"):
+            mode["pyd"] = True
+            try:
+                return body(v, t, depth, seen)
+            finally:
+                mode["pyd"] = False
         if isinstance(v, os._Environ):
             # the process environment (e.g. `from os import environ`): set by whoever starts Python, never by the code,
             # and different in every snapshot process, so it is not import-time state of the package
@@ -235,6 +248,11 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
             return f"mod:{v.__name__};"
         if isinstance(v, types.MethodType):
             return "bound" + dig(v.__func__, depth + 1, seen)
+        if isinstance(v, pathlib.PurePath):
+            # (v2.3.2) a path is its text with the tree's location removed, as in plain strings: walked as an object,
+            # its cached parts (_tail_cached) hold the location as separate components that unroot cannot reach, so
+            # a path into the package (datasette's app_root) differed between the base export and the working tree
+            return f"path:{t.__name__}:" + repr(unroot(str(v)))
         if id(v) in seen:
             impure[0] += 1
             return "<cycle>"
@@ -270,9 +288,12 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
             r = repr(v)
         except Exception:  # noqa: BLE001
             r = "<unrepr>"
-        return f"{t.__module__}.{t.__qualname__}:{unroot(addr.sub('', r))};"
+        r = unroot(addr.sub('', r))
+        if mode["pyd"]:
+            r = "\n".join(sorted(pyd_ptr.sub("0x", pyd_ref.sub(r"\1:<id>", r)).splitlines()))
+        return f"{t.__module__}.{t.__qualname__}:{r};"
 
-    mode = {"ordered": True, "seq": False}
+    mode = {"ordered": True, "seq": False, "pyd": False}
 
     def one(v):
         # the two fingerprints differ only in how lists and tuples are hashed: without any, the second pass is skipped
@@ -307,7 +328,11 @@ def _snapshot_main(tree: str, files_path: str, out_path: str) -> None:
             if k in IGNORED_CLASS_KEYS:
                 continue
             key = f"{modname}:{prefix}.{k}"
-            out[key] = one(v)
+            mode["pyd"] = k.startswith("__pydantic_")   # a model's schema, validator, serializer, decorators
+            try:
+                out[key] = one(v)
+            finally:
+                mode["pyd"] = False
             if any(k in vars(b) for b in cls.__mro__[1:] if b is not object):
                 overrides.append(key)
             if isinstance(v, type) and v.__module__ == modname and v.__qualname__ == f"{cls.__qualname__}.{k}":
@@ -379,7 +404,8 @@ def cache_key(root: str, tops: list[str], python: str, files: list[str] | None =
 
 
 # (v2.2) the base snapshot's cache format: more samples for finding order-unstable values (the maps keep FORMAT)
-BASE_FORMAT = f"{FORMAT}.b2"
+# (v2.3.2) .b3: path and pydantic fingerprints changed, so base snapshots cached by v2.3.1 are taken again
+BASE_FORMAT = f"{FORMAT}.b3"
 # heap shifts and export locations of the extra base samples. Values whose order follows memory addresses (sympy's
 # multipledispatch orderings: a topological sort over a set of classes) can come out in another order in any process;
 # with only two extra samples at one location such a value often looked stable and then "changed" on every edit.
