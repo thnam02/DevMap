@@ -26,10 +26,10 @@
  {
   "benchmark": "B1",
   "item": "loguru",
-  "done": 28,
+  "done": 34,
   "total": 50,
   "status": "running",
-  "hours_left": 1.4
+  "hours_left": 1.0
  },
  {
   "benchmark": "B1",
@@ -98,10 +98,10 @@
  {
   "benchmark": "B1b",
   "item": "reversed SWE-bench fixes",
-  "done": 66,
+  "done": 77,
   "total": 437,
-  "status": "paused (4 skip)",
-  "hours_left": 18.6
+  "status": "running (5 skip)",
+  "hours_left": 16.0
  },
  {
   "benchmark": "B3",
