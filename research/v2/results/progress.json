@@ -26,10 +26,10 @@
  {
   "benchmark": "B1",
   "item": "loguru",
-  "done": 0,
+  "done": 6,
   "total": 50,
   "status": "running",
-  "hours_left": 2.7
+  "hours_left": 1.9
  },
  {
   "benchmark": "B1",
@@ -98,10 +98,10 @@
  {
   "benchmark": "B1b",
   "item": "reversed SWE-bench fixes",
-  "done": 58,
+  "done": 63,
   "total": 437,
-  "status": "paused (2 skip, 12 error)",
-  "hours_left": 14.6
+  "status": "running (2 skip, 14 error)",
+  "hours_left": 12.3
  },
  {
   "benchmark": "B3",
@@ -122,7 +122,7 @@
  {
   "benchmark": "RQ2",
   "item": "ablation from saved maps",
-  "done": 52,
+  "done": 118,
   "total": 600,
   "status": "running",
   "hours_left": null
