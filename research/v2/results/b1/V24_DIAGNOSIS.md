@@ -130,6 +130,22 @@ No-change values linking the most tests: `datasette.app:app_root` (module value,
 - 4 value(s): <the value>: removed  (up to 110 tests per value)
 - real values linking the most tests: `datasette.events:timezone` (import binding, 110); `datasette.utils.sql_analysis:_allow_authorizer_action` (module value, 106); `datasette.utils.sql_analysis:_disable_authorizer` (module value, 106); `datasette.utils.sql_analysis:sys` (import binding, 106)
 
+### No-change baseline on the other finished projects
+
+Same check, with no commit applied: ValueRTS's own base snapshot of the parent (`importstate.base_snapshot`: an export with 9 samples across 3 locations; values that vary between samples are marked unstable and compared without order) against a snapshot of the same parent checked out in a second folder, compared with `importstate.diff` as selection does. 3 ok pairs per project (first, middle and last by rank). Expected: no value differs.
+
+| Project | Pair (parent) | Values in the snapshot | Marked unstable | Differ with no change | Which |
+|---|---|---|---|---|---|
+| sqlglot | 7f1cf60c88 (1b7cd17877) | 16999 | 11 | 0 | - |
+| sqlglot | 47b94d424a (7fb054f17f) | 16885 | 11 | 0 | - |
+| sqlglot | cb5d8da1ba (03f96df1d3) | 16836 | 11 | 0 | - |
+| pygments | a43b45dcf0 (d8f14cb395) | 13129 | 2 | 0 | - |
+| pygments | 1d0e749f63 (38c6c59e3f) | 13118 | 2 | 0 | - |
+| pygments | 328319ca34 (11665605a3) | 13073 | 2 | 0 | - |
+| loguru | (not run yet: B1 still running on it) | | | | |
+
+datasette, for comparison: 84 values differ with no change in each of its 5 pairs (above).
+
 ## 2. sqlglot: the 15 slowest tests
 
 Ranking and shares from `results/b1/sqlglot/time_concentration.md` (each test's own duration in the plain run at the parent, summed over the 52 ok pairs). Per pair: B = selected by both ValueRTS and testmon, V = ValueRTS only, T = testmon only, . = neither; columns in rank order.

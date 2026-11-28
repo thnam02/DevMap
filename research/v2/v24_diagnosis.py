@@ -538,6 +538,40 @@ def part2():
     PL.jdump(out, os.path.join(PL.WORK, "v24", "sqlglot.json"))
 
 
+def part3(name, n=3):
+    """No-change baseline on a finished project: for n ok pairs (first, middle, last by rank), ValueRTS's own base
+    snapshot of the parent (importstate.base_snapshot: an export, 9 samples) against a snapshot of the same parent
+    checked out in a second folder, compared with importstate.diff exactly as selection does. Expected: nothing."""
+    b1.use(name)
+    rows = sorted((r for r in b1.rows(name).values() if r.get("status") == "ok"), key=lambda r: r.get("rank", 0))
+    pick = [rows[0], rows[len(rows) // 2], rows[-1]][:n] if len(rows) >= 3 else rows
+    out = []
+    for r in pick:
+        wait_load()
+        p, c = r["parent"], r["id"]
+        t0 = time.time()
+        cov = PL.jload(os.path.join(PL.WORK, "b1", c[:12], "covmap.json"))
+        root = PL.make_tree("v24", p)
+        second = PL.make_tree("v24-second", p)
+        files = I._snapshot_files(cov)
+        with tempfile.TemporaryDirectory() as tmp:
+            base = IS.base_snapshot(root, files, PL.PY, os.path.join(tmp, "b.json"), rev=p)
+        snap = IS.snapshot(second, files, PL.PY)
+        if base is None or snap is None:
+            out.append({"id": c[:10], "error": "snapshot failed", "base": base is not None, "second": snap is not None})
+            continue
+        d = IS.diff(base, snap)
+        ch = d["changed"]
+        out.append({"id": c[:10], "parent": p[:10], "values": len(base["state"]), "unstable": len(base.get("unstable", [])),
+                    "samples": base.get("unstable_samples"), "differ": len(ch), "keys": ch[:200],
+                    "fingerprints": {k: [base["state"].get(k), snap["state"].get(k)] for k in ch[:50]},
+                    "errors": d["errors"], "secs": round(time.time() - t0)})
+        print(time.strftime("%H:%M:%S"), name, c[:10], f"{len(base['state'])} values, {len(ch)} differ with no change "
+              f"({out[-1]['secs']} s)", flush=True)
+    os.makedirs(os.path.join(PL.WORK, "v24"), exist_ok=True)
+    PL.jdump({"project": name, "python": PL.PY, "pairs": out}, os.path.join(PL.WORK, "v24", "nochange.json"))
+
+
 def write():
     import collections
     W = PL.BASE_WORK
@@ -636,6 +670,28 @@ def write():
         rk = sorted(real, key=lambda k: -d["values"][k]["tests"])[:4]
         L += ["- real values linking the most tests: " + "; ".join(
             f"`{k}` ({d['values'][k]['kind']}, {d['values'][k]['tests']})" for k in rk), ""]
+    # ---------------------------------------------------------------- no-change baseline on other projects
+    L += ["### No-change baseline on the other finished projects", "",
+          "Same check, with no commit applied: ValueRTS's own base snapshot of the parent (`importstate.base_snapshot`: "
+          "an export with 9 samples across 3 locations; values that vary between samples are marked unstable and "
+          "compared without order) against a snapshot of the same parent checked out in a second folder, compared "
+          "with `importstate.diff` as selection does. 3 ok pairs per project (first, middle and last by rank). "
+          "Expected: no value differs.", "",
+          "| Project | Pair (parent) | Values in the snapshot | Marked unstable | Differ with no change | Which |",
+          "|---|---|---|---|---|---|"]
+    for name in ("sqlglot", "pygments", "loguru"):
+        nc = PL.jload(os.path.join(W, name, "v24", "nochange.json"))
+        if not nc:
+            L.append(f"| {name} | (not run yet: B1 still running on it) | | | | |")
+            continue
+        for x in nc["pairs"]:
+            if "error" in x:
+                L.append(f"| {name} | {x['id']} | {x['error']} | | | |")
+                continue
+            L.append(f"| {name} | {x['id']} ({x['parent']}) | {x['values']} | {x['unstable']} | {x['differ']} | "
+                     + (", ".join(f"`{k}`" for k in x["keys"][:10]) or "-") + " |")
+    dsn = len(noise_sets[0]) if noise_sets else 0
+    L += ["", f"datasette, for comparison: {dsn} values differ with no change in each of its 5 pairs (above).", ""]
     # ---------------------------------------------------------------- part 2
     s = PL.jload(os.path.join(W, "sqlglot", "v24", "sqlglot.json"))
     L += ["## 2. sqlglot: the 15 slowest tests", "",
@@ -702,6 +758,8 @@ def main():
         part1(a[1:])
     elif a[0] == "sqlglot":
         part2()
+    elif a[0] == "nochange":
+        part3(a[1])
     elif a[0] == "write":
         write()
     else:
