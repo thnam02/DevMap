@@ -29,6 +29,18 @@ import rts as SEL  # noqa: E402
 from dc_engine import impact as I  # noqa: E402
 
 MAX_LOAD = float(os.environ.get("RESCORE_MAX_LOAD", "10"))
+# the live result rows (another checkout's research/v2/results, e.g. the main one when running from a verification
+# checkout, whose own results folder is a stale committed copy)
+RESULTS = os.environ.get("RESCORE_RESULTS")
+if RESULTS:
+    b1.OUT = os.path.join(RESULTS, "b1")
+
+
+def _b1b():
+    B = _b1b()
+    if RESULTS:
+        B.OUT = os.path.join(RESULTS, "b1b")
+    return B
 
 
 def wait_load():
@@ -89,7 +101,7 @@ def select_b1(tag, name):
 def _fixed_commit(tree_dir, src, x):
     """b1b.fixed_tree without the install: base commit + test patch + reference fix, committed with the same identity
     and dates (so the commit is the one the map was recorded at)."""
-    import b1b as B
+    B = _b1b()
     if not os.path.isdir(os.path.join(tree_dir, ".git")):
         os.makedirs(os.path.dirname(tree_dir), exist_ok=True)
         subprocess.run(["git", "clone", "-q", "--shared", "--no-checkout", src, tree_dir], check=True)
@@ -112,7 +124,7 @@ def _fixed_commit(tree_dir, src, x):
 
 
 def select_b1b(tag, only=None):
-    import b1b as B
+    B = _b1b()
     import swe_probe as P
     meta, envs = P.load_instances(), B.envs_ok()
     outdir = os.path.join(P.WORK, "rescore", tag)
@@ -174,7 +186,7 @@ def items(a, b, projects, with_b1b=True):
                 if sc in fa and sc in fb:
                     yield "b1", name, r, sc, fa, fb, os.path.join(PL.WORK, "b1", r["id"][:12])
     if with_b1b:
-        import b1b as B
+        B = _b1b()
         import swe_probe as P
         for r in B.rows().values():
             fa = PL.jload(os.path.join(P.WORK, "rescore", a, f"{r['id']}.json")) or {}
@@ -266,7 +278,7 @@ def write_rows(b, projects, with_b1b):
                 os.replace(tmp, path)
             print(name, os.path.basename(path), n, "items", flush=True)
     if with_b1b:
-        import b1b as B
+        B = _b1b()
         import swe_probe as P
         for path in sorted(glob.glob(os.path.join(B.OUT, "rows.w*.jsonl"))):
             rows = [json.loads(l) for l in open(path) if l.strip()]
