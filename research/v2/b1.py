@@ -569,9 +569,68 @@ def rows(name=None):
     return out
 
 
+def _worker_tmpdir(i):
+    """A dedicated TMPDIR (a 'proviso-tmp*' folder, e.g. on tmpfs for datasette) gets one subfolder per worker, so a
+    worker can empty its own after each pair without touching the files of the pairs running beside it."""
+    base = os.environ.get("TMPDIR", "")
+    if not os.path.basename(base.rstrip("/")).startswith("proviso-tmp"):
+        return None
+    d = os.path.join(base, f"w{i}")
+    os.makedirs(d, exist_ok=True)
+    os.environ["TMPDIR"] = d   # pipeline.env passes it to every test run
+    return d
+
+
+def cleanup_after_pair(i, tmp):
+    """What a pair's test runs leave behind: processes a test started and did not stop (e.g. a server reparented to
+    init, still holding its port and memory), and temporary files (on tmpfs they stay in memory). Processes are
+    recognised by pipeline.env's PROVISO_PY in their environment and a working directory in this worker's trees or
+    temporary folder; nothing of this worker runs tests between pairs, and other workers use other trees."""
+    import shutil
+    import signal
+    mine = re.compile(re.escape(os.path.join(PL.WORK, "trees")) + rf"/[^/]*-w{i}(/|$)")
+    me, ancestors = os.getpid(), set()
+    p = os.getpid()
+    while p > 1:
+        ancestors.add(p)
+        try:
+            p = int(open(f"/proc/{p}/stat").read().rsplit(")", 1)[1].split()[1])
+        except (OSError, ValueError, IndexError):
+            break
+    killed = []
+    for pid in (int(x) for x in os.listdir("/proc") if x.isdigit()):
+        if pid == me or pid in ancestors:
+            continue
+        try:
+            if b"PROVISO_PY=" not in open(f"/proc/{pid}/environ", "rb").read():
+                continue
+            cwd = os.readlink(f"/proc/{pid}/cwd")
+        except OSError:
+            continue
+        if mine.match(cwd) or (tmp and (cwd + "/").startswith(tmp + "/")):
+            try:
+                cmd = open(f"/proc/{pid}/cmdline", "rb").read().replace(b"\0", b" ").decode(errors="replace")[:120]
+                os.kill(pid, signal.SIGKILL)
+                killed.append(cmd.strip())
+            except OSError:
+                pass
+    tmp_mb = 0
+    if tmp and os.path.isdir(tmp):
+        for root, _, files in os.walk(tmp):
+            for f in files:
+                try:
+                    tmp_mb += os.lstat(os.path.join(root, f)).st_size
+                except OSError:
+                    pass
+        shutil.rmtree(tmp, ignore_errors=True)
+        os.makedirs(tmp, exist_ok=True)
+    return {"killed": killed[:10], "killed_n": len(killed), "tmp_mb": round(tmp_mb / 1048576, 1)}
+
+
 def worker(i, n, limit, want):
     done = rows()
     cands = candidates(limit)
+    tmp = _worker_tmpdir(i)
     for k, (p, c, info) in enumerate(cands):
         if k % n != i or c in done:
             continue
@@ -583,8 +642,10 @@ def worker(i, n, limit, want):
             r = run_pair(p, c, info, i)
         except Exception as e:  # noqa: BLE001
             r = {"status": "error", "error": repr(e)[:500]}
+        secs = round(time.time() - t, 1)
+        r["cleanup"] = cleanup_after_pair(i, tmp)
         r = {"id": c, "parent": p, "rank": k, **{kk: v for kk, v in info.items() if not kk.startswith("namerts_")},
-             **r, "secs": round(time.time() - t, 1), "format": PL.ROW_FORMAT, "env": fingerprint(),
+             **r, "secs": secs, "format": PL.ROW_FORMAT, "env": fingerprint(),
              "proviso": proviso_version()}
         with open(os.path.join(res(), f"rows.w{i}.jsonl"), "a") as fh:
             fh.write(json.dumps(r) + "\n")
