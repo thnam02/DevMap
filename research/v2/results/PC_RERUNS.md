@@ -11,9 +11,9 @@ Also fixed (b1.py): after each pair the worker empties its own TMPDIR subfolder 
 | | rows | ok | skip | error | env hashes |
 |---|---|---|---|---|---|
 | first run (superseded) | 150 | 40 | 110 | 0 | 1 |
-| re-run (in progress) | 0 | 0 | 0 | 0 | 0 () |
+| re-run (in progress) | 3 | 3 | 0 | 0 | 1 (83a6ccb73a54c1cd) |
 
-Re-run cleanup so far: 0 leftover processes killed, 0 MB of temporary files removed.
+Re-run cleanup so far: 0 leftover processes killed, 412 MB of temporary files removed.
 
 ### Contamination check of the httpx install (2026-11-28 01:54:18 UTC)
 
