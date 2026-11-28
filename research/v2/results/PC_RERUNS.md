@@ -39,12 +39,12 @@ Fix (b1b.py): when the install fails for that reason, the instance runs from the
 | pydata__xarray-3302 | old build script | ok (no install) | 31/43 (72%; 7 with errors) | 2/2 | failing 1, F2P reproduced 0 |
 | pydata__xarray-3305 | old build script | ok (no install) | 30/41 (73%; 7 with errors) | 1/1 | failing 1, F2P reproduced 1 |
 | pydata__xarray-3364 | old build script | ok (no install) | 30/41 (73%; 7 with errors) | 2/2 | failing 2, F2P reproduced 2 |
-| pydata__xarray-3406 | old build script | pending | | | |
+| pydata__xarray-3406 | old build script | ok (no install) | 31/43 (72%; 7 with errors) | 1/1 | failing 1, F2P reproduced 1 |
 | pydata__xarray-3520 | old build script | ok (no install) | 31/43 (72%; 7 with errors) | 1/1 | failing 1, F2P reproduced 1 |
-| pydata__xarray-3527 | old build script | pending | | | |
+| pydata__xarray-3527 | old build script | ok (no install) | 31/43 (72%; 7 with errors) | 2/2 | failing 2, F2P reproduced 2 |
 | pydata__xarray-3631 | old build script | ok (no install) | 30/43 (70%; 8 with errors) | 303/303 | failing 1, F2P reproduced 0 |
 | pydata__xarray-3637 | old build script | ok (no install) | 31/43 (72%; 7 with errors) | 7/7 | failing 9, F2P reproduced 7 |
 | pydata__xarray-3649 | old build script | ok (no install) | 30/43 (70%; 8 with errors) | 1/1 | failing 1, F2P reproduced 1 |
 | pydata__xarray-5180 | network | ok | n/a (installed) | n/a (installed) | failing 2, F2P reproduced 2 |
 
-Old build script: 13 instances; 11 ok without install, 0 excluded, 0 error, 2 pending. Network: 1 (ok).
+Old build script: 13 instances; 13 ok without install, 0 excluded, 0 error, 0 pending. Network: 1 (ok).
