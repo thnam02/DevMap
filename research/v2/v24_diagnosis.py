@@ -603,7 +603,8 @@ def write():
          "`research/v2/v24_diagnosis.py` (per-pair data in `$PROVISO_WORK/datasette/v24/` and "
          "`$PROVISO_WORK/sqlglot/v24/`).", ""]
     # ---------------------------------------------------------------- part 1
-    ds = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(W, "datasette", "v24", "*.json")))]
+    ds = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(W, "datasette", "v24", "*.json")))
+          if not os.path.basename(f).startswith("nochange")]
     by = {d["id"][:10]: d for d in ds}
     g = lambda i, k: by[i][k] if i in by else "?"
     L += ["## Summary (interpretation of the data below)", "",
@@ -700,19 +701,24 @@ def write():
           "compared without order) against a snapshot of the same parent checked out in a second folder, compared "
           "with `importstate.diff` as selection does. 3 ok pairs per project (first, middle and last by rank). "
           "Expected: no value differs.", "",
-          "| Project | Pair (parent) | Values in the snapshot | Marked unstable | Differ with no change | Which |",
-          "|---|---|---|---|---|---|"]
-    for name in ("sqlglot", "pygments", "loguru"):
-        nc = PL.jload(os.path.join(W, name, "v24", "nochange.json"))
-        if not nc:
-            L.append(f"| {name} | (not run yet: B1 still running on it) | | | | |")
-            continue
-        for x in nc["pairs"]:
-            if "error" in x:
-                L.append(f"| {name} | {x['id']} | {x['error']} | | | |")
-                continue
-            L.append(f"| {name} | {x['id']} ({x['parent']}) | {x['values']} | {x['unstable']} | {x['differ']} | "
-                     + (", ".join(f"`{k}`" for k in x["keys"][:10]) or "-") + " |")
+          "| Project | Pair (parent) | Files snapshotted | Values | Differ with no change, v2.3.1 | ... v2.3.2 | "
+          "Which (v2.3.2; else v2.3.1) |", "|---|---|---|---|---|---|---|"]
+    for name in ("sqlglot", "pygments", "loguru", "datasette", "pvlib", "pylint", "seaborn", "sphinx", "xarray",
+                 "dask", "sqlalchemy", "sympy"):
+        a = (PL.jload(os.path.join(W, name, "v24", "nochange-v2.3.1.json"))
+             or PL.jload(os.path.join(W, name, "v24", "nochange.json")) or {"pairs": []})
+        b = PL.jload(os.path.join(W, name, "v24", "nochange-v2.3.2.json")) or {"pairs": []}
+        ids = list(dict.fromkeys([x["id"] for x in a["pairs"]] + [x["id"] for x in b["pairs"]]))
+        if not ids:
+            L.append(f"| {name} | (not run) | | | | | |")
+        for i in ids:
+            xa = next((x for x in a["pairs"] if x["id"] == i), {})
+            xb = next((x for x in b["pairs"] if x["id"] == i), {})
+            x = xb or xa
+            keys = (xb.get("keys") if xb else None) or xa.get("keys") or []
+            L.append(f"| {name} | {i} ({x.get('parent', '?')}) | {x.get('files', '?')} ({x.get('files_from', 'map')}) | "
+                     f"{x.get('values', '?')} | {xa.get('differ', '-')} | {xb.get('differ', '-')} | "
+                     + (", ".join(f"`{k}`" for k in keys[:8]) + (" ..." if len(keys) > 8 else "") or "-") + " |")
     dsn = len(noise_sets[0]) if noise_sets else 0
     L += ["", f"datasette, for comparison: {dsn} values differ with no change in each of its 5 pairs (above).", ""]
     # ---------------------------------------------------------------- part 2

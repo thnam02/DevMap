@@ -134,15 +134,44 @@ No-change values linking the most tests: `datasette.app:app_root` (module value,
 
 Same check, with no commit applied: ValueRTS's own base snapshot of the parent (`importstate.base_snapshot`: an export with 9 samples across 3 locations; values that vary between samples are marked unstable and compared without order) against a snapshot of the same parent checked out in a second folder, compared with `importstate.diff` as selection does. 3 ok pairs per project (first, middle and last by rank). Expected: no value differs.
 
-| Project | Pair (parent) | Values in the snapshot | Marked unstable | Differ with no change | Which |
-|---|---|---|---|---|---|
-| sqlglot | 7f1cf60c88 (1b7cd17877) | 16999 | 11 | 0 | - |
-| sqlglot | 47b94d424a (7fb054f17f) | 16885 | 11 | 0 | - |
-| sqlglot | cb5d8da1ba (03f96df1d3) | 16836 | 11 | 0 | - |
-| pygments | a43b45dcf0 (d8f14cb395) | 13129 | 2 | 0 | - |
-| pygments | 1d0e749f63 (38c6c59e3f) | 13118 | 2 | 0 | - |
-| pygments | 328319ca34 (11665605a3) | 13073 | 2 | 0 | - |
-| loguru | (not run yet: B1 still running on it) | | | | |
+| Project | Pair (parent) | Files snapshotted | Values | Differ with no change, v2.3.1 | ... v2.3.2 | Which (v2.3.2; else v2.3.1) |
+|---|---|---|---|---|---|---|
+| sqlglot | 7f1cf60c88 (1b7cd17877) | 182 (map) | 16999 | 0 | 0 | - |
+| sqlglot | 47b94d424a (7fb054f17f) | 182 (map) | 16885 | 0 | 0 | - |
+| sqlglot | cb5d8da1ba (03f96df1d3) | 182 (map) | 16836 | 0 | 0 | - |
+| pygments | a43b45dcf0 (d8f14cb395) | 332 (map) | 13129 | 0 | 0 | - |
+| pygments | 1d0e749f63 (38c6c59e3f) | 332 (map) | 13118 | 0 | 0 | - |
+| pygments | 328319ca34 (11665605a3) | 331 (map) | 13073 | 0 | 0 | - |
+| loguru | 940b7cfea0 (849574267c) | 19 (map) | 516 | 0 | 0 | - |
+| loguru | 24c551305f (ab33cc0101) | 19 (map) | 525 | 0 | 0 | - |
+| loguru | 92952b912c (8a4e85993a) | 19 (map) | 540 | 0 | 0 | - |
+| datasette | a8e13cc489 (c435a80030) | 125 (map) | 4249 | 84 | 0 | `datasette.app:FAVICON_PATH`, `datasette.app:app_root`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_core_schema__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_decorators__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_serializer__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_validator__`, `datasette.views.table_create_alter:AddColumnOperation.__pydantic_core_schema__`, `datasette.views.table_create_alter:AddColumnOperation.__pydantic_serializer__` ... |
+| datasette | 9bce2eec7c (daf1989ebe) | 124 (map) | 4105 | 84 | 0 | `datasette.app:FAVICON_PATH`, `datasette.app:app_root`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_core_schema__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_decorators__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_serializer__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_validator__`, `datasette.views.table_create_alter:AddColumnOperation.__pydantic_core_schema__`, `datasette.views.table_create_alter:AddColumnOperation.__pydantic_serializer__` ... |
+| datasette | 1538832830 (063eeae83d) | 121 (map) | 3961 | 84 | 0 | `datasette.app:FAVICON_PATH`, `datasette.app:app_root`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_core_schema__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_decorators__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_serializer__`, `datasette.views.table_create_alter:AddColumnArgs.__pydantic_validator__`, `datasette.views.table_create_alter:AddColumnOperation.__pydantic_core_schema__`, `datasette.views.table_create_alter:AddColumnOperation.__pydantic_serializer__` ... |
+| pvlib | b4916e11dd (4b113ab852) | 58 (package listing) | 1167 | - | 0 | - |
+| pvlib | 15d09111e2 (5be6b7f7a0) | 63 (package listing) | 1231 | - | 0 | - |
+| pvlib | b70fb0f70d (90af1f286f) | 64 (package listing) | 1257 | - | 0 | - |
+| pylint | 0a1044b1d0 (505e4b4770) | 150 (package listing) | 5228 | - | 0 | - |
+| pylint | 0e406c1fa7 (a0c180dbb0) | 151 (package listing) | 5259 | - | 0 | - |
+| pylint | 945880e00d (d363fca110) | 151 (package listing) | 5252 | - | 0 | - |
+| seaborn | 2386036581 (aebf7d8dba) | 55 (package listing) | 2441 | - | 0 | - |
+| seaborn | d657c54add (92c22bc699) | 54 (package listing) | 2437 | - | 0 | - |
+| seaborn | eb0b5cc1c3 (5023f2ee88) | 54 (package listing) | 2448 | - | 0 | - |
+| sphinx | 342b30e1de (eaebbec4d1) | 222 (package listing) | 10938 | 28 | 2 | `sphinx.builders.gettext:timestamp`, `sphinx.writers.texinfo:TEMPLATE` |
+| sphinx | ff3e1d23e3 (a4a8accbd5) | 224 (package listing) | 10921 | 28 | 2 | `sphinx.builders.gettext:timestamp`, `sphinx.writers.texinfo:TEMPLATE` |
+| sphinx | 245dea0911 (e3175f4477) | 228 (package listing) | 10910 | 28 | 2 | `sphinx.builders.gettext:timestamp`, `sphinx.writers.texinfo:TEMPLATE` |
+| xarray | 97fb90b271 (60bc816cd1) | 117 (package listing) | 7539 | 7 | 7 | `xarray.backends.h5netcdf_:HDF5_LOCK`, `xarray.backends.locks:HDF5_LOCK`, `xarray.backends.locks:NETCDFC_LOCK`, `xarray.backends.locks:SerializableLock._locks`, `xarray.backends.netCDF4_:HDF5_LOCK`, `xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK`, `xarray.backends.netCDF4_:NETCDFC_LOCK` |
+| xarray | f77862414d (55dc766fbe) | 117 (package listing) | 7559 | 7 | 7 | `xarray.backends.h5netcdf_:HDF5_LOCK`, `xarray.backends.locks:HDF5_LOCK`, `xarray.backends.locks:NETCDFC_LOCK`, `xarray.backends.locks:SerializableLock._locks`, `xarray.backends.netCDF4_:HDF5_LOCK`, `xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK`, `xarray.backends.netCDF4_:NETCDFC_LOCK` |
+| xarray | 63b0742c4f (d6fae2e860) | 118 (package listing) | 7608 | 7 | 7 | `xarray.backends.h5netcdf_:HDF5_LOCK`, `xarray.backends.locks:HDF5_LOCK`, `xarray.backends.locks:NETCDFC_LOCK`, `xarray.backends.locks:SerializableLock._locks`, `xarray.backends.netCDF4_:HDF5_LOCK`, `xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK`, `xarray.backends.netCDF4_:NETCDFC_LOCK` |
+| dask | 8639b6e7ed (08d1856d3e) | 180 (package listing) | 11112 | 5 | 5 | `dask.array.core:ARRAY_TEMPLATE`, `dask.cli:cli`, `dask.dataframe.dask_expr.io.parquet:_gather_statistics`, `dask.dataframe.io.sql:_extra_deps`, `dask.threaded:main_thread` |
+| dask | a10e2acf53 (fe4abb9bac) | 183 (package listing) | 11620 | 5 | 5 | `dask.array.core:ARRAY_TEMPLATE`, `dask.cli:cli`, `dask.dataframe.dask_expr.io.parquet:_gather_statistics`, `dask.dataframe.io.sql:_extra_deps`, `dask.threaded:main_thread` |
+| dask | f6bd585813 (5aaeb8cbed) | 183 (package listing) | 11630 | 5 | 5 | `dask.array.core:ARRAY_TEMPLATE`, `dask.cli:cli`, `dask.dataframe.dask_expr.io.parquet:_gather_statistics`, `dask.dataframe.io.sql:_extra_deps`, `dask.threaded:main_thread` |
+| sqlalchemy | 10f4d1e2d7 (69e49c9c07) | 218 (package listing) | 27930 | 6 | 6 | `sqlalchemy.event.registry:_collection_to_key`, `sqlalchemy.event.registry:_key_to_collection`, `sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS`, `sqlalchemy.orm.collections:InstrumentedList._sa_instrumented`, `sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented`, `sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented` |
+| sqlalchemy | 11bcd5cc95 (c24215469a) | 218 (package listing) | 27799 | 6 | 6 | `sqlalchemy.event.registry:_collection_to_key`, `sqlalchemy.event.registry:_key_to_collection`, `sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS`, `sqlalchemy.orm.collections:InstrumentedList._sa_instrumented`, `sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented`, `sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented` |
+| sqlalchemy | 7a823b5f81 (a2e79928a9) | 217 (package listing) | 27578 | 6 | 6 | `sqlalchemy.event.registry:_collection_to_key`, `sqlalchemy.event.registry:_key_to_collection`, `sqlalchemy.orm.attributes:_NO_STATE_SYMBOLS`, `sqlalchemy.orm.collections:InstrumentedList._sa_instrumented`, `sqlalchemy.orm.collections:InstrumentedSet._sa_instrumented`, `sqlalchemy.orm.mapped_collection:KeyFuncDict._sa_instrumented` |
+| sympy | d854b099d0 (bfdb8d51c1) | 844 (package listing) | 54773 | - | 0 | - |
+| sympy | 4bbd566c76 (ec45be7510) | 844 (package listing) | 54780 | - | 0 | - |
+| sympy | d10bf4a174 (742fd88e8c) | 844 (package listing) | 54783 | - | 0 | - |
 
 datasette, for comparison: 84 values differ with no change in each of its 5 pairs (above).
 
