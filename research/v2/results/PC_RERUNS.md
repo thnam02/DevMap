@@ -23,8 +23,8 @@ Fix (b1b.py): when the install fails for that reason, the instance runs from the
 
 | instance | cause | re-run status | detail |
 |---|---|---|---|
-| pydata__xarray-3095 | old build script | pending | |
-| pydata__xarray-3151 | old build script | pending | |
+| pydata__xarray-3095 | old build script | ok (no install) | failing 1, F2P reproduced 1 |
+| pydata__xarray-3151 | old build script | ok (no install) | failing 1, F2P reproduced 1 |
 | pydata__xarray-3156 | old build script | pending | |
 | pydata__xarray-3239 | old build script | pending | |
 | pydata__xarray-3302 | old build script | pending | |
@@ -38,4 +38,4 @@ Fix (b1b.py): when the install fails for that reason, the instance runs from the
 | pydata__xarray-3649 | old build script | pending | |
 | pydata__xarray-5180 | network | pending | |
 
-Old build script: 13 instances; 0 ok without install, 0 excluded, 0 error, 13 pending. Network: 1 (pending).
+Old build script: 13 instances; 2 ok without install, 0 excluded, 0 error, 11 pending. Network: 1 (pending).
