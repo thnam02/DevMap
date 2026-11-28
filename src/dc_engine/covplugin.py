@@ -24,7 +24,8 @@ import sys
 
 import pytest
 
-ROOT = os.getcwd()
+# (v2.5) a spawned worker starts in whatever directory the test was in: the recording's root travels in the environment
+ROOT = os.environ.get("PROVISO_MP_ROOT") or os.getcwd()
 PKG = os.path.join(ROOT, os.environ.get("COVMAP_PKG", "sqlglot")) + os.sep
 SUBPROC = "subprocess.py"
 MPPROC = os.path.join("multiprocessing", "process.py")
@@ -32,12 +33,29 @@ MPPROC = os.path.join("multiprocessing", "process.py")
 _OFF = {x.strip() for x in os.environ.get("PROVISO_OFF", "").split(",") if x.strip()}
 
 
+# (v2.5) Worker processes are recorded instead of marking their test as always selected. A child process (forked, or
+# spawned by multiprocessing) runs this recorder too and appends what it runs, as it runs it, to its own file in
+# MPDIR, named after the recording target that was current when it was started. The parent merges a target's files
+# when the target ends. Anything it cannot account for keeps today's rule: a child still alive at that point, a
+# missing or damaged file, the forkserver start method, a child that starts processes itself.
+# PROVISO_OFF=mprecord restores v2.3's behaviour.
+MPREC = "mprecord" not in _OFF and "mp" not in _OFF and hasattr(os, "register_at_fork")
+MPDIR = os.environ.get("PROVISO_MP_DIR", "")
+_child = [False]           # this process is a worker of the recorded test process
+_leak = [False]            # a worker outlived its test: later tests of this process may use it unseen
+_owners: list = []         # recording targets that can own workers, by index
+
+
 def _forked():
     """os.fork() (multiprocessing's fork context, or a test forking itself): the child may run package code."""
     if "mp" in _OFF:
         return
     try:
-        _target().always = True
+        t = _target()
+        if MPREC and MPDIR and not _child[0]:
+            t.kids += 1
+        else:
+            t.always = True
     except Exception:  # noqa: BLE001
         pass
 PKG_NAME = os.path.basename(os.path.normpath(os.environ.get("COVMAP_PKG", "sqlglot")))
@@ -93,12 +111,63 @@ DISABLE = mon.DISABLE
 
 
 class Target:
-    __slots__ = ("funcs", "classes", "always", "files", "dirs", "seen")
+    __slots__ = ("funcs", "classes", "always", "files", "dirs", "seen", "kids", "oid")
 
     def __init__(self):
         self.funcs, self.classes, self.always = set(), set(), False
         self.files, self.dirs = set(), set()   # (v2.3) project files opened for reading, directories listed
         self.seen = set()   # (v2.3.1) types whose package classes are already in self.classes (a cache only)
+        self.kids, self.oid = 0, None   # (v2.5) worker processes started under this target; its owner number
+
+
+class _LogSet(set):
+    """A set that appends each new element to the worker's record file as it arrives (one short write per element, so
+    a worker that is killed has still reported everything it ran)."""
+    __slots__ = ("fd", "kind", "gonly")
+
+    def add(self, x):
+        # g: run while a package module was being imported (import-time code). A key first seen that way is reported
+        # again if it later runs outside an import (a module's code and a function on its first line share a key).
+        g = bool(self.kind == "f" and _modstack and (ROOT + os.sep + _modstack[-1][1]).startswith(PKG))
+        if x in self and (g or x not in self.gonly):
+            return
+        set.add(self, x)
+        if g:
+            self.gonly.add(x)
+        else:
+            self.gonly.discard(x)
+        try:
+            os.write(self.fd, (json.dumps([self.kind, x, g]) + "\n").encode())
+        except OSError:
+            pass
+
+    def update(self, xs):
+        for x in xs:
+            self.add(x)
+
+
+class _ChildTarget:
+    """The single recording target of a worker process."""
+
+    def __init__(self, fd):
+        self.fd, self.seen, self.kids, self.oid, self._always = fd, set(), 0, None, False
+        for name, kind in (("funcs", "f"), ("classes", "c"), ("files", "F"), ("dirs", "D")):
+            s = _LogSet()
+            s.fd, s.kind, s.gonly = fd, kind, set()
+            setattr(self, name, s)
+
+    @property
+    def always(self):
+        return self._always
+
+    @always.setter
+    def always(self, v):
+        if v and not self._always:
+            try:
+                os.write(self.fd, b'["A", null, false]\n')
+            except OSError:
+                pass
+        self._always = bool(v)
 
 
 GLOBAL = Target()          # code run while a PACKAGE module is imported (import-time state: the snapshot's channel)
@@ -155,14 +224,101 @@ def _module_end(code, offset, arg):
         mon.restart_events()
 
 
+def _set_owner():
+    """Name the current recording target in the environment, for the worker processes started under it."""
+    if not (MPREC and MPDIR) or _child[0]:
+        return
+    t = _stack[-1] if _stack else _fixtures.setdefault(SESSION, Target())
+    if t.oid is None:
+        t.oid = len(_owners)
+        _owners.append(t)
+    os.environ["PROVISO_MP_OWNER"] = str(t.oid)
+
+
 def _push(t):
     _stack.append(t)
+    _set_owner()
     mon.restart_events()
 
 
 def _pop():
     _stack.pop()
+    _set_owner()
     mon.restart_events()
+
+
+def _enter_child():
+    """Become a worker's recorder: one target, written through to this process's file. Runs in a forked child right
+    after the fork, and at start-up in a spawned one (see _mpsite/sitecustomize.py)."""
+    if not (MPREC and MPDIR):
+        return
+    try:
+        _child[0] = True
+        fd = os.open(os.path.join(MPDIR, f"{os.environ.get('PROVISO_MP_OWNER', '')}-{os.getpid()}.rec"),
+                     os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+        _stack[:] = [_ChildTarget(fd)]
+        _modstack.clear()
+        mon.restart_events()
+    except Exception:  # noqa: BLE001  (never break the code under test; the parent sees the missing file)
+        pass
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+    try:
+        return open(f"/proc/{pid}/stat").read().rsplit(")", 1)[1].split()[0] != "Z"
+    except OSError:
+        return True
+
+
+_merged: set = set()
+
+
+def _mp_merge(t, wait: float = 3.0) -> bool:
+    """Add the records of t's worker processes to t. False (and t is always selected) unless every worker it started
+    has a complete file and has ended."""
+    import glob
+    import time
+    deadline = time.time() + wait
+    while True:
+        files = [f for f in glob.glob(os.path.join(MPDIR, f"{t.oid}-*.rec"))]
+        live = [f for f in files if _alive(int(os.path.basename(f)[:-4].rsplit("-", 1)[1]))]
+        if (len(files) >= t.kids and not live) or time.time() > deadline:
+            break
+        time.sleep(0.02)
+    ok = len(files) >= t.kids and not live
+    try:
+        for f in files:
+            if f in _merged:
+                continue
+            _merged.add(f)
+            raw = open(f, "rb").read()
+            if raw and not raw.endswith(b"\n"):
+                ok = False
+            for line in raw.splitlines():
+                kind, x, g = json.loads(line)
+                if kind == "A":
+                    t.always = True
+                elif kind == "f":
+                    key = tuple(x)
+                    if not (g and key in GLOBAL.funcs):   # import-time code the parent's import ran too: the snapshot's
+                        t.funcs.add(key)
+                elif kind == "c":
+                    t.classes.add(x)
+                elif kind == "F":
+                    t.files.add(x)
+                elif kind == "D":
+                    t.dirs.add(x)
+    except Exception:  # noqa: BLE001
+        ok = False
+    if not ok:
+        t.always = True
+    return ok
 
 
 def _classes_of(tp):
@@ -191,11 +347,17 @@ def _classify(code):
         k = "subprocess"
     elif code.co_name == "start" and fn.endswith(MPPROC) and \
             getattr(code, "co_qualname", "BaseProcess.start") == "BaseProcess.start":
-        k = "process"   # multiprocessing (Process, Pool, ProcessPoolExecutor): the child runs code the recorder cannot see
+        # multiprocessing (Process, Pool, ProcessPoolExecutor): the child runs code this process cannot see.
+        # (v2.5) with worker recording the launch itself is counted below (fork: _forked; spawn: "spawn")
+        k = None if (MPREC and MPDIR and not _child[0]) else "process"
+    elif code.co_name == "_launch" and fn.endswith(os.path.join("multiprocessing", "popen_spawn_posix.py")):
+        k = "spawn" if (MPREC and MPDIR and not _child[0]) else "process"
+    elif code.co_name == "_launch" and fn.endswith(os.path.join("multiprocessing", "popen_forkserver.py")):
+        k = "process"   # the fork server was started under some earlier target: its children cannot be attributed
     else:
         k = None
     _kind[id(code)] = (code, k)  # keyed by identity: code objects of different files can compare equal
-    if k is not None and k not in ("subprocess", "process") and k[1]:
+    if k is not None and k not in ("subprocess", "process", "spawn") and k[1]:
         _meth[id(code)] = (k[0], code.co_varnames[0])   # the code object is kept alive by _kind
     return k
 
@@ -219,7 +381,7 @@ def _start(code, offset):
             return None
         t.classes.update(_classes_of(tp))
         return None
-    if code.co_name == "<module>" and code.co_filename.startswith(ROOT + os.sep) and not _stack:
+    if code.co_name == "<module>" and code.co_filename.startswith(ROOT + os.sep) and (not _stack or _child[0]):
         _module_start(code)
     got = _kind.get(id(code))
     k = got[1] if got is not None else _classify(code)
@@ -230,6 +392,9 @@ def _start(code, offset):
         if "mp" not in _OFF:
             t.always = True
         return DISABLE
+    if k == "spawn":
+        t.kids += 1      # every launch counts: stays switched on
+        return None
     if k == "subprocess":
         try:
             popen_args = sys._getframe(1).f_locals.get("args")
@@ -363,6 +528,15 @@ def _from_project(target) -> bool:
 
 def _begin():
     # from the moment the plugin is loaded (-p), before conftest files import the package
+    global MPDIR
+    if MPREC and os.environ.get("PROVISO_MP_PARENT") in (None, "", str(os.getpid())) and not _child[0]:
+        # the recorded test process: its workers find the recording through the environment
+        MPDIR = os.environ["COVMAP_OUT"] + ".mp"
+        os.makedirs(MPDIR, exist_ok=True)
+        site = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_mpsite")
+        os.environ.update({"PROVISO_MP_DIR": MPDIR, "PROVISO_MP_ROOT": ROOT, "PROVISO_MP_PARENT": str(os.getpid()),
+                           "PYTHONPATH": os.pathsep.join([site] + [x for x in os.environ.get("PYTHONPATH", "")
+                                                                   .split(os.pathsep) if x and x != site])})
     mon.use_tool_id(TOOL, "proviso-cov-v2")
     mon.register_callback(TOOL, mon.events.PY_START, _start)
     mon.register_callback(TOOL, mon.events.PY_RETURN, _module_end)
@@ -412,6 +586,10 @@ def pytest_runtest_call(item):
         yield
     finally:
         _pop()
+        if _leak[0]:
+            t.always = True
+        if t.kids and not _mp_merge(t):
+            _leak[0] = True
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
@@ -477,7 +655,7 @@ def pytest_runtest_logreport(report):
 
 
 if hasattr(os, "register_at_fork"):
-    os.register_at_fork(before=_forked)
+    os.register_at_fork(before=_forked, after_in_child=_enter_child)
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -491,6 +669,9 @@ def pytest_sessionfinish(session, exitstatus):
         if nid not in _map:
             _map[nid] = {"funcs": [], "classes": [], "always": True, "time": 0.0, "ok": False, "fx": [],
                          "unrecorded": True}
+    for t in list(_fixtures.values()):   # (v2.5) workers started in fixtures, set-up or teardown
+        if t.kids:
+            _mp_merge(t)
     used = {k for v in _map.values() for k in v["fx"]}
     _map["__fixtures__"] = {k: {"funcs": sorted(t.funcs), "classes": sorted(t.classes), "always": t.always,
                                 **({"files": sorted(t.files)} if t.files else {}),

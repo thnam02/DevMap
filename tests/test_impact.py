@@ -570,7 +570,9 @@ class SubprocessRule(unittest.TestCase):
         cov = REC.record(root, "pkg", os.path.join(root, "cov.json"), sys.executable, ["tests"], 1, "", [], env)
         self.assertFalse(cov["tests/test_s.py::test_git"]["always"])
         self.assertTrue(cov["tests/test_s.py::test_shell"]["always"])
-        self.assertTrue(cov["tests/test_s.py::test_mp"]["always"])
+        # (v2.5) a multiprocessing worker is recorded, so its test is no longer always selected (test_v25_mprecord.py);
+        # with the switch off it is, as before
+        self.assertFalse(cov["tests/test_s.py::test_mp"]["always"])
         # a test whose setup fails has no record: it is kept and always selected; a skipped test is not
         self.assertTrue(cov["tests/test_s.py::test_broken_setup"]["always"])
         self.assertNotIn("tests/test_s.py::test_skipped", cov)
