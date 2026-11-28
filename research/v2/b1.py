@@ -202,11 +202,16 @@ def proviso_version():
         root = os.path.dirname(os.path.dirname(HERE))
         # the frozen version's tagged commit when src/ is identical to it, else the last commit that changed src/
         # (not HEAD: results commits move HEAD between and during benchmark runs)
-        tag = os.environ.get("PROVISO_TAG", "proviso-v2.3.1")
-        tagged = PL.git(root, "rev-parse", "-q", "--verify", f"refs/tags/{tag}^{{commit}}").strip()
-        same = tagged and subprocess.run(["git", "diff", "--quiet", tagged, "HEAD", "--", "src"], cwd=root).returncode == 0
-        commit = tagged if same else PL.git(root, "log", "-1", "--format=%H", "--", "src").strip()
-        _PV = {"version": I.VERSION, "commit": commit[:12],
+        # (2026-11-28) the frozen versions in order, newest first: v2.3.2 (fingerprint fix) took over from v2.3.1
+        tags = [os.environ["PROVISO_TAG"]] if os.environ.get("PROVISO_TAG") else ["proviso-v2.3.2", "proviso-v2.3.1"]
+        commit, tag = "", None
+        for t in tags:
+            tagged = PL.git(root, "rev-parse", "-q", "--verify", f"refs/tags/{t}^{{commit}}").strip()
+            if tagged and subprocess.run(["git", "diff", "--quiet", tagged, "HEAD", "--", "src"], cwd=root).returncode == 0:
+                commit, tag = tagged, t
+                break
+        commit = commit or PL.git(root, "log", "-1", "--format=%H", "--", "src").strip()
+        _PV = {"version": I.VERSION, "commit": commit[:12], "tag": tag,
                "src_dirty": bool(PL.git(root, "status", "--porcelain", "--", "src").strip())}
     return _PV
 
