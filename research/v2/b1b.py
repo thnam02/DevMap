@@ -147,6 +147,27 @@ OLD_BUILD = "SafeConfigParser"
 OLD_BUILD_WHY = "old build script not runnable on Python 3.12"
 
 
+def collection(tree: str, base: dict, f2p: list, test_patch: str) -> dict:
+    """What collected at the fixed version (no install): test files with collected tests, out of the test files on disk
+    in the targets (pytest's default names test_*.py, *_test.py); and the FAIL_TO_PASS tests with no collected node."""
+    nodes = sorted(n for n in base if "::" in n)
+    broken = {n for n in base if "::" not in n and not base[n][0]}
+    collected = b1._files(nodes) - broken
+    on_disk = set()
+    for t in PL.CFG["targets"]:
+        for root, dirs, fs in os.walk(os.path.join(tree, t)):
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            on_disk |= {os.path.relpath(os.path.join(root, f), tree) for f in fs
+                        if f.endswith(".py") and (f.startswith("test_") or f.endswith("_test.py"))}
+    total = len(on_disk | collected | broken)
+    tp_files = re.findall(r"(?m)^diff --git a/\S+ b/(\S+)", test_patch)
+    missing = [t for t in f2p if not E.resolve(t, nodes, tp_files)]
+    return {"collected_test_files": len(collected), "test_files_total": total,
+            "collected_share": round(len(collected) / max(1, total), 3), "collect_error_files": len(broken),
+            "collect_error_file_names": sorted(broken)[:20], "test_files_seen": len(collected | broken),
+            "f2p": len(f2p), "f2p_not_collected": missing[:20], "f2p_not_collected_n": len(missing)}
+
+
 def importable(tree: str, pkg: str) -> str:
     """'' if the package imports from the tree (the tree's own copy, not an installed one), else the error's tail."""
     code = (f"import {pkg}, os, sys; f = os.path.realpath({pkg}.__file__); "
@@ -192,15 +213,17 @@ def run_instance(x: dict, i: int) -> dict:
     if not base:
         return {"status": "skip", "why": (f"{OLD_BUILD_WHY}; without install the tests do not collect" if inst else
                                           "the suite produced no outcomes at the fixed version"), **inst}
-    if inst:
-        broken = {n for n in base if "::" not in n and not base[n][0]}
-        files = {n for n in base if "::" not in n} | b1._files(n for n in base if "::" in n)
-        if len(broken) * 2 > len(files):
-            return {"status": "skip", "why": f"{OLD_BUILD_WHY}; without install {len(broken)} of {len(files)} test "
-                                             f"files fail to collect", **inst}
+    f2p = json.loads(x["FAIL_TO_PASS"]) if isinstance(x["FAIL_TO_PASS"], str) else x["FAIL_TO_PASS"]
+    if inst:   # how much of the suite collects without install; every FAIL_TO_PASS test must be collected
+        inst.update(collection(tree, base, f2p, x.get("test_patch") or ""))
+        if inst["f2p_not_collected"]:
+            return {"status": "skip", "why": f"{OLD_BUILD_WHY}; without install {inst['f2p_not_collected_n']} of "
+                                             f"{len(f2p)} FAIL_TO_PASS tests not collected", **inst}
+        if inst["collect_error_files"] * 2 > inst["test_files_seen"]:
+            return {"status": "skip", "why": f"{OLD_BUILD_WHY}; without install {inst['collect_error_files']} of "
+                                             f"{inst['test_files_seen']} test files fail to collect", **inst}
     plain = {k: tt for k, (ok_, tt) in base.items()}
     base_fail = PL.failing(base)
-    f2p = json.loads(x["FAIL_TO_PASS"]) if isinstance(x["FAIL_TO_PASS"], str) else x["FAIL_TO_PASS"]
     t = time.time()
     cov = b1.covmap_at(tree, os.path.join(d, "covmap.json"), f)
     record_s = round(time.time() - t, 1)
