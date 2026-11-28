@@ -18,10 +18,10 @@
  {
   "benchmark": "B1",
   "item": "datasette",
-  "done": 23,
+  "done": 33,
   "total": 50,
   "status": "running",
-  "hours_left": 2.4
+  "hours_left": 1.1
  },
  {
   "benchmark": "B1",
@@ -114,9 +114,9 @@
  {
   "benchmark": "EkstaP",
   "item": "integration and backfill",
-  "done": 0,
+  "done": 1,
   "total": 1,
-  "status": "running",
+  "status": "done",
   "hours_left": null
  },
  {
@@ -124,7 +124,7 @@
   "item": "ablation from saved maps",
   "done": 0,
   "total": 600,
-  "status": "queued",
+  "status": "running",
   "hours_left": null
  }
 ]
