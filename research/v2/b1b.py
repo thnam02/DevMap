@@ -135,8 +135,25 @@ def fixed_tree(x: dict, i: int) -> tuple[str, str]:
     f = git(tree, "rev-parse", "HEAD").strip()
     r = P.run(["uv", "pip", "install", "-q", "--python", PL.PY, "--no-deps", "-e", tree], timeout=1800)
     if r.returncode:
+        if OLD_BUILD in r.stderr:
+            # old versioneer build scripts (xarray 0.12-0.14) use configparser.SafeConfigParser, removed in Python
+            # 3.12, which Proviso needs (sys.monitoring): no install; the tree is first on PYTHONPATH (pipeline.env)
+            return tree, f, {"install": "skipped", "install_why": OLD_BUILD_WHY}
         raise RuntimeError("install: " + r.stderr[-300:])
-    return tree, f
+    return tree, f, {}
+
+
+OLD_BUILD = "SafeConfigParser"
+OLD_BUILD_WHY = "old build script not runnable on Python 3.12"
+
+
+def importable(tree: str, pkg: str) -> str:
+    """'' if the package imports from the tree (the tree's own copy, not an installed one), else the error's tail."""
+    code = (f"import {pkg}, os, sys; f = os.path.realpath({pkg}.__file__); "
+            f"sys.exit(0 if f.startswith(os.path.realpath(sys.argv[1]) + os.sep) else 'imported from ' + f)")
+    r = subprocess.run([PL.PY, "-c", code, tree], cwd=tree, env=PL.env(tree), capture_output=True, text=True,
+                       timeout=600)
+    return "" if r.returncode == 0 else (r.stderr.strip().splitlines() or ["exit %d" % r.returncode])[-1][:300]
 
 
 def side_tree(tree: str, f: str):
@@ -164,12 +181,23 @@ def run_instance(x: dict, i: int) -> dict:
         return {"status": "skip", "why": "the reference fix changes test files only"}
     d = os.path.join(PL.WORK, "b1b", x["instance_id"])
     os.makedirs(d, exist_ok=True)
-    tree, f = fixed_tree(x, i)
+    tree, f, inst = fixed_tree(x, i)
+    if inst:   # not installed (old build script): run only if the package imports from the tree and its tests collect
+        err = importable(tree, PL.CFG["pkg"])
+        if err:
+            return {"status": "skip", "why": f"{OLD_BUILD_WHY}; without install: {err}", **inst}
     t = time.time()
     base = PL.run_tests(tree, os.path.join(d, "base_outcomes.json"))
     base_s = round(time.time() - t, 1)
     if not base:
-        return {"status": "skip", "why": "the suite produced no outcomes at the fixed version"}
+        return {"status": "skip", "why": (f"{OLD_BUILD_WHY}; without install the tests do not collect" if inst else
+                                          "the suite produced no outcomes at the fixed version"), **inst}
+    if inst:
+        broken = {n for n in base if "::" not in n and not base[n][0]}
+        files = {n for n in base if "::" not in n} | b1._files(n for n in base if "::" in n)
+        if len(broken) * 2 > len(files):
+            return {"status": "skip", "why": f"{OLD_BUILD_WHY}; without install {len(broken)} of {len(files)} test "
+                                             f"files fail to collect", **inst}
     plain = {k: tt for k, (ok_, tt) in base.items()}
     base_fail = PL.failing(base)
     f2p = json.loads(x["FAIL_TO_PASS"]) if isinstance(x["FAIL_TO_PASS"], str) else x["FAIL_TO_PASS"]
@@ -179,7 +207,7 @@ def run_instance(x: dict, i: int) -> dict:
     universe = PL.universe_of(cov, base_fail)
     avail = b1.tools_available()
     assets, asset_s = b1.prepare_assets(tree, f, i, d, avail, side_tree(tree, f))
-    row = {"status": "ok", "base_s": base_s, "base_tests": len(base), "base_failing": len(base_fail),
+    row = {"status": "ok", **inst, "base_s": base_s, "base_tests": len(base), "base_failing": len(base_fail),
            "universe": len(universe), "universe_s": round(sum(plain.get(n, 0) for n in universe), 2),
            "record_s": record_s, **asset_s, "tools_available": avail,
            "f2p": len(f2p), "f2p_failing_at_fixed": sorted(t_ for t_ in f2p if t_ in base_fail)[:10]}
