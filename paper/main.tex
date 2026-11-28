@@ -166,6 +166,21 @@ For each changed value, \tool finds the functions that name it, through an index
 \tool selects every test whose recording, own or through its fixtures, ran a changed function, ran a function linked to a changed value, or read a changed file. A file read while tests were collected selects its whole test file; one read during the package import selects every test. Where no dependency can be established, it runs the full suite: a changed pytest configuration, a file that no longer parses, a changed non-Python file no test was seen to read, or a map recorded at a commit outside the current history. When the edited functions alone already reach 90\% of the suite's test time, \tool runs the full suite directly rather than spend time selecting. The snapshot is taken only when a change touches import-time code, so most selections take a few seconds (Section~\ref{sec:results}, RQ4).
 
 
+\subsection{When \tool is safe}
+\tool selects every test whose outcome a change can alter, under four assumptions. The first two are shared by every RTS technique that records execution~\cite{gligoric2015ekstazi}; the last two are specific to \tool.
+
+\begin{itemize}
+  \item \textbf{A1:} \emph{Deterministic tests.} A test's outcome depends only on the code it executes and the state it reads, not on timing, random inputs or the order of other tests.
+  \item \textbf{A2:} \emph{Representative recording.} The recorded run of a test covers the project code and files the test can reach. Code reached only in some runs, for example through a cache that an earlier test in the same file has filled, is outside the record.
+  \item \textbf{A3:} \emph{Import-time state is in the snapshot.} What a package builds at import and tests read later is reachable from module-level values and class attributes. State kept elsewhere, such as in compiled extensions, in files written at import or in the environment, is not compared.
+  \item \textbf{A4:} \emph{Values are read through names.} A test that depends on a changed value executes code that names it, directly or through the names and callers that \tool follows. Reads by reflection over a module's names are not followed.
+\end{itemize}
+
+\para{Argument.}Take a test \emph{t} that \tool does not select, and suppose the change alters its outcome. By A1 the change must alter code that \emph{t} executes or state that \emph{t} reads. If it alters a function that \emph{t} executed during the test, in a fixture or through a file it read, A2 puts that function or file in \emph{t}'s record and \emph{t} is selected, a contradiction. Otherwise the change alters only code that ran at import. If the resulting state is equal, \emph{t} reads the same values and executes the same code, so its outcome is the same. If the state differs, A3 puts the difference in the snapshot comparison, and A4 links the changed value to code in \emph{t}'s record, so \emph{t} is selected, again a contradiction. Where \tool cannot establish a record at all (a test that starts subprocesses, a changed configuration, a file that no longer parses), it selects the test or the full suite.
+
+\para{Scope.}The argument is as strong as its assumptions, and Python programs break each of them. We therefore do not claim safety unconditionally: Section~\ref{sec:results} reports every failing test that \tool missed and the assumption it falls under, and Section~\ref{sec:threats-to-validity} measures how often A2 fails across recordings. \ph{After B1 and B1b: N misses in total; A2: n (caches within a test file, lazy start-up); A4: n (classes used only as markers, reflection); A1: n.}
+
+
 \section{Implementation}\label{sec:implementation}
 \tool is a Python package and a pytest plugin, \ph{LOC: N} lines, for Python 3.12 or later. The recorder uses \texttt{sys.monitoring} and audit hooks only; it needs no change to the project or its tests.
 

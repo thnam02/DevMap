@@ -145,12 +145,12 @@ def _lead(m):
     global n
     n += 1
     lead = m.group(1)
-    idm = re.match(r"((?:C|B)\d+b?):\s+(.*)", lead)
+    idm = re.match(r"((?:C|B|A)\d+b?):\s+(.*)", lead)
     if idm:
         return r"\item \textbf{%s:} \emph{%s}" % (idm.group(1), idm.group(2))
     return r"\item \emph{%s}" % lead
 s = re.sub(r"\\item \\textbf\{([^{}]+\.)\}", _lead, s)
-assert n == 5, ("list-item leads", n)
+assert n == 9, ("list-item leads", n)
 
 # ---------- run-in paragraph headings at the start of a line -> \para ----------
 s = re.sub(r"(?m)^\\textbf\{([^{}]*\.)\} ", lambda m: "\\para{%s}" % m.group(1), s)
