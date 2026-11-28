@@ -543,17 +543,34 @@ def part3(name, n=3):
     snapshot of the parent (importstate.base_snapshot: an export, 9 samples) against a snapshot of the same parent
     checked out in a second folder, compared with importstate.diff exactly as selection does. Expected: nothing."""
     b1.use(name)
+    suffix = os.environ.get("V24_TAG", "")
     rows = sorted((r for r in b1.rows(name).values() if r.get("status") == "ok"), key=lambda r: r.get("rank", 0))
-    pick = [rows[0], rows[len(rows) // 2], rows[-1]][:n] if len(rows) >= 3 else rows
+    mapdir = os.path.join(PL.WORK, "b1")
+    if not rows and os.path.exists(os.path.join(b1.res(), "superseded.jsonl")):   # datasette: the first run's maps
+        rows = sorted((json.loads(l) for l in open(os.path.join(b1.res(), "superseded.jsonl")) if l.strip()),
+                      key=lambda r: r.get("rank", 0))
+        rows = [r for r in rows if r.get("status") == "ok"]
+        mapdir = os.path.join(PL.WORK, "b1.superseded-20261128")
+    if rows:
+        pick = [rows[0], rows[len(rows) // 2], rows[-1]][:n] if len(rows) >= 3 else rows
+        pick = [(r["parent"], r["id"]) for r in pick]
+    else:   # a project B1 has not run yet: its candidate pairs, files from the package listing (no map yet)
+        cands = b1.candidates(150 if PL.CFG.get("source") == "history" else 50)
+        pick = [(x[0], x[1]) for x in ([cands[0], cands[len(cands) // 2], cands[-1]] if len(cands) >= 3 else cands)]
     out = []
-    for r in pick:
+    for p, c in pick:
         wait_load()
-        p, c = r["parent"], r["id"]
         t0 = time.time()
-        cov = PL.jload(os.path.join(PL.WORK, "b1", c[:12], "covmap.json"))
+        cov = PL.jload(os.path.join(mapdir, c[:12], "covmap.json"))
         root = PL.make_tree("v24", p)
         second = PL.make_tree("v24-second", p)
-        files = I._snapshot_files(cov)
+        if cov:
+            files, src = I._snapshot_files(cov), "map"
+        else:   # every package module at P (a superset of what a map lists: a stricter check)
+            pkg = PL.CFG["pkg"]
+            files = sorted(f for f in PL.git(root, "ls-files", "--", pkg).split() if f.endswith(".py")
+                           and not I._is_test_path(f) and not I._is_test_support(f))
+            src = "package listing"
         with tempfile.TemporaryDirectory() as tmp:
             base = IS.base_snapshot(root, files, PL.PY, os.path.join(tmp, "b.json"), rev=p)
         snap = IS.snapshot(second, files, PL.PY)
@@ -562,14 +579,20 @@ def part3(name, n=3):
             continue
         d = IS.diff(base, snap)
         ch = d["changed"]
-        out.append({"id": c[:10], "parent": p[:10], "values": len(base["state"]), "unstable": len(base.get("unstable", [])),
+        out.append({"id": c[:10], "parent": p[:10], "files_from": src, "files": len(files),
+                    "import_errors": sorted(base.get("errors", {}))[:20],
+                    "values": len(base["state"]), "unstable": len(base.get("unstable", [])),
                     "samples": base.get("unstable_samples"), "differ": len(ch), "keys": ch[:200],
                     "fingerprints": {k: [base["state"].get(k), snap["state"].get(k)] for k in ch[:50]},
                     "errors": d["errors"], "secs": round(time.time() - t0)})
         print(time.strftime("%H:%M:%S"), name, c[:10], f"{len(base['state'])} values, {len(ch)} differ with no change "
               f"({out[-1]['secs']} s)", flush=True)
     os.makedirs(os.path.join(PL.WORK, "v24"), exist_ok=True)
-    PL.jdump({"project": name, "python": PL.PY, "pairs": out}, os.path.join(PL.WORK, "v24", "nochange.json"))
+    from dc_engine import importstate as _IS
+    PL.jdump({"project": name, "python": PL.PY, "importstate": _IS.__file__, "base_format": _IS.BASE_FORMAT,
+              "pairs": out}, os.path.join(PL.WORK, "v24", f"nochange{suffix}.json"))
+    bad = sum(x.get("differ", 0) for x in out) + sum("error" in x for x in out)
+    print(f"NOCHANGE {name} {'OK' if not bad else 'NONZERO'} {[x.get('differ', x.get('error')) for x in out]}", flush=True)
 
 
 def write():
