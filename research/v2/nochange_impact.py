@@ -145,7 +145,30 @@ PURPOSE = ("v2.3's own unit test `test_value_differing_between_imports_still_cou
            "values are compared without order, which forgives a different order but not different contents.")
 
 
+# what each value holds (checked by importing it; the git-derived versions in an export and in the working tree)
+NOTES = {
+    "sphinx.builders.gettext:timestamp": "the time of import (time.localtime() unless SOURCE_DATE_EPOCH is set)",
+    "sphinx.writers.texinfo:TEMPLATE": ("embeds sphinx.__display_version__, which adds the git commit when imported "
+                                        "from a git checkout ('8.3.0+/eaebbec4d') but not from the base snapshot's "
+                                        "export ('8.3.0'); every base sample is an export, so none sees it"),
+    "dask.cli:cli": ("click's --version option holds dask.__version__, derived from git by versioneer: "
+                     "'2025.3.0+21.g08d1856d3' in the working tree, '0+unknown' in the base snapshot's export; every "
+                     "base sample is an export"),
+    "dask.threaded:main_thread": "threading.current_thread() at import: a Thread object whose ident differs per process",
+    "xarray.backends.locks:SerializableLock._locks": "registry of the module-level locks, keyed by their random tokens",
+}
+for _k in ("xarray.backends.h5netcdf_:HDF5_LOCK", "xarray.backends.locks:HDF5_LOCK", "xarray.backends.netCDF4_:HDF5_LOCK",
+           "xarray.backends.locks:NETCDFC_LOCK", "xarray.backends.netCDF4_:NETCDF4_PYTHON_LOCK",
+           "xarray.backends.netCDF4_:NETCDFC_LOCK"):
+    NOTES[_k] = "a SerializableLock created at import with a random token (str(uuid.uuid4()))"
+
+
 def classify(name, k, v, universe):
+    c, why = _classify(name, k, v, universe)
+    return c, (why + (f". Holds: {NOTES[k]}" if k in NOTES else ""))
+
+
+def _classify(name, k, v, universe):
     few = v["tests"] <= max(5, universe // 100) and v["time_pct"] < 1.0
     if few:
         return "a", f"links {v['tests']} tests ({v['time_pct']}% of test time): harmless"
@@ -158,8 +181,8 @@ def classify(name, k, v, universe):
         return "b", ("varies between processes but the 9 base samples did not: they are taken at nearly the same "
                      "moment (in parallel, a few seconds in total), and this value changes with time or with "
                      "something constant within those seconds")
-    return "b", ("differs between the base snapshot and the working tree but not between the base samples: it "
-                 "depends on where or when the snapshot runs (export folder vs working tree, or later time)")
+    return "b", ("differs between the base snapshot and the working tree but not between the base samples: the "
+                 "samples are all exports of the commit (no .git), the working tree is a git checkout")
 
 
 def write():
