@@ -18,10 +18,10 @@
  {
   "benchmark": "B1",
   "item": "datasette",
-  "done": 24,
+  "done": 33,
   "total": 50,
   "status": "running",
-  "hours_left": 2.8
+  "hours_left": 1.3
  },
  {
   "benchmark": "B1",
@@ -100,8 +100,8 @@
   "item": "reversed SWE-bench fixes",
   "done": 118,
   "total": 437,
-  "status": "running (12 skip)",
-  "hours_left": 16.5
+  "status": "running (5 skip)",
+  "hours_left": 17.8
  },
  {
   "benchmark": "B3",
