@@ -24,7 +24,7 @@ Selection only, from saved B1 maps; no test was run and Proviso's src was not ch
 
 ## 1. datasette: import-time values reported as changed
 
-Pairs: 5 of the 49 first-run pairs (maps of the superseded run) whose scenario S reported more than 80 changed values. Per pair, Proviso's selection was re-run on a tree at the parent with the commit's source changes, and the changed values taken from its reason (`import_state_changed`).
+Pairs: 5 of the 24 (of 40 ok) first-run pairs (maps of the superseded run) whose scenario S reported more than 80 changed values, chosen to span 86-176 values and different kinds of commit. Per pair, Proviso's selection was re-run on a tree at the parent with the commit's source changes, and the changed values taken from its reason (`import_state_changed`).
 
 **No-change baseline.** The same parent was also checked out at a second path and snapshotted, then compared with Proviso's base snapshot of the parent exactly as selection compares the changed tree. A value that differs there differs without any code change.
 
