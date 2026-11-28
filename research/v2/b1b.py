@@ -23,6 +23,7 @@ parallel (--workers)."""
 from __future__ import annotations
 
 import glob
+import hashlib
 import json
 import os
 import random
@@ -265,6 +266,46 @@ def run_instance(x: dict, i: int) -> dict:
     return row
 
 
+def _norm(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def deps_fingerprint(py: str, repo: str) -> dict:
+    """b1.fingerprint() without the project under test: each instance installs its own tree (editable), which changes
+    the project's version in the package list (and so the 'env' hash); every other package must stay the same within
+    one SWE environment. Same format as b1.fingerprint (interpreter version, then sorted name==version lines)."""
+    project = _norm(repo.split("__", 1)[1])
+    r = subprocess.run([py, "-c", "import sys,importlib.metadata as m;print(sys.version.split()[0]);"
+                        "print('\\n'.join(sorted(f'{d.metadata[\"Name\"]}=={d.version}' for d in m.distributions()"
+                        " if d.metadata['Name'])))"], capture_output=True, text=True)
+    lines = r.stdout.splitlines()
+    head, pk = (lines[0] if lines else "?"), lines[1:]
+    deps = [l for l in pk if _norm(l.split("==", 1)[0]) != project]
+    text = "\n".join([head, *deps]) + "\n"
+    return {"python": head, "packages": len(deps), "excluded": [l for l in pk if l not in deps],
+            "hash": hashlib.sha256(text.encode()).hexdigest()[:16]}
+
+
+def env_check(rs: list) -> list:
+    """Report lines: one dependencies-only hash per SWE environment (repo, version)."""
+    by: dict = {}
+    for r in rs:
+        h = (r.get("env_deps") or {}).get("hash")
+        by.setdefault((r["repo"], r["version"]), {}).setdefault(h, []).append(r["id"])
+    bad = {k: v for k, v in by.items() if len(v) > 1 or None in v}
+    lines = ["## Environment check: one dependencies-only hash per SWE environment", "",
+             "`env_deps.hash`: the environment's packages without the project under test (whose own editable install "
+             "changes per instance, and with it `env.hash`).", "",
+             f"{len(by) - len(bad)} of {len(by)} environments with rows have a single dependencies-only hash"
+             + ("." if not bad else "; not single:"), ""]
+    for (repo, ver), v in sorted(bad.items()):
+        lines.append(f"- {repo} {ver}: " + "; ".join(f"{h or 'missing'} x {len(ids)} ({', '.join(ids[:3])})"
+                                                      for h, ids in v.items()))
+    if bad:
+        lines.append("")
+    return lines
+
+
 def rows() -> dict:
     out = {}
     for path in sorted(glob.glob(os.path.join(OUT, "rows.w*.jsonl"))):
@@ -305,7 +346,8 @@ def worker(i: int, n: int, want: int, repos):
             except Exception as e:  # noqa: BLE001
                 r = {"status": "error", "error": repr(e)[:500]}
             r = {"id": x["instance_id"], "repo": repo, "version": version, **r, "secs": round(time.time() - t, 1),
-                 "format": PL.ROW_FORMAT, "env": b1.fingerprint(), "proviso": b1.proviso_version()}
+                 "format": PL.ROW_FORMAT, "env": b1.fingerprint(), "env_deps": deps_fingerprint(PL.PY, repo),
+                 "proviso": b1.proviso_version()}
             with open(os.path.join(OUT, f"rows.w{i}.jsonl"), "a") as fh:
                 fh.write(json.dumps(r) + "\n")
             pv = r.get("R", {}).get("tools", {}).get("proviso", {})
@@ -338,6 +380,7 @@ def report():
                          f"{b1._med(100 * g(r)['selected'] / max(1, r['universe']) for r in xs)} | "
                          f"{b1._med(100 * g(r)['time_share'] for r in xs)} |")
         lines.append("")
+    lines += env_check(rs)
     os.makedirs(OUT, exist_ok=True)
     open(os.path.join(OUT, "report.md"), "w").write("\n".join(lines) + "\n")
     print("\n".join(lines))
